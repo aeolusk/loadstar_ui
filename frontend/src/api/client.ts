@@ -126,3 +126,10 @@ export async function fetchBlackBox(root: string, address: string): Promise<Blac
   });
   return res.data;
 }
+
+export async function updateWayPoint(root: string, data: WayPointDetail): Promise<WayPointDetail> {
+  const res = await apiClient.put<WayPointDetail>('/elements/waypoint', data, {
+    params: { root },
+  });
+  return res.data;
+}

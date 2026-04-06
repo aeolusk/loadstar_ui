@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchWayPoint, type WayPointDetail } from '../../api/client';
+import { fetchWayPoint, updateWayPoint, type WayPointDetail } from '../../api/client';
 
 interface WayPointEditorProps {
   projectRoot: string;
@@ -69,6 +69,7 @@ const s = {
 export default function WayPointEditor({ projectRoot, address }: WayPointEditorProps) {
   const [data, setData] = useState<WayPointDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Edit modes
@@ -117,6 +118,23 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
       .finally(() => setLoading(false));
   }, [projectRoot, address]);
 
+  const saveToServer = async (patch: Partial<WayPointDetail>) => {
+    if (!data) return;
+    setSaving(true);
+    try {
+      const payload: WayPointDetail = { ...data, ...patch };
+      const updated = await updateWayPoint(projectRoot, payload);
+      setData(updated);
+      setTechSpecItems(updated.techSpec.map(t => ({ ...t })));
+      setIssues([...updated.issues]);
+      setOpenQuestions(updated.openQuestions.map(q => ({ ...q })));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Save failed');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) return <div style={{ color: 'var(--text-muted)', padding: 12 }}>Loading...</div>;
   if (error || !data) return <div style={{ color: 'var(--status-error)', padding: 12 }}>Error: {error}</div>;
 
@@ -136,7 +154,7 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
   };
   const cancelEditIdentity = () => setEditIdentity(false);
   const saveIdentity = () => {
-    // TODO: API call to save
+    saveToServer({ status: editStatus, summary: editSummary, version: editVersion, priority: editPriority, syncedAt: editSyncedAt });
     setEditIdentity(false);
   };
 
@@ -147,7 +165,7 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
   };
   const cancelEditComment = () => setEditComment(false);
   const saveComment = () => {
-    // TODO: API call to save
+    saveToServer({ comment: editCommentText || null });
     setEditComment(false);
   };
 
@@ -158,13 +176,15 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
   };
   const cancelEditTodoSummary = () => setEditTodoSummary(false);
   const saveTodoSummary = () => {
-    // TODO: API call
+    saveToServer({ todoSummary: editTodoSummaryText });
     setEditTodoSummary(false);
   };
 
   // --- TECH_SPEC handlers ---
   const toggleTechSpec = (idx: number) => {
-    setTechSpecItems(prev => prev.map((item, i) => i === idx ? { ...item, done: !item.done } : item));
+    const updated = techSpecItems.map((item, i) => i === idx ? { ...item, done: !item.done } : item);
+    setTechSpecItems(updated);
+    saveToServer({ techSpec: updated });
   };
   const toggleSelectTechSpec = (idx: number) => {
     setSelectedTechSpec(prev => {
@@ -174,8 +194,10 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
     });
   };
   const deleteSelectedTechSpec = () => {
-    setTechSpecItems(prev => prev.filter((_, i) => !selectedTechSpec.has(i)));
+    const updated = techSpecItems.filter((_, i) => !selectedTechSpec.has(i));
+    setTechSpecItems(updated);
     setSelectedTechSpec(new Set());
+    saveToServer({ techSpec: updated });
   };
   const startEditTechSpecItem = (idx: number) => {
     setEditingTechSpec(idx);
@@ -183,14 +205,18 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
   };
   const saveEditTechSpecItem = () => {
     if (editingTechSpec !== null) {
-      setTechSpecItems(prev => prev.map((item, i) => i === editingTechSpec ? { ...item, text: editTechSpecText } : item));
+      const updated = techSpecItems.map((item, i) => i === editingTechSpec ? { ...item, text: editTechSpecText } : item);
+      setTechSpecItems(updated);
       setEditingTechSpec(null);
+      saveToServer({ techSpec: updated });
     }
   };
   const addTechSpec = () => {
     if (newTechSpec.trim()) {
-      setTechSpecItems(prev => [...prev, { text: newTechSpec.trim(), done: false }]);
+      const updated = [...techSpecItems, { text: newTechSpec.trim(), done: false }];
+      setTechSpecItems(updated);
       setNewTechSpec('');
+      saveToServer({ techSpec: updated });
     }
   };
 
@@ -203,8 +229,10 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
     });
   };
   const deleteSelectedIssues = () => {
-    setIssues(prev => prev.filter((_, i) => !selectedIssues.has(i)));
+    const updated = issues.filter((_, i) => !selectedIssues.has(i));
+    setIssues(updated);
     setSelectedIssues(new Set());
+    saveToServer({ issues: updated });
   };
   const startEditIssueItem = (idx: number) => {
     setEditingIssue(idx);
@@ -212,26 +240,34 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
   };
   const saveEditIssueItem = () => {
     if (editingIssue !== null) {
-      setIssues(prev => prev.map((item, i) => i === editingIssue ? editIssueText : item));
+      const updated = issues.map((item, i) => i === editingIssue ? editIssueText : item);
+      setIssues(updated);
       setEditingIssue(null);
+      saveToServer({ issues: updated });
     }
   };
   const addIssue = () => {
     if (newIssue.trim()) {
-      setIssues(prev => [...prev, newIssue.trim()]);
+      const updated = [...issues, newIssue.trim()];
+      setIssues(updated);
       setNewIssue('');
+      saveToServer({ issues: updated });
     }
   };
 
   // --- OPEN_QUESTIONS handlers ---
   const toggleOqResolved = (idx: number) => {
-    setOpenQuestions(prev => prev.map((q, i) => i === idx ? { ...q, resolved: !q.resolved } : q));
+    const updated = openQuestions.map((q, i) => i === idx ? { ...q, resolved: !q.resolved } : q);
+    setOpenQuestions(updated);
+    saveToServer({ openQuestions: updated });
   };
   const addOpenQuestion = () => {
     if (newOqText.trim()) {
       const nextId = `Q${openQuestions.length + 1}`;
-      setOpenQuestions(prev => [...prev, { id: nextId, text: newOqText.trim(), resolved: false }]);
+      const updated = [...openQuestions, { id: nextId, text: newOqText.trim(), resolved: false }];
+      setOpenQuestions(updated);
       setNewOqText('');
+      saveToServer({ openQuestions: updated });
     }
   };
 
@@ -243,7 +279,10 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
         <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>{address.split('/').pop()}</span>
         <span style={s.badge(color)}>{statusLabels[data.status] || data.status}</span>
       </div>
-      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 16 }}>{address}</div>
+      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span>{address}</span>
+        {saving && <span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>Saving...</span>}
+      </div>
 
       {/* ===== IDENTITY ===== */}
       <div style={s.section}>

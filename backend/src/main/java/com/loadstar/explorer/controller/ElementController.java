@@ -57,4 +57,13 @@ public class ElementController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    @PutMapping("/waypoint")
+    public ResponseEntity<WayPointDetailResponse> updateWayPoint(@RequestParam String root, @RequestBody WayPointDetailResponse data) {
+        try {
+            return ResponseEntity.ok(elementService.updateWayPoint(root, data));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }

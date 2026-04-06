@@ -21,3 +21,5 @@
 | W://root/backend/element_service | 2026-04-06 11:47 | 요소 파싱/조회/편집 API 구현 | DONE | 2026-04-06 14:55 | - |
 | W://root/frontend/waypoint_editor | 2026-04-06 15:12 | WayPoint 편집 기능 구현: IDENTITY/TODO/ISSUE/COMMENT 편집 + Backend API + CLI 변경 이력 | UPDATED(PENDING→ACTIVE) | 2026-04-06 15:12 | - |
 | W://root/backend/element_service | 2026-04-06 15:12 | WayPoint 수정 API + loadstar log CLI 변경 이력 기록 | UPDATED(PENDING→ACTIVE) | 2026-04-06 15:12 | - |
+| W://root/frontend/waypoint_editor | 2026-04-06 15:12 | WayPoint 편집 기능 구현: IDENTITY/TODO/ISSUE/COMMENT 편집 + Backend API + CLI 변경 이력 | DONE | 2026-04-06 15:26 | - |
+| W://root/backend/element_service | 2026-04-06 15:12 | WayPoint 수정 API + loadstar log CLI 변경 이력 기록 | DONE | 2026-04-06 15:26 | - |

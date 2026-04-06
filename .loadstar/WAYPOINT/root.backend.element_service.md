@@ -1,6 +1,6 @@
 <WAYPOINT>
 ## [ADDRESS] W://root/backend/element_service
-## [STATUS] S_PRG
+## [STATUS] S_STB
 
 ### IDENTITY
 - SUMMARY: 요소 파싱/조회/편집 — Map, WayPoint, BlackBox md 파일 읽기/쓰기, 트리 구조 JSON 변환
@@ -21,8 +21,8 @@
   - [x] GET /api/elements/waypoint : WayPoint 상세 조회
   - [x] GET /api/elements/blackbox : BlackBox 상세 조회
   - [x] GET /api/elements/validate : 프로젝트 유효성 검증
-  - [ ] PUT /api/elements/waypoint : WayPoint 수정 (md 파일 쓰기)
-  - [ ] 수정 후 loadstar log MODIFIED CLI 호출로 변경 이력 기록
+  - [x] PUT /api/elements/waypoint : WayPoint 수정 (md 파일 쓰기)
+  - [x] 수정 후 loadstar log MODIFIED CLI 호출로 변경 이력 기록
 
 ### ISSUE
 (없음)

@@ -18,6 +18,8 @@ import java.util.List;
 public class ElementService {
 
     private final ElementParser parser;
+    private final ElementWriter writer;
+    private final CliExecutor cli;
 
     private Path getLoadstarRoot(String projectRoot) {
         return Paths.get(projectRoot, ".loadstar");
@@ -123,6 +125,55 @@ public class ElementService {
         Path file = addressToPath(projectRoot, address);
         if (!Files.exists(file)) throw new IOException("BlackBox not found: " + file);
         return parser.parseBlackBoxDetail(file);
+    }
+
+    public WayPointDetailResponse updateWayPoint(String projectRoot, WayPointDetailResponse data) throws IOException {
+        String address = data.getAddress();
+        Path file = addressToPath(projectRoot, address);
+        if (!Files.exists(file)) throw new IOException("WayPoint not found: " + file);
+
+        // Read existing to preserve CONNECTIONS (which are not editable from UI)
+        WayPointDetailResponse existing = parser.parseWayPointDetail(file);
+        data.setParent(existing.getParent());
+        data.setChildren(existing.getChildren());
+        data.setReferences(existing.getReferences());
+        data.setBlackbox(existing.getBlackbox());
+        if (data.getCreated() == null) data.setCreated(existing.getCreated());
+        if (data.getTodoAddress() == null) data.setTodoAddress(existing.getTodoAddress());
+
+        // Write updated md
+        writer.writeWayPoint(file, data);
+
+        // Log change via CLI
+        cli.logModified(projectRoot, address, buildChangeSummary(existing, data));
+
+        // Return fresh data
+        return parser.parseWayPointDetail(file);
+    }
+
+    private String buildChangeSummary(WayPointDetailResponse before, WayPointDetailResponse after) {
+        List<String> changes = new ArrayList<>();
+        if (!eq(before.getStatus(), after.getStatus())) changes.add("STATUS " + before.getStatus() + " -> " + after.getStatus());
+        if (!eq(before.getSummary(), after.getSummary())) changes.add("SUMMARY changed");
+        if (!eq(before.getComment(), after.getComment())) changes.add("COMMENT changed");
+
+        int beforeDone = before.getTechSpec() != null ? (int) before.getTechSpec().stream().filter(WayPointDetailResponse.TechSpecItem::isDone).count() : 0;
+        int afterDone = after.getTechSpec() != null ? (int) after.getTechSpec().stream().filter(WayPointDetailResponse.TechSpecItem::isDone).count() : 0;
+        int beforeTotal = before.getTechSpec() != null ? before.getTechSpec().size() : 0;
+        int afterTotal = after.getTechSpec() != null ? after.getTechSpec().size() : 0;
+        if (beforeDone != afterDone || beforeTotal != afterTotal) changes.add("TECH_SPEC " + beforeDone + "/" + beforeTotal + " -> " + afterDone + "/" + afterTotal);
+
+        int beforeIssues = before.getIssues() != null ? before.getIssues().size() : 0;
+        int afterIssues = after.getIssues() != null ? after.getIssues().size() : 0;
+        if (beforeIssues != afterIssues) changes.add("ISSUE count " + beforeIssues + " -> " + afterIssues);
+
+        return changes.isEmpty() ? "updated" : String.join(", ", changes);
+    }
+
+    private boolean eq(String a, String b) {
+        if (a == null && b == null) return true;
+        if (a == null || b == null) return false;
+        return a.equals(b);
     }
 
     public List<TreeNodeDto> getTree(String projectRoot) throws IOException {
