@@ -19,7 +19,7 @@ public class ElementParser {
     private static final Pattern SYNCED_AT_PATTERN = Pattern.compile("##\\s*\\[SYNCED_AT\\]\\s*(\\S+)");
 
     public MapData parseMap(Path file) throws IOException {
-        List<String> lines = Files.readAllLines(file);
+        List<String> lines = Files.readAllLines(file, java.nio.charset.StandardCharsets.UTF_8);
         MapData map = new MapData();
         List<String> waypoints = new ArrayList<>();
         boolean inWaypoints = false;
@@ -67,7 +67,7 @@ public class ElementParser {
     }
 
     public WayPointData parseWayPoint(Path file) throws IOException {
-        List<String> lines = Files.readAllLines(file);
+        List<String> lines = Files.readAllLines(file, java.nio.charset.StandardCharsets.UTF_8);
         WayPointData wp = new WayPointData();
         wp.setChildren(new ArrayList<>());
         wp.setReferences(new ArrayList<>());
@@ -134,7 +134,7 @@ public class ElementParser {
     }
 
     public BlackBoxData parseBlackBox(Path file) throws IOException {
-        List<String> lines = Files.readAllLines(file);
+        List<String> lines = Files.readAllLines(file, java.nio.charset.StandardCharsets.UTF_8);
         BlackBoxData bb = new BlackBoxData();
 
         for (String line : lines) {
@@ -173,7 +173,7 @@ public class ElementParser {
     }
 
     public WayPointDetailResponse parseWayPointDetail(Path file) throws IOException {
-        List<String> lines = Files.readAllLines(file);
+        List<String> lines = Files.readAllLines(file, java.nio.charset.StandardCharsets.UTF_8);
         WayPointDetailResponse wp = new WayPointDetailResponse();
         wp.setChildren(new ArrayList<>());
         wp.setReferences(new ArrayList<>());
@@ -325,7 +325,7 @@ public class ElementParser {
     }
 
     public BlackBoxDetailResponse parseBlackBoxDetail(Path file) throws IOException {
-        List<String> lines = Files.readAllLines(file);
+        List<String> lines = Files.readAllLines(file, java.nio.charset.StandardCharsets.UTF_8);
         BlackBoxDetailResponse bb = new BlackBoxDetailResponse();
         bb.setCodeMap(new ArrayList<>());
         bb.setTodos(new ArrayList<>());
