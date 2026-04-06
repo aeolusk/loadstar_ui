@@ -45,15 +45,14 @@ function WayPointNode({ data }: { data: {
 } }) {
   const color = statusColors[data.status] || statusColors.S_IDL;
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    // Ignore if clicking on BlackBox icon
+  const handleClick = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('.bb-icon')) return;
     data.onNodeSelect('waypoint', data.address);
   };
 
   return (
     <div
-      onMouseDown={handleMouseDown}
+      onClick={handleClick}
       style={{
         background: '#ffffff', border: `2px solid ${color}`, borderRadius: 8,
         padding: '14px 18px', minWidth: 180,
@@ -67,7 +66,7 @@ function WayPointNode({ data }: { data: {
       {data.hasBlackbox && (
         <div
           className="bb-icon"
-          onMouseDown={(e) => { e.stopPropagation(); data.onNodeSelect('blackbox', data.blackboxAddr); }}
+          onClick={(e) => { e.stopPropagation(); data.onNodeSelect('blackbox', data.blackboxAddr); }}
           title={`BlackBox: ${data.blackboxAddr}`}
           style={{
             position: 'absolute', top: -8, right: -8,
@@ -126,7 +125,7 @@ function RefWayPointNode({ data }: { data: { label: string; status: string; addr
   const color = statusColors[data.status] || statusColors.S_IDL;
   return (
     <div
-      onMouseDown={() => data.onNodeSelect('waypoint', data.address)}
+      onClick={() => data.onNodeSelect('waypoint', data.address)}
       style={{
         background: '#faf8f5', border: `1px dashed ${color}`, borderRadius: 6,
         padding: '8px 14px', minWidth: 140, fontSize: 12,
