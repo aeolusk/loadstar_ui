@@ -1,6 +1,6 @@
 <WAYPOINT>
 ## [ADDRESS] W://root/backend/element_service
-## [STATUS] S_IDL
+## [STATUS] S_STB
 
 ### IDENTITY
 - SUMMARY: 요소 파싱/조회/편집 — Map, WayPoint, BlackBox md 파일 읽기/쓰기, 트리 구조 JSON 변환

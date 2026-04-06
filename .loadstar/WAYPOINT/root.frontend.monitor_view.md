@@ -13,7 +13,11 @@
 - BLACKBOX: B://root/frontend/monitor_view
 
 ### TODO
-(없음)
+- ADDRESS: W://root/frontend/monitor_view
+- SUMMARY: 모니터링/드리프트 현황 화면 구현
+- TECH_SPEC:
+  - [x] 샘플 데이터 기반 화면 레이아웃 구현
+  - [ ] 실제 API 연동 (loadstar monitor CLI)
 
 ### ISSUE
 (없음)

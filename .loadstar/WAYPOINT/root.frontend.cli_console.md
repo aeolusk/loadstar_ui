@@ -13,7 +13,11 @@
 - BLACKBOX: B://root/frontend/cli_console
 
 ### TODO
-(없음)
+- ADDRESS: W://root/frontend/cli_console
+- SUMMARY: CLI 콘솔 화면 구현
+- TECH_SPEC:
+  - [x] 샘플 데이터 기반 화면 레이아웃 구현
+  - [ ] 실제 CLI 실행 API 연동
 
 ### ISSUE
 (없음)

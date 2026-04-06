@@ -1,6 +1,6 @@
 <WAYPOINT>
 ## [ADDRESS] W://root/frontend/blackbox_editor
-## [STATUS] S_PRG
+## [STATUS] S_STB
 
 ### IDENTITY
 - SUMMARY: BlackBox 상세/편집 — CODE_MAP 뷰어, TODO(WP_REF) 현황, ISSUE, 드리프트 경고 표시

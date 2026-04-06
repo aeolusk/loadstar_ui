@@ -1,6 +1,6 @@
 <WAYPOINT>
 ## [ADDRESS] W://root/backend/project_config
-## [STATUS] S_IDL
+## [STATUS] S_STB
 
 ### IDENTITY
 - SUMMARY: 프로젝트 초기화 및 설정 — .loadstar 경로 지정, 연결 상태 확인, 프로젝트 정보 반환

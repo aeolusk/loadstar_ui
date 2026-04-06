@@ -13,7 +13,11 @@
 - BLACKBOX: B://root/frontend/dashboard
 
 ### TODO
-(없음)
+- ADDRESS: W://root/frontend/dashboard
+- SUMMARY: 프로젝트 대시보드 화면 구현
+- TECH_SPEC:
+  - [x] 샘플 데이터 기반 화면 레이아웃 구현
+  - [ ] 실제 API 연동 (요소 수, 상태 분포, 건강 경고)
 
 ### ISSUE
 (없음)
