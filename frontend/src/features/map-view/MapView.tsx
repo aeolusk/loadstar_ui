@@ -38,25 +38,36 @@ const statusLabels: Record<string, string> = {
 // ===== Custom Nodes =====
 
 function WayPointNode({ data }: { data: {
-  label: string; status: string; summary: string;
+  label: string; status: string; summary: string; address: string;
   hasBlackbox: boolean; blackboxAddr: string;
   onBlackboxClick: (addr: string) => void;
+  onNodeSelect: (type: 'waypoint' | 'blackbox', addr: string) => void;
 } }) {
   const color = statusColors[data.status] || statusColors.S_IDL;
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Ignore if clicking on BlackBox icon
+    if ((e.target as HTMLElement).closest('.bb-icon')) return;
+    data.onNodeSelect('waypoint', data.address);
+  };
+
   return (
-    <div style={{
-      background: '#ffffff', border: `2px solid ${color}`, borderRadius: 8,
-      padding: '14px 18px', minWidth: 180,
-      boxShadow: '0 2px 8px rgba(44, 36, 23, 0.08)', cursor: 'pointer', position: 'relative',
-    }}>
+    <div
+      onMouseDown={handleMouseDown}
+      style={{
+        background: '#ffffff', border: `2px solid ${color}`, borderRadius: 8,
+        padding: '14px 18px', minWidth: 180,
+        boxShadow: '0 2px 8px rgba(44, 36, 23, 0.08)', cursor: 'pointer', position: 'relative',
+      }}
+    >
       <Handle type="target" position={Position.Left} style={{ background: color, width: 8, height: 8 }} />
       <Handle type="source" position={Position.Right} style={{ background: color, width: 8, height: 8 }} />
       <Handle type="source" position={Position.Bottom} id="bottom" style={{ background: '#9b8e7e', width: 6, height: 6 }} />
 
       {data.hasBlackbox && (
         <div
-          onClick={(e) => { e.stopPropagation(); data.onBlackboxClick(data.blackboxAddr); }}
+          className="bb-icon"
+          onMouseDown={(e) => { e.stopPropagation(); data.onNodeSelect('blackbox', data.blackboxAddr); }}
           title={`BlackBox: ${data.blackboxAddr}`}
           style={{
             position: 'absolute', top: -8, right: -8,
@@ -111,14 +122,17 @@ function MapNode({ data }: { data: { label: string; status: string } }) {
   );
 }
 
-function RefWayPointNode({ data }: { data: { label: string; status: string } }) {
+function RefWayPointNode({ data }: { data: { label: string; status: string; address: string; onNodeSelect: (type: 'waypoint', addr: string) => void } }) {
   const color = statusColors[data.status] || statusColors.S_IDL;
   return (
-    <div style={{
-      background: '#faf8f5', border: `1px dashed ${color}`, borderRadius: 6,
-      padding: '8px 14px', minWidth: 140, fontSize: 12,
-      color: '#6b5d4d', textAlign: 'center', cursor: 'pointer', opacity: 0.85,
-    }}>
+    <div
+      onMouseDown={() => data.onNodeSelect('waypoint', data.address)}
+      style={{
+        background: '#faf8f5', border: `1px dashed ${color}`, borderRadius: 6,
+        padding: '8px 14px', minWidth: 140, fontSize: 12,
+        color: '#6b5d4d', textAlign: 'center', cursor: 'pointer', opacity: 0.85,
+      }}
+    >
       <Handle type="target" position={Position.Top} style={{ background: color, width: 6, height: 6 }} />
       <span style={{ marginRight: 4, color: '#3a7ca5' }}>◆</span>
       {data.label}
@@ -132,6 +146,7 @@ const nodeTypes = { waypoint: WayPointNode, mapNode: MapNode, refWaypoint: RefWa
 function buildGraph(
   items: MapViewItem[],
   handleBlackboxClick: (addr: string) => void,
+  onNodeSelect: (type: 'waypoint' | 'blackbox', addr: string) => void,
 ): { nodes: Node[]; edges: Edge[] } {
   const ns: Node[] = [];
   const es: Edge[] = [];
@@ -166,6 +181,7 @@ function buildGraph(
           hasBlackbox: !!item.blackbox,
           blackboxAddr: item.blackbox || '',
           onBlackboxClick: handleBlackboxClick,
+          onNodeSelect,
         },
         sourcePosition: Position.Right,
         targetPosition: Position.Left,
@@ -183,7 +199,11 @@ function buildGraph(
     }
   });
 
-  // Reference edges
+  // Reference edges - stack ref nodes vertically, slight x offset for line separation
+  let refNodeIndex = 0;
+  const REF_Y_GAP = 60;
+  const REF_X_OFFSET = 20;
+
   items.forEach((item) => {
     if (item.type !== 'WAYPOINT' || !item.references) return;
 
@@ -199,16 +219,19 @@ function buildGraph(
           animated: true,
         });
       } else {
-        // External ref node
+        // External ref node - stack vertically with slight x offset
         if (!refNodeSet.has(refAddr)) {
           const refLabel = refAddr.split('/').pop() || refAddr;
-          const sourceX = addressXMap[item.address] ?? 0;
           ns.push({
             id: `ref-${refAddr}`, type: 'refWaypoint',
-            position: { x: sourceX + 15, y: Y_REF },
-            data: { label: refLabel, status: 'S_IDL', address: refAddr },
+            position: {
+              x: refNodeIndex * REF_X_OFFSET,
+              y: Y_REF + refNodeIndex * REF_Y_GAP,
+            },
+            data: { label: refLabel, status: 'S_IDL', address: refAddr, onNodeSelect },
           });
           refNodeSet.add(refAddr);
+          refNodeIndex++;
         }
         es.push({
           id: `e-ref-${item.address}-${refAddr}`,
@@ -225,10 +248,9 @@ function buildGraph(
 }
 
 // Memoized flow chart - prevents re-render when detail panel changes
-const FlowChart = memo(({ nodes, edges, onNodeClick, onNodeDoubleClick }: {
+const FlowChart = memo(({ nodes, edges, onNodeDoubleClick }: {
   nodes: Node[];
   edges: Edge[];
-  onNodeClick: NodeMouseHandler;
   onNodeDoubleClick: NodeMouseHandler;
 }) => {
   const { fitView } = useReactFlow();
@@ -245,7 +267,7 @@ const FlowChart = memo(({ nodes, edges, onNodeClick, onNodeDoubleClick }: {
   return (
     <ReactFlow
       nodes={nodes} edges={edges} nodeTypes={nodeTypes}
-      onNodeClick={onNodeClick} onNodeDoubleClick={onNodeDoubleClick}
+      onNodeDoubleClick={onNodeDoubleClick}
       proOptions={{ hideAttribution: true }}
       style={{ background: '#faf8f5' }}
       minZoom={0.3} maxZoom={2}
@@ -272,17 +294,14 @@ export default function MapView({ projectRoot, address, onOpenTab }: MapViewProp
     setDetail({ type: 'blackbox', address: bbAddr });
   }, []);
 
+  const handleNodeSelect = useCallback((type: 'waypoint' | 'blackbox', addr: string) => {
+    setDetail({ type, address: addr });
+  }, []);
+
   const { nodes, edges } = useMemo(() => {
     if (!mapData) return { nodes: [] as Node[], edges: [] as Edge[] };
-    return buildGraph(mapData.items, handleBlackboxClick);
-  }, [mapData, handleBlackboxClick]);
-
-  const onNodeClick: NodeMouseHandler = useCallback((_event, node) => {
-    if (node.type === 'mapNode') return;
-    const data = node.data as { address?: string };
-    const addr = data.address || node.id;
-    setDetail({ type: 'waypoint', address: addr });
-  }, []);
+    return buildGraph(mapData.items, handleBlackboxClick, handleNodeSelect);
+  }, [mapData, handleBlackboxClick, handleNodeSelect]);
 
   const onNodeDoubleClick: NodeMouseHandler = useCallback((_event, node) => {
     if (node.type === 'mapNode') {
@@ -323,7 +342,7 @@ export default function MapView({ projectRoot, address, onOpenTab }: MapViewProp
               <ReactFlowProvider>
                 <FlowChart
                   nodes={nodes} edges={edges}
-                  onNodeClick={onNodeClick} onNodeDoubleClick={onNodeDoubleClick}
+                  onNodeDoubleClick={onNodeDoubleClick}
                 />
               </ReactFlowProvider>
             </div>
