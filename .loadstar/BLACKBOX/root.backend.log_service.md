@@ -16,5 +16,5 @@
 (없음)
 
 ### COMMENT
-(없음)
+- [2026-04-06T16:14:00] [MODIFIED] Log API 구현: GET /api/log/find (offset/limit/address/kind)
 </BLACKBOX>

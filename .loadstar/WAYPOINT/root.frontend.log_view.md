@@ -17,7 +17,9 @@
 - SUMMARY: 로그 검색/조회 화면 구현
 - TECH_SPEC:
   - [x] 샘플 데이터 기반 화면 레이아웃 구현
-  - [ ] 실제 API 연동 (loadstar findlog CLI)
+  - [x] 실제 API 연동 (loadstar findlog CLI)
+  - [x] 필터 조건: KIND, Address, 기간(1h/6h/1d/3d/7d/기한없음)
+  - [x] 페이징 (20건 단위, 이전/다음)
 
 ### ISSUE
 (없음)

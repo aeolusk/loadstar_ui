@@ -16,5 +16,5 @@
 (없음)
 
 ### COMMENT
-(없음)
+- [2026-04-06T16:14:00] [MODIFIED] TODO API 6개 엔드포인트 구현: list, history, add, update, done, delete
 </BLACKBOX>

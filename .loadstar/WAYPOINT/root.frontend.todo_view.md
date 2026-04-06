@@ -17,7 +17,8 @@
 - SUMMARY: TODO 목록 + History 화면 구현
 - TECH_SPEC:
   - [x] 샘플 데이터 기반 화면 레이아웃 구현 (목록/History 탭 전환)
-  - [ ] 실제 API 연동 (loadstar todo CLI)
+  - [x] 실제 API 연동 (loadstar todo CLI)
+  - [x] 필터 조건: Status, Address, 기간(1h/6h/1d/3d/7d/기한없음)
   - [ ] TODO CRUD 기능 (추가, 상태변경, 완료, 삭제)
 
 ### ISSUE

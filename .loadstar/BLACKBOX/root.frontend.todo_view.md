@@ -16,5 +16,5 @@
 (없음)
 
 ### COMMENT
-(없음)
+- [2026-04-06T16:13:59] [MODIFIED] TODO View API 연동 완료: CLI 연동, 필터(Status/Address/기간), 조회 버튼 방식
 </BLACKBOX>

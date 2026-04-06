@@ -13,7 +13,11 @@
 - BLACKBOX: B://root/backend/cli_service
 
 ### TODO
-(없음)
+- ADDRESS: W://root/backend/cli_service
+- SUMMARY: CLI 실행기 구현
+- TECH_SPEC:
+  - [x] CliExecutor: ProcessBuilder 기반 CLI 실행
+  - [x] loadstar log MODIFIED 자동 호출
 
 ### ISSUE
 (없음)

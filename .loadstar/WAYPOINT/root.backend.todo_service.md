@@ -13,7 +13,15 @@
 - BLACKBOX: B://root/backend/todo_service
 
 ### TODO
-(없음)
+- ADDRESS: W://root/backend/todo_service
+- SUMMARY: TODO CLI 연동 API 구현
+- TECH_SPEC:
+  - [x] GET /api/todo/list : TODO 목록 조회
+  - [x] GET /api/todo/history : TODO 이력 조회
+  - [x] POST /api/todo/add : TODO 추가
+  - [x] PUT /api/todo/update : TODO 상태 변경
+  - [x] POST /api/todo/done : TODO 완료
+  - [x] DELETE /api/todo/delete : TODO 삭제
 
 ### ISSUE
 (없음)
