@@ -67,6 +67,29 @@ export interface BlackBoxDetail {
   comment: string | null;
 }
 
+// --- File Browser ---
+
+export interface DirEntry {
+  name: string;
+  path: string;
+  hasChildren: boolean;
+  loadstarProject: boolean;
+}
+
+export interface BrowseResponse {
+  path: string;
+  parent: string | null;
+  hasLoadstar: boolean;
+  entries: DirEntry[];
+}
+
+export async function browseDirectory(path: string): Promise<BrowseResponse> {
+  const res = await apiClient.get<BrowseResponse>('/files/browse', {
+    params: { path },
+  });
+  return res.data;
+}
+
 // --- API Functions (all require root param) ---
 
 export async function validateProject(root: string): Promise<{ valid: boolean; root: string }> {
