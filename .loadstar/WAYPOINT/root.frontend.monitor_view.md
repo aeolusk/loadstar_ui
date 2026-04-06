@@ -1,6 +1,6 @@
 <WAYPOINT>
 ## [ADDRESS] W://root/frontend/monitor_view
-## [STATUS] S_IDL
+## [STATUS] S_PRG
 
 ### IDENTITY
 - SUMMARY: 모니터링 화면 — 스냅샷 관리, Diff 비교, 드리프트 현황, SYNCED_AT 일람

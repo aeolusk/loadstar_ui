@@ -1,6 +1,6 @@
 <WAYPOINT>
 ## [ADDRESS] W://root/frontend/map_view
-## [STATUS] S_IDL
+## [STATUS] S_PRG
 
 ### IDENTITY
 - SUMMARY: Map 화면 — React Flow 기반 WayPoint 체인 흐름도, 좌→우 수평 배치, 하단 BlackBox/참조 연결

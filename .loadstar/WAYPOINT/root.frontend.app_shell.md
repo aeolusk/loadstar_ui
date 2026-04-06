@@ -1,6 +1,6 @@
 <WAYPOINT>
 ## [ADDRESS] W://root/frontend/app_shell
-## [STATUS] S_IDL
+## [STATUS] S_PRG
 
 ### IDENTITY
 - SUMMARY: 앱 골격 — Menu Bar, Toolbar, Element Tree, Editor Tabs, Status Bar 레이아웃 구성

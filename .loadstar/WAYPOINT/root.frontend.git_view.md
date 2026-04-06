@@ -1,6 +1,6 @@
 <WAYPOINT>
 ## [ADDRESS] W://root/frontend/git_view
-## [STATUS] S_IDL
+## [STATUS] S_PRG
 
 ### IDENTITY
 - SUMMARY: GIT 이력 화면 — 커밋 목록, 변경 파일 표시, LOADSTAR 요소 태그, checkpoint 실행

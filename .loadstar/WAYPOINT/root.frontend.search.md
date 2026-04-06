@@ -1,6 +1,6 @@
 <WAYPOINT>
 ## [ADDRESS] W://root/frontend/search
-## [STATUS] S_IDL
+## [STATUS] S_PRG
 
 ### IDENTITY
 - SUMMARY: 검색 — Command Palette (Ctrl+K), 주소/키워드 통합 검색, 결과에서 요소 탭 열기

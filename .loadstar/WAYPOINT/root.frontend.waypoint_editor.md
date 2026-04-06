@@ -1,6 +1,6 @@
 <WAYPOINT>
 ## [ADDRESS] W://root/frontend/waypoint_editor
-## [STATUS] S_IDL
+## [STATUS] S_PRG
 
 ### IDENTITY
 - SUMMARY: WayPoint 상세/편집 — IDENTITY, CONNECTIONS, TECH_SPEC 체크박스, ISSUE, OPEN_QUESTIONS 표시/편집

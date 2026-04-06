@@ -1,6 +1,6 @@
 <WAYPOINT>
 ## [ADDRESS] W://root/frontend/dashboard
-## [STATUS] S_IDL
+## [STATUS] S_PRG
 
 ### IDENTITY
 - SUMMARY: 대시보드 — 프로젝트 개요, 요소 수/상태 분포, 건강 상태 경고 (SYNCED_AT, 드리프트, OPEN_QUESTIONS)

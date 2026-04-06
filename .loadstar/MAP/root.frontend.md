@@ -1,6 +1,6 @@
 <MAP>
 ## [ADDRESS] M://root/frontend
-## [STATUS] S_IDL
+## [STATUS] S_PRG
 
 ### IDENTITY
 - SUMMARY: React 프론트엔드 — Eclipse-style 웹 UI

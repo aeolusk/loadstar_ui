@@ -1,6 +1,6 @@
 <WAYPOINT>
 ## [ADDRESS] W://root/frontend/log_view
-## [STATUS] S_IDL
+## [STATUS] S_PRG
 
 ### IDENTITY
 - SUMMARY: 로그 검색 화면 — findlog 연동, KIND/Address 필터, 페이징, 시간순 정렬
