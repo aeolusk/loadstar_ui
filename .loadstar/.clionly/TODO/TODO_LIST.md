@@ -1,5 +1,6 @@
 | 주소 (Address) | 발생 시간 (Time) | 작업 요약 (Summary) | 상태 (Status) | 선행 조건 (Depends_On) |
 | :--- | :--- | :--- | :--- | :--- |
+| W://root/frontend/map_view | 2026-04-06 12:01 | Map Viewer 구현: React Flow 노드 배치, WP 체인 흐름도, BlackBox/참조 연결, 노드 클릭 탭 열기 | ACTIVE | - |
 | W://root/backend/cli_service | 2026-04-06 11:47 | ProcessBuilder 기반 CLI 실행기 구현 | PENDING | - |
 | W://root/backend/log_service | 2026-04-06 11:47 | 로그 CLI 연동 API 구현 | PENDING | W://root/backend/cli_service |
 | W://root/backend/monitor_service | 2026-04-06 11:47 | 모니터링 CLI 연동 API 구현 | PENDING | W://root/backend/cli_service |
@@ -16,5 +17,3 @@
 | W://root/frontend/dashboard | 2026-04-06 11:47 | 프로젝트 대시보드 화면 구현 | ACTIVE | - |
 | W://root/frontend/blackbox_editor | 2026-04-06 11:47 | BlackBox 상세/편집 화면 구현 (드리프트 경고 포함) | ACTIVE | - |
 | W://root/frontend/waypoint_editor | 2026-04-06 11:47 | WayPoint 상세/편집 화면 구현 | ACTIVE | - |
-| W://root/frontend/map_view | 2026-04-06 11:47 | React Flow 기반 WayPoint 체인 흐름도 구현 | ACTIVE | - |
-| W://root/frontend/app_shell | 2026-04-06 11:47 | Eclipse-style 메인 레이아웃 구현 (MenuBar, Toolbar, ElementTree, EditorTabs, StatusBar) | ACTIVE | - |

@@ -11,3 +11,6 @@
 | W://root/frontend/log_view | 2026-04-06 11:47 | 로그 검색/조회 화면 구현 | UPDATED(PENDING→ACTIVE) | 2026-04-06 11:47 | - |
 | W://root/frontend/cli_console | 2026-04-06 11:47 | CLI 콘솔 화면 구현 | UPDATED(PENDING→ACTIVE) | 2026-04-06 11:47 | - |
 | W://root/frontend/search | 2026-04-06 11:47 | Command Palette 검색 구현 | UPDATED(PENDING→ACTIVE) | 2026-04-06 11:47 | - |
+| W://root/frontend/app_shell | 2026-04-06 11:47 | Eclipse-style 메인 레이아웃 구현 (MenuBar, Toolbar, ElementTree, EditorTabs, StatusBar) | DONE | 2026-04-06 12:01 | - |
+| W://root/frontend/map_view | 2026-04-06 11:47 | React Flow 기반 WayPoint 체인 흐름도 구현 | DONE | 2026-04-06 12:01 | - |
+| W://root/frontend/map_view | 2026-04-06 12:01 | Map Viewer 구현: React Flow 노드 배치, WP 체인 흐름도, BlackBox/참조 연결, 노드 클릭 탭 열기 | UPDATED(PENDING→ACTIVE) | 2026-04-06 12:02 | - |
