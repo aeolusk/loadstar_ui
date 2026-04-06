@@ -1,6 +1,6 @@
 <WAYPOINT>
 ## [ADDRESS] W://root/backend/log_service
-## [STATUS] S_IDL
+## [STATUS] S_STB
 
 ### IDENTITY
 - SUMMARY: 로그 관리 — loadstar log/findlog CLI 연동, KIND/Address 필터링

@@ -26,3 +26,5 @@
 | W://root/frontend/todo_view | 2026-04-06 11:47 | TODO 목록 + History 탭 전환 화면 구현 | DONE | 2026-04-06 15:57 | - |
 | W://root/backend/todo_service | 2026-04-06 11:47 | TODO CLI 연동 API 구현 | DONE | 2026-04-06 15:57 | W://root/backend/cli_service |
 | W://root/backend/cli_service | 2026-04-06 11:47 | ProcessBuilder 기반 CLI 실행기 구현 | DONE | 2026-04-06 15:58 | - |
+| W://root/frontend/log_view | 2026-04-06 11:47 | 로그 검색/조회 화면 구현 | DONE | 2026-04-06 16:06 | - |
+| W://root/backend/log_service | 2026-04-06 11:47 | 로그 CLI 연동 API 구현 | DONE | 2026-04-06 16:06 | - |

@@ -180,3 +180,27 @@ export async function doneTodo(root: string, address: string): Promise<void> {
 export async function deleteTodo(root: string, address: string): Promise<void> {
   await apiClient.delete('/todo/delete', { data: { address }, params: { root } });
 }
+
+// --- Log API ---
+
+export interface LogEntry {
+  timestamp: string;
+  kind: string;
+  content: string;
+  address: string;
+}
+
+export interface LogResult {
+  entries: LogEntry[];
+  offset: number;
+  limit: number;
+  hasMore: boolean;
+}
+
+export async function fetchLog(root: string, offset: number, limit: number, address?: string, kind?: string): Promise<LogResult> {
+  const params: Record<string, string | number> = { root, offset, limit };
+  if (address) params.address = address;
+  if (kind) params.kind = kind;
+  const res = await apiClient.get<LogResult>('/log/find', { params });
+  return res.data;
+}
