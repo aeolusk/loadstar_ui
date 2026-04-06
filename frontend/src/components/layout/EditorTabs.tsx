@@ -50,7 +50,6 @@ const TabContent = ({ tab, projectRoot, onOpenTab }: { tab: Tab; projectRoot: st
 };
 
 const EditorTabs = ({ projectRoot, tabs, activeTabId, onSelectTab, onCloseTab, onOpenTab }: EditorTabsProps) => {
-  const activeTab = tabs.find(t => t.id === activeTabId);
 
   return (
     <div className="editor-area">
@@ -75,9 +74,7 @@ const EditorTabs = ({ projectRoot, tabs, activeTabId, onSelectTab, onCloseTab, o
         </div>
       )}
       <div className="editor-content">
-        {activeTab ? (
-          <TabContent tab={activeTab} projectRoot={projectRoot} onOpenTab={onOpenTab} />
-        ) : (
+        {tabs.length === 0 && (
           <div className="editor-empty">
             <div className="editor-empty-icon">☆</div>
             <div>탭을 열려면 트리에서 요소를 더블클릭하거나 툴바 버튼을 클릭하세요.</div>
@@ -86,6 +83,14 @@ const EditorTabs = ({ projectRoot, tabs, activeTabId, onSelectTab, onCloseTab, o
             </div>
           </div>
         )}
+        {tabs.map(tab => (
+          <div
+            key={tab.id}
+            style={{ display: tab.id === activeTabId ? 'contents' : 'none' }}
+          >
+            <TabContent tab={tab} projectRoot={projectRoot} onOpenTab={onOpenTab} />
+          </div>
+        ))}
       </div>
     </div>
   );
