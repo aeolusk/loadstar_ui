@@ -9,7 +9,7 @@
 ### CONNECTIONS
 - PARENT: M://root/frontend
 - CHILDREN: []
-- REFERENCE: []
+- REFERENCE: [W://root/test/test_app_shell]
 - BLACKBOX: B://root/frontend/app_shell
 
 ### TODO

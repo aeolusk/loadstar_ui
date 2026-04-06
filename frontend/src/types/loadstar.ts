@@ -19,6 +19,8 @@ export interface TreeNode {
   status: StatusCode;
   summary: string;
   children: TreeNode[];
+  references?: string[];  // CONNECTIONS.REFERENCE 주소 목록
+  blackbox?: string;      // CONNECTIONS.BLACKBOX 주소
 }
 
 export interface TodoItem {

@@ -2,7 +2,7 @@ server:
   port: 8080
 
 loadstar:
-  project-path: ${LOADSTAR_PROJECT_PATH:}
+  project-path: ${LOADSTAR_PROJECT_PATH:C:/bono/MCP/GIT/loadstar_ui}
 
 spring:
   devtools:

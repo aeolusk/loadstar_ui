@@ -9,7 +9,7 @@
 ### CONNECTIONS
 - PARENT: M://root/frontend
 - CHILDREN: []
-- REFERENCE: []
+- REFERENCE: [W://root/test/test_cli_console]
 - BLACKBOX: B://root/frontend/cli_console
 
 ### TODO

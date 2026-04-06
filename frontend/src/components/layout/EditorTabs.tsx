@@ -14,6 +14,7 @@ interface EditorTabsProps {
   activeTabId: string | null;
   onSelectTab: (tabId: string) => void;
   onCloseTab: (tabId: string) => void;
+  onOpenTab: (tab: Tab) => void;
 }
 
 const tabTypeIcon = (type: Tab['type']): string => {
@@ -31,10 +32,10 @@ const tabTypeIcon = (type: Tab['type']): string => {
   }
 };
 
-const TabContent = ({ tab }: { tab: Tab }) => {
+const TabContent = ({ tab, onOpenTab }: { tab: Tab; onOpenTab: (tab: Tab) => void }) => {
   switch (tab.type) {
     case 'dashboard': return <DashboardView />;
-    case 'map': return <MapView address={tab.address || ''} />;
+    case 'map': return <MapView address={tab.address || ''} onOpenTab={onOpenTab} />;
     case 'waypoint': return <WayPointEditor address={tab.address || ''} />;
     case 'blackbox': return <BlackBoxEditor address={tab.address || ''} />;
     case 'todo': return <TodoView />;
@@ -47,7 +48,7 @@ const TabContent = ({ tab }: { tab: Tab }) => {
   }
 };
 
-const EditorTabs = ({ tabs, activeTabId, onSelectTab, onCloseTab }: EditorTabsProps) => {
+const EditorTabs = ({ tabs, activeTabId, onSelectTab, onCloseTab, onOpenTab }: EditorTabsProps) => {
   const activeTab = tabs.find(t => t.id === activeTabId);
 
   return (
@@ -74,7 +75,7 @@ const EditorTabs = ({ tabs, activeTabId, onSelectTab, onCloseTab }: EditorTabsPr
       )}
       <div className="editor-content">
         {activeTab ? (
-          <TabContent tab={activeTab} />
+          <TabContent tab={activeTab} onOpenTab={onOpenTab} />
         ) : (
           <div className="editor-empty">
             <div className="editor-empty-icon">☆</div>

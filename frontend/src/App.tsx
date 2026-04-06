@@ -43,17 +43,18 @@ function App() {
       <MenuBar />
       <Toolbar onOpenTab={openTab} />
       <div className="app-body">
-        <Group orientation="horizontal" autoSave="main-layout">
-          <Panel defaultSize={22} minSize={15} maxSize={40}>
+        <Group orientation="horizontal">
+          <Panel defaultSize="22%" minSize="18%" maxSize="45%" id="tree-panel">
             <ElementTree onOpenTab={openTab} />
           </Panel>
           <Separator className="resize-handle" />
-          <Panel defaultSize={78} minSize={40}>
+          <Panel defaultSize="78%" minSize="45%" id="editor-panel">
             <EditorTabs
               tabs={tabs}
               activeTabId={activeTabId}
               onSelectTab={setActiveTabId}
               onCloseTab={closeTab}
+              onOpenTab={openTab}
             />
           </Panel>
         </Group>

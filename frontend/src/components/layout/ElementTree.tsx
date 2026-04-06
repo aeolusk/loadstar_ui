@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Tab } from '../../App';
 import type { TreeNode, ElementType } from '../../types/loadstar';
-import { sampleTree } from '../../data/sampleData';
+import { fetchTree } from '../../api/client';
 
 interface ElementTreeProps {
   onOpenTab: (tab: Tab) => void;
@@ -33,6 +33,12 @@ const TreeNodeItem = ({
   onOpenTab: (tab: Tab) => void;
 }) => {
   const [expanded, setExpanded] = useState(depth === 0);
+  const hasChildren = node.children.length > 0;
+
+  const handleToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpanded(!expanded);
+  };
 
   const handleDoubleClick = () => {
     onOpenTab({
@@ -43,12 +49,6 @@ const TreeNodeItem = ({
     });
   };
 
-  const handleClick = () => {
-    if (node.children.length > 0) {
-      setExpanded(!expanded);
-    }
-  };
-
   const id = node.address.split('/').pop() || node.address;
 
   return (
@@ -56,14 +56,15 @@ const TreeNodeItem = ({
       <div
         className="tree-node"
         style={{ paddingLeft: depth * 16 + 8 }}
-        onClick={handleClick}
         onDoubleClick={handleDoubleClick}
       >
         <span className="tree-node-label">
-          {node.children.length > 0 ? (
-            <span className="tree-toggle">{expanded ? '▾' : '▸'}</span>
+          {hasChildren ? (
+            <span className="tree-toggle-btn" onClick={handleToggle}>
+              {expanded ? '−' : '+'}
+            </span>
           ) : (
-            <span className="tree-toggle" />
+            <span className="tree-toggle-spacer" />
           )}
           <span className={`tree-node-icon ${typeIcon(node.type).cls}`}>
             {typeIcon(node.type).icon}
@@ -85,17 +86,31 @@ const TreeNodeItem = ({
 };
 
 const ElementTree = ({ onOpenTab }: ElementTreeProps) => {
+  const [tree, setTree] = useState<TreeNode[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTree()
+      .then(setTree)
+      .catch((err) => console.error('Failed to load tree:', err))
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <div className="element-tree">
       <div className="element-tree-header">Explorer</div>
-      {sampleTree.map(node => (
-        <TreeNodeItem
-          key={node.address}
-          node={node}
-          depth={0}
-          onOpenTab={onOpenTab}
-        />
-      ))}
+      {loading ? (
+        <div style={{ padding: 12, color: 'var(--text-muted)', fontSize: 12 }}>Loading...</div>
+      ) : (
+        tree.map(node => (
+          <TreeNodeItem
+            key={node.address}
+            node={node}
+            depth={0}
+            onOpenTab={onOpenTab}
+          />
+        ))
+      )}
     </div>
   );
 };

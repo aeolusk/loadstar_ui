@@ -9,7 +9,7 @@
 ### CONNECTIONS
 - PARENT: M://root/frontend
 - CHILDREN: []
-- REFERENCE: []
+- REFERENCE: [W://root/test/test_waypoint_editor]
 - BLACKBOX: B://root/frontend/waypoint_editor
 
 ### TODO

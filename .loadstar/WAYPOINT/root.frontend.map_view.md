@@ -9,7 +9,7 @@
 ### CONNECTIONS
 - PARENT: M://root/frontend
 - CHILDREN: []
-- REFERENCE: []
+- REFERENCE: [W://root/test/test_map_view]
 - BLACKBOX: B://root/frontend/map_view
 
 ### TODO
