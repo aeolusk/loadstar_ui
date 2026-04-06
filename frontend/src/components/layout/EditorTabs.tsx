@@ -1,4 +1,13 @@
 import type { Tab } from '../../App';
+import DashboardView from '../../features/dashboard/DashboardView';
+import MapView from '../../features/map-view/MapView';
+import WayPointEditor from '../../features/waypoint-editor/WayPointEditor';
+import BlackBoxEditor from '../../features/blackbox-editor/BlackBoxEditor';
+import TodoView from '../../features/todo-view/TodoView';
+import MonitorView from '../../features/monitor-view/MonitorView';
+import GitView from '../../features/git-view/GitView';
+import LogView from '../../features/log-view/LogView';
+import CliConsole from '../../features/cli-console/CliConsole';
 
 interface EditorTabsProps {
   tabs: Tab[];
@@ -19,6 +28,22 @@ const tabTypeIcon = (type: Tab['type']): string => {
     case 'git': return '⑂';
     case 'log': return '☰';
     case 'cli': return '▸';
+  }
+};
+
+const TabContent = ({ tab }: { tab: Tab }) => {
+  switch (tab.type) {
+    case 'dashboard': return <DashboardView />;
+    case 'map': return <MapView address={tab.address || ''} />;
+    case 'waypoint': return <WayPointEditor address={tab.address || ''} />;
+    case 'blackbox': return <BlackBoxEditor address={tab.address || ''} />;
+    case 'todo': return <TodoView />;
+    case 'history': return <TodoView />;
+    case 'monitor': return <MonitorView />;
+    case 'git': return <GitView />;
+    case 'log': return <LogView />;
+    case 'cli': return <CliConsole />;
+    default: return <div>Unknown tab type</div>;
   }
 };
 
@@ -49,16 +74,7 @@ const EditorTabs = ({ tabs, activeTabId, onSelectTab, onCloseTab }: EditorTabsPr
       )}
       <div className="editor-content">
         {activeTab ? (
-          <div>
-            <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: 'var(--text-primary)' }}>
-              {tabTypeIcon(activeTab.type)} {activeTab.title}
-            </h3>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: 4 }}>Type: {activeTab.type}</p>
-            {activeTab.address && (
-              <p style={{ color: 'var(--text-secondary)', marginBottom: 4 }}>Address: {activeTab.address}</p>
-            )}
-            <p style={{ color: 'var(--text-muted)', marginTop: 16 }}>콘텐츠 구현 예정</p>
-          </div>
+          <TabContent tab={activeTab} />
         ) : (
           <div className="editor-empty">
             <div className="editor-empty-icon">☆</div>

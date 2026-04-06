@@ -1,36 +1,11 @@
 import { useState } from 'react';
 import type { Tab } from '../../App';
 import type { TreeNode, ElementType } from '../../types/loadstar';
+import { sampleTree } from '../../data/sampleData';
 
 interface ElementTreeProps {
   onOpenTab: (tab: Tab) => void;
 }
-
-// 임시 샘플 데이터 — 추후 API 연동
-const sampleTree: TreeNode[] = [
-  {
-    address: 'M://root',
-    type: 'MAP',
-    status: 'S_PRG',
-    summary: 'Project Root',
-    children: [
-      {
-        address: 'M://root/backend',
-        type: 'MAP',
-        status: 'S_IDL',
-        summary: 'Backend',
-        children: [],
-      },
-      {
-        address: 'M://root/frontend',
-        type: 'MAP',
-        status: 'S_IDL',
-        summary: 'Frontend',
-        children: [],
-      },
-    ],
-  },
-];
 
 const typeToTabType = (type: ElementType): Tab['type'] => {
   switch (type) {
