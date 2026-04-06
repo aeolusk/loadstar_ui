@@ -45,26 +45,14 @@ function WayPointNode({ data }: { data: {
 } }) {
   const color = statusColors[data.status] || statusColors.S_IDL;
 
-  const downPos = useRef<{ x: number; y: number } | null>(null);
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleClick = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('.bb-icon')) return;
-    downPos.current = { x: e.clientX, y: e.clientY };
-  };
-  const handleMouseUp = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('.bb-icon')) return;
-    if (!downPos.current) return;
-    const dx = Math.abs(e.clientX - downPos.current.x);
-    const dy = Math.abs(e.clientY - downPos.current.y);
-    if (dx < 5 && dy < 5) {
-      data.onNodeSelect('waypoint', data.address);
-    }
-    downPos.current = null;
+    data.onNodeSelect('waypoint', data.address);
   };
 
   return (
     <div
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
+      onClick={handleClick}
       style={{
         background: '#ffffff', border: `2px solid ${color}`, borderRadius: 8,
         padding: '14px 18px', minWidth: 180,
@@ -78,7 +66,7 @@ function WayPointNode({ data }: { data: {
       {data.hasBlackbox && (
         <div
           className="bb-icon"
-          onMouseUp={(e) => { e.stopPropagation(); data.onNodeSelect('blackbox', data.blackboxAddr); }}
+          onClick={(e) => { e.stopPropagation(); data.onNodeSelect('blackbox', data.blackboxAddr); }}
           title={`BlackBox: ${data.blackboxAddr}`}
           style={{
             position: 'absolute', top: -8, right: -8,
@@ -135,17 +123,9 @@ function MapNode({ data }: { data: { label: string; status: string } }) {
 
 function RefWayPointNode({ data }: { data: { label: string; status: string; address: string; onNodeSelect: (type: 'waypoint', addr: string) => void } }) {
   const color = statusColors[data.status] || statusColors.S_IDL;
-  const downPos = useRef<{ x: number; y: number } | null>(null);
   return (
     <div
-      onMouseDown={(e) => { downPos.current = { x: e.clientX, y: e.clientY }; }}
-      onMouseUp={(e) => {
-        if (!downPos.current) return;
-        const dx = Math.abs(e.clientX - downPos.current.x);
-        const dy = Math.abs(e.clientY - downPos.current.y);
-        if (dx < 5 && dy < 5) data.onNodeSelect('waypoint', data.address);
-        downPos.current = null;
-      }}
+      onClick={() => data.onNodeSelect('waypoint', data.address)}
       style={{
         background: '#faf8f5', border: `1px dashed ${color}`, borderRadius: 6,
         padding: '8px 14px', minWidth: 140, fontSize: 12,
