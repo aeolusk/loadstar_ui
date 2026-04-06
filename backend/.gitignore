@@ -1,8 +1,10 @@
-.gradle/
-build/
-!gradle/wrapper/gradle-wrapper.jar
+target/
 *.class
 *.jar
-!gradle/wrapper/*.jar
 .idea/
 *.iml
+.settings/
+.project
+.classpath
+.gradle/
+build/
