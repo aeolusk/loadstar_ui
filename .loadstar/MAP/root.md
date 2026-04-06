@@ -8,6 +8,7 @@
 ### WAYPOINTS
 - M://root/backend
 - M://root/frontend
+- M://root/test
 
 ### COMMENT
 (없음)
