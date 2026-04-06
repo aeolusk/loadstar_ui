@@ -64,11 +64,11 @@ function WayPointNode({ data }: { data: {
           }}
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#e8e0d4'; }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '#f3efe8'; }}
-        >&#128230;</div>
+        >📦</div>
       )}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-        <span style={{ fontSize: 14, color: '#3a7ca5' }}>&#9670;</span>
+        <span style={{ fontSize: 14, color: '#3a7ca5' }}>◆</span>
         <span style={{ fontSize: 13, fontWeight: 600, color: '#2c2417' }}>{data.label}</span>
       </div>
 
@@ -101,7 +101,7 @@ function MapNode({ data }: { data: { label: string; status: string } }) {
       <Handle type="target" position={Position.Left} style={{ background: color, width: 8, height: 8 }} />
       <Handle type="source" position={Position.Right} style={{ background: color, width: 8, height: 8 }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 15 }}>&#128193;</span>
+        <span style={{ fontSize: 15 }}>📁</span>
         <span style={{ fontSize: 13, fontWeight: 600, color: '#2c2417' }}>{data.label}</span>
       </div>
       <div style={{ fontSize: 10, color: '#9b8e7e', marginTop: 4 }}>Map (double-click)</div>
@@ -118,7 +118,7 @@ function RefWayPointNode({ data }: { data: { label: string; status: string } }) 
       color: '#6b5d4d', textAlign: 'center', cursor: 'pointer', opacity: 0.85,
     }}>
       <Handle type="target" position={Position.Top} style={{ background: color, width: 6, height: 6 }} />
-      <span style={{ marginRight: 4, color: '#3a7ca5' }}>&#9670;</span>
+      <span style={{ marginRight: 4, color: '#3a7ca5' }}>◆</span>
       {data.label}
       <div style={{ fontSize: 9, color: '#9b8e7e', marginTop: 2 }}>ref (external)</div>
     </div>
@@ -278,7 +278,7 @@ export default function MapView({ projectRoot, address, onOpenTab }: MapViewProp
         padding: '8px 16px', borderBottom: '1px solid #e5ddd0', background: '#faf8f5',
         display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0,
       }}>
-        <span style={{ fontSize: 15 }}>&#128193;</span>
+        <span style={{ fontSize: 15 }}>📁</span>
         <span style={{ fontSize: 14, fontWeight: 600, color: '#2c2417' }}>{mapLabel}</span>
         <span style={{ fontSize: 12, color: '#9b8e7e' }}>{address}</span>
         <span style={{ fontSize: 11, color: '#6b5d4d', marginLeft: 'auto' }}>

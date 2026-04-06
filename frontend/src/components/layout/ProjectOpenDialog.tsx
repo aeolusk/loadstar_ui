@@ -154,7 +154,7 @@ export default function ProjectOpenDialog({ onProjectSelected }: ProjectOpenDial
                 onDoubleClick={() => { if (entry.loadstarProject) handleSelect(entry.path); }}
               >
                 <span style={styles.dirIcon}>
-                  {entry.loadstarProject ? '&#9733;' : entry.hasChildren ? '&#128194;' : '&#128193;'}
+                  {entry.loadstarProject ? '\u2605' : entry.hasChildren ? '\uD83D\uDCC2' : '\uD83D\uDCC1'}
                 </span>
                 <span style={styles.dirName}>{entry.name}</span>
                 {entry.loadstarProject && (
