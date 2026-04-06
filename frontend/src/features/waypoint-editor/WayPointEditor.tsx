@@ -1,247 +1,141 @@
-import type { CSSProperties } from 'react';
-import { sampleWaypoint } from '../../data/sampleData';
+import { useState, useEffect } from 'react';
+import { fetchWayPoint, type WayPointDetail } from '../../api/client';
 
 interface WayPointEditorProps {
   address: string;
 }
 
-const styles: Record<string, CSSProperties> = {
-  container: {
-    padding: 24,
-    overflowY: 'auto',
-    height: '100%',
-  },
-  header: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 20,
-  },
-  address: {
-    fontFamily: 'monospace',
-    fontSize: 'var(--font-md)',
-    color: 'var(--text-secondary)',
-  },
-  statusBadge: {
-    fontSize: 'var(--font-xs)',
-    padding: '2px 10px',
-    borderRadius: 10,
-    fontWeight: 600,
-    color: '#fff',
-  },
-  section: {
-    background: 'var(--bg-surface)',
-    border: '1px solid var(--border-light)',
-    borderRadius: 'var(--radius-lg)',
-    marginBottom: 16,
-    boxShadow: 'var(--shadow-sm)',
-    overflow: 'hidden',
-  },
-  sectionHeader: {
-    padding: '10px 16px',
-    background: 'var(--bg-secondary)',
-    borderBottom: '1px solid var(--border-light)',
-    fontSize: 'var(--font-sm)',
-    fontWeight: 600,
-    color: 'var(--text-secondary)',
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.5,
-  },
-  sectionBody: {
-    padding: 16,
-  },
-  row: {
-    display: 'flex',
-    gap: 8,
-    marginBottom: 8,
-    fontSize: 'var(--font-base)',
-  },
-  label: {
-    width: 100,
-    color: 'var(--text-muted)',
-    fontSize: 'var(--font-sm)',
-    flexShrink: 0,
-  },
-  value: {
-    color: 'var(--text-primary)',
-  },
-  link: {
-    color: 'var(--accent-primary)',
-    cursor: 'pointer',
-    textDecoration: 'underline',
-    fontSize: 'var(--font-base)',
-  },
-  progressBar: {
-    height: 6,
-    borderRadius: 3,
-    background: 'var(--bg-tertiary)',
-    overflow: 'hidden',
-    marginBottom: 12,
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 3,
-    background: 'var(--accent-primary)',
-  },
-  checkItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    padding: '6px 0',
-    fontSize: 'var(--font-base)',
-    color: 'var(--text-primary)',
-    borderBottom: '1px solid var(--border-light)',
-  },
-  questionItem: {
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: 8,
-    padding: '8px 0',
-    fontSize: 'var(--font-base)',
-    borderBottom: '1px solid var(--border-light)',
-  },
-  qBadge: {
-    fontSize: 'var(--font-xs)',
-    padding: '1px 6px',
-    borderRadius: 'var(--radius-sm)',
-    fontWeight: 600,
-    flexShrink: 0,
-  },
-  emptyText: {
-    color: 'var(--text-muted)',
-    fontSize: 'var(--font-sm)',
-    fontStyle: 'italic',
-  },
+const statusColors: Record<string, string> = {
+  S_IDL: '#9b8e7e', S_PRG: '#3a7ca5', S_STB: '#5a8a5e', S_ERR: '#b54a3f', S_REV: '#c47f17',
+};
+const statusLabels: Record<string, string> = {
+  S_IDL: 'Idle', S_PRG: 'In Progress', S_STB: 'Stable', S_ERR: 'Error', S_REV: 'Review',
 };
 
-const statusColors: Record<string, string> = {
-  S_IDL: 'var(--status-idle)',
-  S_PRG: 'var(--status-progress)',
-  S_STB: 'var(--status-stable)',
-  S_ERR: 'var(--status-error)',
-  S_REV: 'var(--status-review)',
+const s = {
+  section: { marginBottom: 16 } as React.CSSProperties,
+  sectionTitle: { fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8, borderBottom: '1px solid var(--border-light)', paddingBottom: 4 } as React.CSSProperties,
+  label: { fontSize: 11, color: 'var(--text-muted)', marginBottom: 2 } as React.CSSProperties,
+  value: { fontSize: 13, color: 'var(--text-primary)', marginBottom: 8 } as React.CSSProperties,
+  link: { fontSize: 13, color: 'var(--accent-primary)', cursor: 'pointer', textDecoration: 'underline' } as React.CSSProperties,
+  badge: (color: string) => ({ fontSize: 11, padding: '1px 8px', background: color + '20', color, borderRadius: 3, fontWeight: 600, display: 'inline-block' }) as React.CSSProperties,
+  progressBar: { height: 6, borderRadius: 3, background: 'var(--bg-tertiary)', overflow: 'hidden', marginBottom: 8 } as React.CSSProperties,
+  progressFill: (pct: number) => ({ height: '100%', width: `${pct}%`, background: pct === 100 ? 'var(--status-stable)' : 'var(--accent-primary)', borderRadius: 3 }) as React.CSSProperties,
 };
 
 export default function WayPointEditor({ address }: WayPointEditorProps) {
-  const wp = sampleWaypoint; // In real app, fetch by address
-  const doneCount = wp.techSpec.filter((t) => t.done).length;
-  const totalSpec = wp.techSpec.length;
-  const progress = totalSpec > 0 ? Math.round((doneCount / totalSpec) * 100) : 0;
+  const [data, setData] = useState<WayPointDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    fetchWayPoint(address)
+      .then(setData)
+      .catch(e => setError(e.message || 'Failed to load'))
+      .finally(() => setLoading(false));
+  }, [address]);
+
+  if (loading) return <div style={{ color: 'var(--text-muted)', padding: 12 }}>Loading...</div>;
+  if (error || !data) return <div style={{ color: 'var(--status-error)', padding: 12 }}>Error: {error}</div>;
+
+  const done = data.techSpec.filter(t => t.done).length;
+  const total = data.techSpec.length;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const color = statusColors[data.status] || statusColors.S_IDL;
 
   return (
-    <div style={styles.container}>
+    <div style={{ fontSize: 13 }}>
       {/* Header */}
-      <div style={styles.header}>
-        <span style={{ ...styles.statusBadge, background: statusColors[wp.status] }}>{wp.status}</span>
-        <span style={styles.address}>{address}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <span style={{ fontSize: 16, color: '#3a7ca5' }}>&#9670;</span>
+        <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>{address.split('/').pop()}</span>
+        <span style={s.badge(color)}>{statusLabels[data.status] || data.status}</span>
       </div>
+      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 12 }}>{address}</div>
 
       {/* IDENTITY */}
-      <div style={styles.section}>
-        <div style={styles.sectionHeader}>Identity</div>
-        <div style={styles.sectionBody}>
-          <div style={styles.row}>
-            <span style={styles.label}>Summary</span>
-            <span style={styles.value}>{wp.identity.summary}</span>
-          </div>
-          <div style={styles.row}>
-            <span style={styles.label}>Version</span>
-            <span style={styles.value}>{wp.identity.metadata.version}</span>
-          </div>
-          <div style={styles.row}>
-            <span style={styles.label}>Created</span>
-            <span style={styles.value}>{wp.identity.metadata.created}</span>
-          </div>
-          <div style={styles.row}>
-            <span style={styles.label}>Priority</span>
-            <span style={styles.value}>{wp.identity.metadata.priority}</span>
-          </div>
-          <div style={styles.row}>
-            <span style={styles.label}>Synced At</span>
-            <span style={styles.value}>{wp.identity.syncedAt}</span>
-          </div>
+      <div style={s.section}>
+        <div style={s.sectionTitle}>IDENTITY</div>
+        <div style={s.label}>Summary</div>
+        <div style={s.value}>{data.summary || '-'}</div>
+        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+          {data.version && <div><span style={s.label}>Version: </span><span style={{ fontSize: 12 }}>{data.version}</span></div>}
+          {data.created && <div><span style={s.label}>Created: </span><span style={{ fontSize: 12 }}>{data.created}</span></div>}
+          {data.priority && <div><span style={s.label}>Priority: </span><span style={{ fontSize: 12 }}>{data.priority}</span></div>}
+          {data.syncedAt && <div><span style={s.label}>SYNCED_AT: </span><span style={{ fontSize: 12 }}>{data.syncedAt}</span></div>}
         </div>
       </div>
 
       {/* CONNECTIONS */}
-      <div style={styles.section}>
-        <div style={styles.sectionHeader}>Connections</div>
-        <div style={styles.sectionBody}>
-          <div style={styles.row}>
-            <span style={styles.label}>Parent</span>
-            <span style={styles.link}>{wp.connections.parent}</span>
+      <div style={s.section}>
+        <div style={s.sectionTitle}>CONNECTIONS</div>
+        {data.parent && <div style={{ marginBottom: 4 }}><span style={s.label}>Parent: </span><span style={s.link}>{data.parent}</span></div>}
+        {data.children.length > 0 && (
+          <div style={{ marginBottom: 4 }}>
+            <span style={s.label}>Children: </span>
+            {data.children.map(c => <span key={c} style={{ ...s.link, marginRight: 8 }}>{c}</span>)}
           </div>
-          <div style={styles.row}>
-            <span style={styles.label}>Children</span>
-            {wp.connections.children.length > 0 ? (
-              <span>{wp.connections.children.map((c, i) => <span key={i} style={styles.link}>{c} </span>)}</span>
-            ) : (
-              <span style={styles.emptyText}>None</span>
-            )}
+        )}
+        {data.references.length > 0 && (
+          <div style={{ marginBottom: 4 }}>
+            <span style={s.label}>Reference: </span>
+            {data.references.map(r => <span key={r} style={{ ...s.link, marginRight: 8 }}>{r}</span>)}
           </div>
-          <div style={styles.row}>
-            <span style={styles.label}>Reference</span>
-            <span>{wp.connections.reference.map((r, i) => <span key={i} style={styles.link}>{r} </span>)}</span>
-          </div>
-          <div style={styles.row}>
-            <span style={styles.label}>BlackBox</span>
-            <span style={styles.link}>{wp.connections.blackbox}</span>
-          </div>
-        </div>
+        )}
+        {data.blackbox && <div><span style={s.label}>BlackBox: </span><span style={s.link}>{data.blackbox}</span></div>}
       </div>
 
       {/* TECH_SPEC */}
-      <div style={styles.section}>
-        <div style={styles.sectionHeader}>Tech Spec ({doneCount}/{totalSpec})</div>
-        <div style={styles.sectionBody}>
-          <div style={styles.progressBar}>
-            <div style={{ ...styles.progressFill, width: `${progress}%` }} />
-          </div>
-          {wp.techSpec.map((spec, i) => (
-            <div key={i} style={styles.checkItem}>
-              <input type="checkbox" checked={spec.done} readOnly style={{ accentColor: 'var(--accent-primary)' }} />
-              <span style={{ textDecoration: spec.done ? 'line-through' : 'none', color: spec.done ? 'var(--text-muted)' : 'var(--text-primary)' }}>
-                {spec.text}
+      {total > 0 && (
+        <div style={s.section}>
+          <div style={s.sectionTitle}>TECH_SPEC ({done}/{total})</div>
+          <div style={s.progressBar}><div style={s.progressFill(pct)} /></div>
+          {data.techSpec.map((item, i) => (
+            <div key={i} style={{ padding: '3px 0', display: 'flex', alignItems: 'flex-start' }}>
+              <input type="checkbox" checked={item.done} readOnly style={{ marginRight: 6 }} />
+              <span style={{ color: item.done ? 'var(--text-muted)' : 'var(--text-primary)', textDecoration: item.done ? 'line-through' : 'none' }}>
+                {item.text}
               </span>
             </div>
           ))}
         </div>
-      </div>
+      )}
 
       {/* OPEN_QUESTIONS */}
-      <div style={styles.section}>
-        <div style={styles.sectionHeader}>Open Questions</div>
-        <div style={styles.sectionBody}>
-          {wp.openQuestions.map((q) => (
-            <div key={q.id} style={styles.questionItem}>
-              <span
-                style={{
-                  ...styles.qBadge,
-                  background: q.resolved ? 'var(--status-stable)' : 'var(--status-review)',
-                  color: '#fff',
-                }}
-              >
+      {data.openQuestions.length > 0 && (
+        <div style={s.section}>
+          <div style={s.sectionTitle}>OPEN_QUESTIONS</div>
+          {data.openQuestions.map(q => (
+            <div key={q.id} style={{ padding: '4px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={s.badge(q.resolved ? '#5a8a5e' : '#c47f17')}>
                 {q.resolved ? 'RESOLVED' : 'OPEN'}
               </span>
-              <span style={{ color: 'var(--text-primary)' }}>{q.text}</span>
+              <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>[{q.id}]</span>
+              <span>{q.text}</span>
             </div>
           ))}
         </div>
-      </div>
+      )}
 
       {/* ISSUES */}
-      <div style={styles.section}>
-        <div style={styles.sectionHeader}>Issues</div>
-        <div style={styles.sectionBody}>
-          {wp.issues.length === 0 ? (
-            <span style={styles.emptyText}>No issues</span>
-          ) : (
-            wp.issues.map((issue, i) => (
-              <div key={i} style={{ padding: '6px 0', borderBottom: '1px solid var(--border-light)' }}>{issue}</div>
-            ))
-          )}
+      {data.issues.length > 0 && (
+        <div style={s.section}>
+          <div style={s.sectionTitle}>ISSUE</div>
+          {data.issues.map((issue, i) => (
+            <div key={i} style={{ padding: '2px 0', color: 'var(--text-secondary)' }}>- {issue}</div>
+          ))}
         </div>
-      </div>
+      )}
+
+      {/* COMMENT */}
+      {data.comment && (
+        <div style={s.section}>
+          <div style={s.sectionTitle}>COMMENT</div>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}>{data.comment}</div>
+        </div>
+      )}
     </div>
   );
 }

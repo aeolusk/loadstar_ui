@@ -172,6 +172,303 @@ public class ElementParser {
         return bb;
     }
 
+    public WayPointDetailResponse parseWayPointDetail(Path file) throws IOException {
+        List<String> lines = Files.readAllLines(file);
+        WayPointDetailResponse wp = new WayPointDetailResponse();
+        wp.setChildren(new ArrayList<>());
+        wp.setReferences(new ArrayList<>());
+        wp.setTechSpec(new ArrayList<>());
+        wp.setIssues(new ArrayList<>());
+        wp.setOpenQuestions(new ArrayList<>());
+
+        String currentSection = "";
+        boolean inTechSpec = false;
+        boolean inIssue = false;
+        boolean inOpenQuestions = false;
+        StringBuilder commentBuilder = new StringBuilder();
+        boolean inComment = false;
+
+        for (String line : lines) {
+            String trimmed = line.trim();
+
+            Matcher addrMatch = ADDRESS_PATTERN.matcher(trimmed);
+            if (addrMatch.matches()) {
+                wp.setAddress(addrMatch.group(1).trim());
+                continue;
+            }
+
+            Matcher statusMatch = STATUS_PATTERN.matcher(trimmed);
+            if (statusMatch.matches()) {
+                wp.setStatus(statusMatch.group(1).trim());
+                continue;
+            }
+
+            if (trimmed.startsWith("### ")) {
+                currentSection = trimmed;
+                inTechSpec = false;
+                inIssue = false;
+                inOpenQuestions = false;
+                inComment = currentSection.contains("COMMENT");
+                continue;
+            }
+
+            // IDENTITY
+            if (trimmed.startsWith("- SUMMARY:")) {
+                wp.setSummary(trimmed.substring("- SUMMARY:".length()).trim());
+                continue;
+            }
+            if (trimmed.startsWith("- SYNCED_AT:")) {
+                wp.setSyncedAt(trimmed.substring("- SYNCED_AT:".length()).trim());
+                continue;
+            }
+            if (trimmed.startsWith("- METADATA:")) {
+                String meta = trimmed.substring("- METADATA:".length()).trim();
+                // Parse [Ver: 1.0, Created: 2026-04-06, Priority: P1]
+                meta = meta.replaceAll("[\\[\\]]", "");
+                for (String part : meta.split(",")) {
+                    String[] kv = part.split(":", 2);
+                    if (kv.length == 2) {
+                        String key = kv[0].trim().toLowerCase();
+                        String val = kv[1].trim();
+                        if (key.contains("ver")) wp.setVersion(val);
+                        else if (key.contains("created") || key.contains("create")) wp.setCreated(val);
+                        else if (key.contains("prior")) wp.setPriority(val);
+                    }
+                }
+                continue;
+            }
+
+            // CONNECTIONS
+            if (trimmed.startsWith("- PARENT:")) {
+                wp.setParent(trimmed.substring("- PARENT:".length()).trim());
+                continue;
+            }
+            if (trimmed.startsWith("- CHILDREN:")) {
+                wp.setChildren(parseAddressList(trimmed.substring("- CHILDREN:".length()).trim()));
+                continue;
+            }
+            if (trimmed.startsWith("- REFERENCE:")) {
+                wp.setReferences(parseAddressList(trimmed.substring("- REFERENCE:".length()).trim()));
+                continue;
+            }
+            if (trimmed.startsWith("- BLACKBOX:")) {
+                String bb = trimmed.substring("- BLACKBOX:".length()).trim();
+                if (!bb.isEmpty() && bb.startsWith("B://")) wp.setBlackbox(bb);
+                continue;
+            }
+
+            // TODO section
+            if (trimmed.startsWith("- ADDRESS:") && currentSection.contains("TODO")) {
+                wp.setTodoAddress(trimmed.substring("- ADDRESS:".length()).trim());
+                continue;
+            }
+            if (trimmed.startsWith("- SUMMARY:") && currentSection.contains("TODO")) {
+                wp.setTodoSummary(trimmed.substring("- SUMMARY:".length()).trim());
+                continue;
+            }
+            if (trimmed.startsWith("- TECH_SPEC:")) {
+                inTechSpec = true;
+                continue;
+            }
+
+            // TECH_SPEC items
+            if (inTechSpec && (trimmed.startsWith("- [x]") || trimmed.startsWith("- [ ]"))) {
+                WayPointDetailResponse.TechSpecItem item = new WayPointDetailResponse.TechSpecItem();
+                item.setDone(trimmed.startsWith("- [x]"));
+                item.setText(trimmed.substring(5).trim());
+                wp.getTechSpec().add(item);
+                continue;
+            }
+            if (inTechSpec && !trimmed.startsWith("-") && !trimmed.isEmpty()) {
+                inTechSpec = false;
+            }
+
+            // ISSUE section
+            if (currentSection.contains("ISSUE") && !currentSection.contains("COMMENT")) {
+                if (trimmed.startsWith("- OPEN_QUESTIONS:")) {
+                    inOpenQuestions = true;
+                    inIssue = false;
+                    continue;
+                }
+                if (inOpenQuestions && trimmed.startsWith("- [")) {
+                    // Parse [Q1] or [Q1 RESOLVED]
+                    WayPointDetailResponse.OpenQuestion oq = new WayPointDetailResponse.OpenQuestion();
+                    int closeBracket = trimmed.indexOf(']');
+                    if (closeBracket > 0) {
+                        String tag = trimmed.substring(2, closeBracket);
+                        oq.setResolved(tag.contains("RESOLVED"));
+                        oq.setId(tag.replaceAll("\\s*RESOLVED\\s*", "").trim());
+                        oq.setText(trimmed.substring(closeBracket + 1).trim());
+                        wp.getOpenQuestions().add(oq);
+                    }
+                    continue;
+                }
+                if (!inOpenQuestions && trimmed.startsWith("- ") && !trimmed.equals("(없음)")) {
+                    wp.getIssues().add(trimmed.substring(2).trim());
+                    continue;
+                }
+            }
+
+            // COMMENT
+            if (inComment && !trimmed.equals("(없음)") && !trimmed.startsWith("</")) {
+                if (trimmed.startsWith("- ")) {
+                    commentBuilder.append(trimmed.substring(2)).append("\n");
+                } else if (!trimmed.isEmpty()) {
+                    commentBuilder.append(trimmed).append("\n");
+                }
+            }
+        }
+
+        String comment = commentBuilder.toString().trim();
+        wp.setComment(comment.isEmpty() ? null : comment);
+        return wp;
+    }
+
+    public BlackBoxDetailResponse parseBlackBoxDetail(Path file) throws IOException {
+        List<String> lines = Files.readAllLines(file);
+        BlackBoxDetailResponse bb = new BlackBoxDetailResponse();
+        bb.setCodeMap(new ArrayList<>());
+        bb.setTodos(new ArrayList<>());
+        bb.setIssues(new ArrayList<>());
+
+        String currentSection = "";
+        String currentCodeMapFile = null;
+        List<BlackBoxDetailResponse.CodeMapItem> currentItems = null;
+        boolean inTodo = false;
+        boolean inIssue = false;
+        StringBuilder commentBuilder = new StringBuilder();
+        boolean inComment = false;
+
+        for (String line : lines) {
+            String trimmed = line.trim();
+
+            Matcher addrMatch = ADDRESS_PATTERN.matcher(trimmed);
+            if (addrMatch.matches()) { bb.setAddress(addrMatch.group(1).trim()); continue; }
+
+            Matcher statusMatch = STATUS_PATTERN.matcher(trimmed);
+            if (statusMatch.matches()) { bb.setStatus(statusMatch.group(1).trim()); continue; }
+
+            Matcher syncedMatch = SYNCED_AT_PATTERN.matcher(trimmed);
+            if (syncedMatch.matches()) { bb.setSyncedAt(syncedMatch.group(1).trim()); continue; }
+
+            if (trimmed.startsWith("### ")) {
+                // Flush code map entry
+                if (currentCodeMapFile != null && currentItems != null) {
+                    BlackBoxDetailResponse.CodeMapEntry entry = new BlackBoxDetailResponse.CodeMapEntry();
+                    entry.setFile(currentCodeMapFile);
+                    entry.setItems(currentItems);
+                    bb.getCodeMap().add(entry);
+                    currentCodeMapFile = null;
+                    currentItems = null;
+                }
+                currentSection = trimmed;
+                inTodo = currentSection.contains("TODO");
+                inIssue = currentSection.contains("ISSUE");
+                inComment = currentSection.contains("COMMENT");
+                continue;
+            }
+
+            // DESCRIPTION
+            if (trimmed.startsWith("- SUMMARY:") && currentSection.contains("DESCRIPTION")) {
+                bb.setSummary(trimmed.substring("- SUMMARY:".length()).trim());
+                continue;
+            }
+            if (trimmed.startsWith("- LINKED_WP:")) {
+                bb.setLinkedWp(trimmed.substring("- LINKED_WP:".length()).trim());
+                continue;
+            }
+
+            // CODE_MAP
+            if (currentSection.contains("CODE_MAP")) {
+                if (trimmed.startsWith("**") && trimmed.contains("계획")) {
+                    bb.setCodeMapPhase("plan");
+                    continue;
+                }
+                if (trimmed.startsWith("**") && (trimmed.contains("실측") || trimmed.contains("완료"))) {
+                    bb.setCodeMapPhase("actual");
+                    continue;
+                }
+                if (trimmed.startsWith("- `") && trimmed.contains("`")) {
+                    // Flush previous entry
+                    if (currentCodeMapFile != null && currentItems != null) {
+                        BlackBoxDetailResponse.CodeMapEntry entry = new BlackBoxDetailResponse.CodeMapEntry();
+                        entry.setFile(currentCodeMapFile);
+                        entry.setItems(currentItems);
+                        bb.getCodeMap().add(entry);
+                    }
+                    int end = trimmed.indexOf('`', 3);
+                    currentCodeMapFile = end > 3 ? trimmed.substring(3, end) : trimmed.substring(3);
+                    currentItems = new ArrayList<>();
+                    continue;
+                }
+                if (currentItems != null && trimmed.startsWith("- `")) {
+                    // Sub-item: function/method
+                    BlackBoxDetailResponse.CodeMapItem item = new BlackBoxDetailResponse.CodeMapItem();
+                    int nameEnd = trimmed.indexOf('`', 3);
+                    if (nameEnd > 3) {
+                        item.setName(trimmed.substring(3, nameEnd));
+                        String rest = trimmed.substring(nameEnd + 1).trim();
+                        if (rest.startsWith("→") || rest.startsWith("->")) {
+                            item.setDescription(rest.substring(1).trim());
+                        } else {
+                            item.setDescription(rest);
+                        }
+                    } else {
+                        item.setName(trimmed.substring(3));
+                        item.setDescription("");
+                    }
+                    currentItems.add(item);
+                    continue;
+                }
+            }
+
+            // TODO
+            if (inTodo && (trimmed.startsWith("- [x]") || trimmed.startsWith("- [ ]"))) {
+                BlackBoxDetailResponse.TodoItem item = new BlackBoxDetailResponse.TodoItem();
+                item.setDone(trimmed.startsWith("- [x]"));
+                String text = trimmed.substring(5).trim();
+                // Extract [WP_REF:N]
+                int refStart = text.indexOf("[WP_REF:");
+                if (refStart >= 0) {
+                    int refEnd = text.indexOf(']', refStart);
+                    if (refEnd > refStart) {
+                        String refNum = text.substring(refStart + 8, refEnd).trim();
+                        try { item.setWpRef(Integer.parseInt(refNum)); } catch (NumberFormatException ignored) {}
+                        text = (text.substring(0, refStart) + text.substring(refEnd + 1)).trim();
+                    }
+                }
+                item.setText(text);
+                bb.getTodos().add(item);
+                continue;
+            }
+
+            // ISSUE
+            if (inIssue && trimmed.startsWith("- ") && !trimmed.equals("(없음)")) {
+                bb.getIssues().add(trimmed.substring(2).trim());
+                continue;
+            }
+
+            // COMMENT
+            if (inComment && !trimmed.equals("(없음)") && !trimmed.startsWith("</")) {
+                if (trimmed.startsWith("- ")) commentBuilder.append(trimmed.substring(2)).append("\n");
+                else if (!trimmed.isEmpty()) commentBuilder.append(trimmed).append("\n");
+            }
+        }
+
+        // Flush last code map entry
+        if (currentCodeMapFile != null && currentItems != null) {
+            BlackBoxDetailResponse.CodeMapEntry entry = new BlackBoxDetailResponse.CodeMapEntry();
+            entry.setFile(currentCodeMapFile);
+            entry.setItems(currentItems);
+            bb.getCodeMap().add(entry);
+        }
+
+        String comment = commentBuilder.toString().trim();
+        bb.setComment(comment.isEmpty() ? null : comment);
+        if (bb.getCodeMapPhase() == null) bb.setCodeMapPhase("plan");
+        return bb;
+    }
+
     private List<String> parseAddressList(String value) {
         List<String> result = new ArrayList<>();
         if (value == null || value.equals("[]") || value.isEmpty()) {

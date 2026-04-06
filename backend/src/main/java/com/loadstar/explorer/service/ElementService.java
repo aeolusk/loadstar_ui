@@ -122,6 +122,18 @@ public class ElementService {
         return response;
     }
 
+    public WayPointDetailResponse getWayPointDetail(String address) throws IOException {
+        Path file = addressToPath(address);
+        if (!Files.exists(file)) throw new IOException("WayPoint not found: " + file);
+        return parser.parseWayPointDetail(file);
+    }
+
+    public BlackBoxDetailResponse getBlackBoxDetail(String address) throws IOException {
+        Path file = addressToPath(address);
+        if (!Files.exists(file)) throw new IOException("BlackBox not found: " + file);
+        return parser.parseBlackBoxDetail(file);
+    }
+
     /**
      * Get element tree for the left panel.
      * Returns a simplified recursive structure.
