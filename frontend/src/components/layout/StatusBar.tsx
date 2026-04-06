@@ -1,11 +1,13 @@
 const StatusBar = () => {
   return (
     <div className="status-bar">
-      <span>LOADSTAR Explorer</span>
-      <span>|</span>
-      <span>checkpoint: -</span>
-      <span>|</span>
-      <span>drift: 0</span>
+      <div className="status-bar-item">LOADSTAR Explorer</div>
+      <div className="status-bar-separator" />
+      <div className="status-bar-item">checkpoint: --</div>
+      <div className="status-bar-separator" />
+      <div className="status-bar-item">drift: 0</div>
+      <div className="status-bar-spacer" />
+      <div className="status-bar-item">v0.1.0</div>
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Group, Panel, Separator } from 'react-resizable-panels';
 import MenuBar from './components/layout/MenuBar';
 import Toolbar from './components/layout/Toolbar';
 import ElementTree from './components/layout/ElementTree';
@@ -28,9 +29,12 @@ function App() {
   };
 
   const closeTab = (tabId: string) => {
-    setTabs(prev => prev.filter(t => t.id !== tabId));
+    const idx = tabs.findIndex(t => t.id === tabId);
+    const newTabs = tabs.filter(t => t.id !== tabId);
+    setTabs(newTabs);
     if (activeTabId === tabId) {
-      setActiveTabId(tabs.length > 1 ? tabs[tabs.length - 2]?.id : null);
+      const nextTab = newTabs[Math.min(idx, newTabs.length - 1)];
+      setActiveTabId(nextTab?.id ?? null);
     }
   };
 
@@ -39,13 +43,20 @@ function App() {
       <MenuBar />
       <Toolbar onOpenTab={openTab} />
       <div className="app-body">
-        <ElementTree onOpenTab={openTab} />
-        <EditorTabs
-          tabs={tabs}
-          activeTabId={activeTabId}
-          onSelectTab={setActiveTabId}
-          onCloseTab={closeTab}
-        />
+        <Group orientation="horizontal" autoSave="main-layout">
+          <Panel defaultSize={22} minSize={15} maxSize={40}>
+            <ElementTree onOpenTab={openTab} />
+          </Panel>
+          <Separator className="resize-handle" />
+          <Panel defaultSize={78} minSize={40}>
+            <EditorTabs
+              tabs={tabs}
+              activeTabId={activeTabId}
+              onSelectTab={setActiveTabId}
+              onCloseTab={closeTab}
+            />
+          </Panel>
+        </Group>
       </div>
       <StatusBar />
     </div>

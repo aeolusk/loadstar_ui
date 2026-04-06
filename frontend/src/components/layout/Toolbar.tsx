@@ -4,14 +4,14 @@ interface ToolbarProps {
   onOpenTab: (tab: Tab) => void;
 }
 
-const toolbarItems: { label: string; type: Tab['type'] }[] = [
-  { label: '대시보드', type: 'dashboard' },
-  { label: 'TODO', type: 'todo' },
-  { label: 'History', type: 'history' },
-  { label: '모니터링', type: 'monitor' },
-  { label: 'GIT', type: 'git' },
-  { label: '로그', type: 'log' },
-  { label: 'CLI', type: 'cli' },
+const toolbarItems: { label: string; type: Tab['type']; icon: string }[] = [
+  { label: '대시보드', type: 'dashboard', icon: '⊞' },
+  { label: 'TODO', type: 'todo', icon: '☑' },
+  { label: 'History', type: 'history', icon: '↻' },
+  { label: '모니터링', type: 'monitor', icon: '◎' },
+  { label: 'GIT', type: 'git', icon: '⑂' },
+  { label: '로그', type: 'log', icon: '☰' },
+  { label: 'CLI', type: 'cli', icon: '▸' },
 ];
 
 const Toolbar = ({ onOpenTab }: ToolbarProps) => {
@@ -31,9 +31,18 @@ const Toolbar = ({ onOpenTab }: ToolbarProps) => {
           className="toolbar-btn"
           onClick={() => handleClick(item)}
         >
-          {item.label}
+          <span>{item.icon}</span> {item.label}
         </button>
       ))}
+      <div className="toolbar-separator" />
+      <div className="toolbar-spacer" />
+      <div className="toolbar-search">
+        <span>Search</span>
+        <kbd>Ctrl+K</kbd>
+      </div>
+      <div className="toolbar-badge">
+        <span className="toolbar-badge-count">0</span>
+      </div>
     </div>
   );
 };

@@ -40,11 +40,11 @@ const typeToTabType = (type: ElementType): Tab['type'] => {
   }
 };
 
-const typeIcon = (type: ElementType) => {
+const typeIcon = (type: ElementType): { icon: string; cls: string } => {
   switch (type) {
-    case 'MAP': return '📁';
-    case 'WAYPOINT': return '◆';
-    case 'BLACKBOX': return '📦';
+    case 'MAP': return { icon: '📁', cls: 'map' };
+    case 'WAYPOINT': return { icon: '◆', cls: 'waypoint' };
+    case 'BLACKBOX': return { icon: '📦', cls: 'blackbox' };
   }
 };
 
@@ -85,12 +85,16 @@ const TreeNodeItem = ({
         onDoubleClick={handleDoubleClick}
       >
         <span className="tree-node-label">
-          {node.children.length > 0 && (
-            <span style={{ fontSize: 10 }}>{expanded ? '▼' : '▶'}</span>
+          {node.children.length > 0 ? (
+            <span className="tree-toggle">{expanded ? '▾' : '▸'}</span>
+          ) : (
+            <span className="tree-toggle" />
           )}
-          <span className="tree-node-icon">{typeIcon(node.type)}</span>
+          <span className={`tree-node-icon ${typeIcon(node.type).cls}`}>
+            {typeIcon(node.type).icon}
+          </span>
           <span className={`status-dot ${node.status}`} />
-          <span>{id}</span>
+          <span className="tree-node-name">{id}</span>
         </span>
       </div>
       {expanded && node.children.map(child => (
