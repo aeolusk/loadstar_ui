@@ -199,48 +199,66 @@ function buildGraph(
     }
   });
 
-  // Reference edges - stack ref nodes vertically, slight x offset for line separation
-  let refNodeIndex = 0;
-  const REF_Y_GAP = 60;
-  const REF_X_OFFSET = 20;
+  // Reference edges - fan-out pattern per parent WP
+  // Each WP's external refs: 1 ref = directly below, 2+ refs = fan out vertically with x offset
+  const REF_Y_START = Y_REF;
+  const REF_Y_GAP = 55;
+  const REF_X_SHIFT = 30; // x shift per child for fan effect
 
   items.forEach((item) => {
     if (item.type !== 'WAYPOINT' || !item.references) return;
 
-    item.references.forEach((refAddr) => {
-      if (allAddresses.has(refAddr)) {
-        // Same map: direct edge
-        es.push({
-          id: `e-ref-${item.address}-${refAddr}`,
-          source: item.address, sourceHandle: 'bottom', target: refAddr,
-          type: 'default',
-          markerEnd: { type: MarkerType.ArrowClosed, color: '#3a7ca5' },
-          style: { stroke: '#3a7ca5', strokeWidth: 1.5, strokeDasharray: '6 3' },
-          animated: true,
-        });
-      } else {
-        // External ref node - stack vertically with slight x offset
-        if (!refNodeSet.has(refAddr)) {
-          const refLabel = refAddr.split('/').pop() || refAddr;
-          ns.push({
-            id: `ref-${refAddr}`, type: 'refWaypoint',
-            position: {
-              x: refNodeIndex * REF_X_OFFSET,
-              y: Y_REF + refNodeIndex * REF_Y_GAP,
-            },
-            data: { label: refLabel, status: 'S_IDL', address: refAddr, onNodeSelect },
-          });
-          refNodeSet.add(refAddr);
-          refNodeIndex++;
+    // Separate internal vs external refs
+    const internalRefs = item.references.filter(r => allAddresses.has(r));
+    const externalRefs = item.references.filter(r => !allAddresses.has(r));
+
+    // Internal: direct edge within the chain
+    internalRefs.forEach((refAddr) => {
+      es.push({
+        id: `e-ref-${item.address}-${refAddr}`,
+        source: item.address, sourceHandle: 'bottom', target: refAddr,
+        type: 'default',
+        markerEnd: { type: MarkerType.ArrowClosed, color: '#3a7ca5' },
+        style: { stroke: '#3a7ca5', strokeWidth: 1.5, strokeDasharray: '6 3' },
+        animated: true,
+      });
+    });
+
+    // External: fan-out below the parent WP
+    if (externalRefs.length === 0) return;
+
+    const parentX = addressXMap[item.address] ?? 0;
+    const parentCenterX = parentX + 90; // approx center of node
+
+    externalRefs.forEach((refAddr, i) => {
+      if (!refNodeSet.has(refAddr)) {
+        const refLabel = refAddr.split('/').pop() || refAddr;
+        let refX: number;
+        const refY = REF_Y_START + i * REF_Y_GAP;
+
+        if (externalRefs.length === 1) {
+          // Single ref: directly below parent
+          refX = parentCenterX - 70;
+        } else {
+          // Multiple refs: fan out - first slightly left, then shift right per item
+          refX = parentCenterX - 70 - REF_X_SHIFT + i * REF_X_SHIFT;
         }
-        es.push({
-          id: `e-ref-${item.address}-${refAddr}`,
-          source: item.address, sourceHandle: 'bottom', target: `ref-${refAddr}`,
-          type: 'straight',
-          markerEnd: { type: MarkerType.ArrowClosed, color: '#3a7ca5' },
-          style: { stroke: '#3a7ca5', strokeDasharray: '6 3', opacity: 0.7 },
+
+        ns.push({
+          id: `ref-${refAddr}`, type: 'refWaypoint',
+          position: { x: refX, y: refY },
+          data: { label: refLabel, status: 'S_IDL', address: refAddr, onNodeSelect },
         });
+        refNodeSet.add(refAddr);
       }
+
+      es.push({
+        id: `e-ref-${item.address}-${refAddr}`,
+        source: item.address, sourceHandle: 'bottom', target: `ref-${refAddr}`,
+        type: 'straight',
+        markerEnd: { type: MarkerType.ArrowClosed, color: '#3a7ca5' },
+        style: { stroke: '#3a7ca5', strokeDasharray: '6 3', opacity: 0.7 },
+      });
     });
   });
 
