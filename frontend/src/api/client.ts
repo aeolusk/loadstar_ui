@@ -34,22 +34,6 @@ export interface MapViewResponse {
   items: MapViewItem[];
 }
 
-// --- API Functions ---
-
-export async function fetchTree(): Promise<TreeNode[]> {
-  const res = await apiClient.get<TreeNode[]>('/elements/tree');
-  return res.data;
-}
-
-export async function fetchMapView(address: string): Promise<MapViewResponse> {
-  const res = await apiClient.get<MapViewResponse>('/elements/map-view', {
-    params: { address },
-  });
-  return res.data;
-}
-
-// --- WayPoint Detail ---
-
 export interface WayPointDetail {
   address: string;
   status: string;
@@ -70,15 +54,6 @@ export interface WayPointDetail {
   comment: string | null;
 }
 
-export async function fetchWayPoint(address: string): Promise<WayPointDetail> {
-  const res = await apiClient.get<WayPointDetail>('/elements/waypoint', {
-    params: { address },
-  });
-  return res.data;
-}
-
-// --- BlackBox Detail ---
-
 export interface BlackBoxDetail {
   address: string;
   status: string;
@@ -92,9 +67,39 @@ export interface BlackBoxDetail {
   comment: string | null;
 }
 
-export async function fetchBlackBox(address: string): Promise<BlackBoxDetail> {
+// --- API Functions (all require root param) ---
+
+export async function validateProject(root: string): Promise<{ valid: boolean; root: string }> {
+  const res = await apiClient.get<{ valid: boolean; root: string }>('/elements/validate', {
+    params: { root },
+  });
+  return res.data;
+}
+
+export async function fetchTree(root: string): Promise<TreeNode[]> {
+  const res = await apiClient.get<TreeNode[]>('/elements/tree', {
+    params: { root },
+  });
+  return res.data;
+}
+
+export async function fetchMapView(root: string, address: string): Promise<MapViewResponse> {
+  const res = await apiClient.get<MapViewResponse>('/elements/map-view', {
+    params: { root, address },
+  });
+  return res.data;
+}
+
+export async function fetchWayPoint(root: string, address: string): Promise<WayPointDetail> {
+  const res = await apiClient.get<WayPointDetail>('/elements/waypoint', {
+    params: { root, address },
+  });
+  return res.data;
+}
+
+export async function fetchBlackBox(root: string, address: string): Promise<BlackBoxDetail> {
   const res = await apiClient.get<BlackBoxDetail>('/elements/blackbox', {
-    params: { address },
+    params: { root, address },
   });
   return res.data;
 }

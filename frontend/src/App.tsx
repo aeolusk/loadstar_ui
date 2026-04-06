@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import MenuBar from './components/layout/MenuBar';
 import Toolbar from './components/layout/Toolbar';
+import ProjectSelector from './components/layout/ProjectSelector';
 import ElementTree from './components/layout/ElementTree';
 import EditorTabs from './components/layout/EditorTabs';
 import StatusBar from './components/layout/StatusBar';
@@ -15,6 +16,7 @@ export interface Tab {
 }
 
 function App() {
+  const [projectRoot, setProjectRoot] = useState<string>('');
   const [tabs, setTabs] = useState<Tab[]>([]);
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
 
@@ -38,6 +40,12 @@ function App() {
     }
   };
 
+  const handleProjectChange = (root: string) => {
+    setProjectRoot(root);
+    setTabs([]);
+    setActiveTabId(null);
+  };
+
   return (
     <div className="app">
       <MenuBar />
@@ -45,11 +53,17 @@ function App() {
       <div className="app-body">
         <Group orientation="horizontal">
           <Panel defaultSize="22%" minSize="18%" maxSize="45%" id="tree-panel">
-            <ElementTree onOpenTab={openTab} />
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <ProjectSelector projectRoot={projectRoot} onProjectChange={handleProjectChange} />
+              <div style={{ flex: 1, overflow: 'hidden' }}>
+                <ElementTree projectRoot={projectRoot} onOpenTab={openTab} />
+              </div>
+            </div>
           </Panel>
           <Separator className="resize-handle" />
           <Panel defaultSize="78%" minSize="45%" id="editor-panel">
             <EditorTabs
+              projectRoot={projectRoot}
               tabs={tabs}
               activeTabId={activeTabId}
               onSelectTab={setActiveTabId}
@@ -59,7 +73,7 @@ function App() {
           </Panel>
         </Group>
       </div>
-      <StatusBar />
+      <StatusBar projectRoot={projectRoot} />
     </div>
   );
 }

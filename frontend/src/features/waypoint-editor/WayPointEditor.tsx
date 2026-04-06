@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { fetchWayPoint, type WayPointDetail } from '../../api/client';
 
 interface WayPointEditorProps {
+  projectRoot: string;
   address: string;
 }
 
@@ -23,7 +24,7 @@ const s = {
   progressFill: (pct: number) => ({ height: '100%', width: `${pct}%`, background: pct === 100 ? 'var(--status-stable)' : 'var(--accent-primary)', borderRadius: 3 }) as React.CSSProperties,
 };
 
-export default function WayPointEditor({ address }: WayPointEditorProps) {
+export default function WayPointEditor({ projectRoot, address }: WayPointEditorProps) {
   const [data, setData] = useState<WayPointDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +32,7 @@ export default function WayPointEditor({ address }: WayPointEditorProps) {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    fetchWayPoint(address)
+    fetchWayPoint(projectRoot, address)
       .then(setData)
       .catch(e => setError(e.message || 'Failed to load'))
       .finally(() => setLoading(false));

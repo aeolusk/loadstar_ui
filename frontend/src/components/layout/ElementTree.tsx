@@ -4,6 +4,7 @@ import type { TreeNode, ElementType } from '../../types/loadstar';
 import { fetchTree } from '../../api/client';
 
 interface ElementTreeProps {
+  projectRoot: string;
   onOpenTab: (tab: Tab) => void;
 }
 
@@ -85,16 +86,18 @@ const TreeNodeItem = ({
   );
 };
 
-const ElementTree = ({ onOpenTab }: ElementTreeProps) => {
+const ElementTree = ({ projectRoot, onOpenTab }: ElementTreeProps) => {
   const [tree, setTree] = useState<TreeNode[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchTree()
+    if (!projectRoot) { setTree([]); return; }
+    setLoading(true);
+    fetchTree(projectRoot)
       .then(setTree)
       .catch((err) => console.error('Failed to load tree:', err))
       .finally(() => setLoading(false));
-  }, []);
+  }, [projectRoot]);
 
   return (
     <div className="element-tree">

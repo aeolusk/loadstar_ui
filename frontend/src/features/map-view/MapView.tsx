@@ -16,6 +16,7 @@ import WayPointEditor from '../waypoint-editor/WayPointEditor';
 import BlackBoxEditor from '../blackbox-editor/BlackBoxEditor';
 
 interface MapViewProps {
+  projectRoot: string;
   address: string;
   onOpenTab: (tab: Tab) => void;
 }
@@ -221,7 +222,7 @@ function buildGraph(
   return { nodes: ns, edges: es };
 }
 
-export default function MapView({ address, onOpenTab }: MapViewProps) {
+export default function MapView({ projectRoot, address, onOpenTab }: MapViewProps) {
   const [detail, setDetail] = useState<DetailPanel | null>(null);
   const [mapData, setMapData] = useState<MapViewResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -230,7 +231,7 @@ export default function MapView({ address, onOpenTab }: MapViewProps) {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    fetchMapView(address)
+    fetchMapView(projectRoot, address)
       .then(setMapData)
       .catch((err) => setError(err.message || 'Failed to load'))
       .finally(() => setLoading(false));
@@ -317,8 +318,8 @@ export default function MapView({ address, onOpenTab }: MapViewProps) {
                 </div>
                 <div style={{ flex: 1, overflow: 'auto', padding: '12px 16px' }}>
                   {detail.type === 'waypoint'
-                    ? <WayPointEditor address={detail.address} />
-                    : <BlackBoxEditor address={detail.address} />
+                    ? <WayPointEditor projectRoot={projectRoot} address={detail.address} />
+                    : <BlackBoxEditor projectRoot={projectRoot} address={detail.address} />
                   }
                 </div>
               </div>

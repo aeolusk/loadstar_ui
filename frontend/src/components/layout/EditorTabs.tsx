@@ -10,6 +10,7 @@ import LogView from '../../features/log-view/LogView';
 import CliConsole from '../../features/cli-console/CliConsole';
 
 interface EditorTabsProps {
+  projectRoot: string;
   tabs: Tab[];
   activeTabId: string | null;
   onSelectTab: (tabId: string) => void;
@@ -32,12 +33,12 @@ const tabTypeIcon = (type: Tab['type']): string => {
   }
 };
 
-const TabContent = ({ tab, onOpenTab }: { tab: Tab; onOpenTab: (tab: Tab) => void }) => {
+const TabContent = ({ tab, projectRoot, onOpenTab }: { tab: Tab; projectRoot: string; onOpenTab: (tab: Tab) => void }) => {
   switch (tab.type) {
     case 'dashboard': return <DashboardView />;
-    case 'map': return <MapView address={tab.address || ''} onOpenTab={onOpenTab} />;
-    case 'waypoint': return <WayPointEditor address={tab.address || ''} />;
-    case 'blackbox': return <BlackBoxEditor address={tab.address || ''} />;
+    case 'map': return <MapView projectRoot={projectRoot} address={tab.address || ''} onOpenTab={onOpenTab} />;
+    case 'waypoint': return <WayPointEditor projectRoot={projectRoot} address={tab.address || ''} />;
+    case 'blackbox': return <BlackBoxEditor projectRoot={projectRoot} address={tab.address || ''} />;
     case 'todo': return <TodoView />;
     case 'history': return <TodoView />;
     case 'monitor': return <MonitorView />;
@@ -48,7 +49,7 @@ const TabContent = ({ tab, onOpenTab }: { tab: Tab; onOpenTab: (tab: Tab) => voi
   }
 };
 
-const EditorTabs = ({ tabs, activeTabId, onSelectTab, onCloseTab, onOpenTab }: EditorTabsProps) => {
+const EditorTabs = ({ projectRoot, tabs, activeTabId, onSelectTab, onCloseTab, onOpenTab }: EditorTabsProps) => {
   const activeTab = tabs.find(t => t.id === activeTabId);
 
   return (
@@ -75,7 +76,7 @@ const EditorTabs = ({ tabs, activeTabId, onSelectTab, onCloseTab, onOpenTab }: E
       )}
       <div className="editor-content">
         {activeTab ? (
-          <TabContent tab={activeTab} onOpenTab={onOpenTab} />
+          <TabContent tab={activeTab} projectRoot={projectRoot} onOpenTab={onOpenTab} />
         ) : (
           <div className="editor-empty">
             <div className="editor-empty-icon">☆</div>

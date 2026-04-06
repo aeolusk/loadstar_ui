@@ -2,7 +2,7 @@ server:
   port: 8080
 
 loadstar:
-  project-path: ${LOADSTAR_PROJECT_PATH:C:/bono/MCP/GIT/loadstar_ui}
+  # project root is now passed as API parameter (?root=...)
 
 spring:
   devtools:

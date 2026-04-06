@@ -1,7 +1,11 @@
-const StatusBar = () => {
+interface StatusBarProps {
+  projectRoot: string;
+}
+
+const StatusBar = ({ projectRoot }: StatusBarProps) => {
   return (
     <div className="status-bar">
-      <div className="status-bar-item">LOADSTAR Explorer</div>
+      <div className="status-bar-item">{projectRoot}</div>
       <div className="status-bar-separator" />
       <div className="status-bar-item">checkpoint: --</div>
       <div className="status-bar-separator" />

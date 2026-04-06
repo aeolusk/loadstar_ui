@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { fetchBlackBox, type BlackBoxDetail } from '../../api/client';
 
 interface BlackBoxEditorProps {
+  projectRoot: string;
   address: string;
 }
 
@@ -36,7 +37,7 @@ function daysSince(syncedAt: string | null): number {
   return Math.floor((now.getTime() - synced.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-export default function BlackBoxEditor({ address }: BlackBoxEditorProps) {
+export default function BlackBoxEditor({ projectRoot, address }: BlackBoxEditorProps) {
   const [data, setData] = useState<BlackBoxDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +45,7 @@ export default function BlackBoxEditor({ address }: BlackBoxEditorProps) {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    fetchBlackBox(address)
+    fetchBlackBox(projectRoot, address)
       .then(setData)
       .catch(e => setError(e.message || 'Failed to load'))
       .finally(() => setLoading(false));

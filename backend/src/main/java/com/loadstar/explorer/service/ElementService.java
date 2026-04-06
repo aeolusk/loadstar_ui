@@ -3,7 +3,6 @@ package com.loadstar.explorer.service;
 import com.loadstar.explorer.model.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -20,20 +19,12 @@ public class ElementService {
 
     private final ElementParser parser;
 
-    @Value("${loadstar.project-path:}")
-    private String projectPath;
-
-    private Path getLoadstarRoot() {
-        String base = projectPath.isEmpty() ? System.getProperty("user.dir") : projectPath;
-        return Paths.get(base, ".loadstar");
+    private Path getLoadstarRoot(String projectRoot) {
+        return Paths.get(projectRoot, ".loadstar");
     }
 
-    /**
-     * Convert logical address to physical file path.
-     * TYPE://seg1/seg2/.../id -> .loadstar/TYPE_DIR/seg1.seg2...id.md
-     */
-    private Path addressToPath(String address) {
-        Path root = getLoadstarRoot();
+    private Path addressToPath(String projectRoot, String address) {
+        Path root = getLoadstarRoot(projectRoot);
         String typeDir;
         String pathPart;
 
@@ -55,12 +46,15 @@ public class ElementService {
     }
 
     /**
-     * Get MapViewResponse for a given Map address.
-     * Returns the Map info + list of direct children (WayPoints/Maps)
-     * with their BlackBox info and connections.
+     * Validate that the given project root has a .loadstar directory.
      */
-    public MapViewResponse getMapView(String mapAddress) throws IOException {
-        Path mapFile = addressToPath(mapAddress);
+    public boolean isValidProject(String projectRoot) {
+        Path loadstar = getLoadstarRoot(projectRoot);
+        return Files.isDirectory(loadstar) && Files.exists(loadstar.resolve("MAP").resolve("root.md"));
+    }
+
+    public MapViewResponse getMapView(String projectRoot, String mapAddress) throws IOException {
+        Path mapFile = addressToPath(projectRoot, mapAddress);
         if (!Files.exists(mapFile)) {
             throw new IOException("Map file not found: " + mapFile);
         }
@@ -77,8 +71,7 @@ public class ElementService {
 
             try {
                 if (childAddr.startsWith("M://")) {
-                    // Sub-Map
-                    Path childFile = addressToPath(childAddr);
+                    Path childFile = addressToPath(projectRoot, childAddr);
                     if (Files.exists(childFile)) {
                         MapData childMap = parser.parseMap(childFile);
                         item.setType("MAP");
@@ -86,8 +79,7 @@ public class ElementService {
                         item.setSummary(childMap.getSummary());
                     }
                 } else if (childAddr.startsWith("W://")) {
-                    // WayPoint
-                    Path wpFile = addressToPath(childAddr);
+                    Path wpFile = addressToPath(projectRoot, childAddr);
                     if (Files.exists(wpFile)) {
                         WayPointData wp = parser.parseWayPoint(wpFile);
                         item.setType("WAYPOINT");
@@ -97,9 +89,8 @@ public class ElementService {
                         item.setReferences(wp.getReferences());
                         item.setBlackbox(wp.getBlackbox());
 
-                        // Load BlackBox status/syncedAt if exists
                         if (wp.getBlackbox() != null) {
-                            Path bbFile = addressToPath(wp.getBlackbox());
+                            Path bbFile = addressToPath(projectRoot, wp.getBlackbox());
                             if (Files.exists(bbFile)) {
                                 BlackBoxData bb = parser.parseBlackBox(bbFile);
                                 item.setBlackboxStatus(bb.getStatus());
@@ -122,35 +113,31 @@ public class ElementService {
         return response;
     }
 
-    public WayPointDetailResponse getWayPointDetail(String address) throws IOException {
-        Path file = addressToPath(address);
+    public WayPointDetailResponse getWayPointDetail(String projectRoot, String address) throws IOException {
+        Path file = addressToPath(projectRoot, address);
         if (!Files.exists(file)) throw new IOException("WayPoint not found: " + file);
         return parser.parseWayPointDetail(file);
     }
 
-    public BlackBoxDetailResponse getBlackBoxDetail(String address) throws IOException {
-        Path file = addressToPath(address);
+    public BlackBoxDetailResponse getBlackBoxDetail(String projectRoot, String address) throws IOException {
+        Path file = addressToPath(projectRoot, address);
         if (!Files.exists(file)) throw new IOException("BlackBox not found: " + file);
         return parser.parseBlackBoxDetail(file);
     }
 
-    /**
-     * Get element tree for the left panel.
-     * Returns a simplified recursive structure.
-     */
-    public List<TreeNodeDto> getTree() throws IOException {
-        Path rootMap = getLoadstarRoot().resolve("MAP").resolve("root.md");
+    public List<TreeNodeDto> getTree(String projectRoot) throws IOException {
+        Path rootMap = getLoadstarRoot(projectRoot).resolve("MAP").resolve("root.md");
         if (!Files.exists(rootMap)) {
             return List.of();
         }
-        return List.of(buildTreeNode("M://root"));
+        return List.of(buildTreeNode(projectRoot, "M://root"));
     }
 
-    private TreeNodeDto buildTreeNode(String address) throws IOException {
+    private TreeNodeDto buildTreeNode(String projectRoot, String address) throws IOException {
         TreeNodeDto node = new TreeNodeDto();
         node.setAddress(address);
 
-        Path file = addressToPath(address);
+        Path file = addressToPath(projectRoot, address);
         if (!Files.exists(file)) {
             node.setType(address.startsWith("M://") ? "MAP" : address.startsWith("W://") ? "WAYPOINT" : "BLACKBOX");
             node.setStatus("S_ERR");
@@ -167,7 +154,7 @@ public class ElementService {
 
             List<TreeNodeDto> children = new ArrayList<>();
             for (String childAddr : map.getWaypoints()) {
-                children.add(buildTreeNode(childAddr));
+                children.add(buildTreeNode(projectRoot, childAddr));
             }
             node.setChildren(children);
         } else if (address.startsWith("W://")) {
@@ -179,14 +166,12 @@ public class ElementService {
             node.setBlackbox(wp.getBlackbox());
 
             List<TreeNodeDto> children = new ArrayList<>();
-            // Add BlackBox as child in tree
             if (wp.getBlackbox() != null) {
-                children.add(buildTreeNode(wp.getBlackbox()));
+                children.add(buildTreeNode(projectRoot, wp.getBlackbox()));
             }
-            // Add WayPoint children
             if (wp.getChildren() != null) {
                 for (String childAddr : wp.getChildren()) {
-                    children.add(buildTreeNode(childAddr));
+                    children.add(buildTreeNode(projectRoot, childAddr));
                 }
             }
             node.setChildren(children);
