@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { TreeNode } from '../types/loadstar';
 
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: import.meta.env.DEV ? 'http://localhost:8080/api' : '/api',
   headers: {
     'Content-Type': 'application/json',
   },

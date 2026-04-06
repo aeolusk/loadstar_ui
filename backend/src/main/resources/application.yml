@@ -8,3 +8,6 @@ spring:
   devtools:
     restart:
       enabled: true
+  web:
+    resources:
+      static-locations: file:../frontend/dist/,classpath:/static/
