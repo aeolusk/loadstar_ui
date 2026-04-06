@@ -1,0 +1,10 @@
+server:
+  port: 8080
+
+loadstar:
+  project-path: ${LOADSTAR_PROJECT_PATH:}
+
+spring:
+  devtools:
+    restart:
+      enabled: true
