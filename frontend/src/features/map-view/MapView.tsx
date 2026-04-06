@@ -1,6 +1,8 @@
-import { useMemo, useCallback, useState, useEffect } from 'react';
+import { useMemo, useCallback, useState, useEffect, useRef, memo } from 'react';
 import {
   ReactFlow,
+  useReactFlow,
+  ReactFlowProvider,
   type Node,
   type Edge,
   type NodeMouseHandler,
@@ -222,6 +224,35 @@ function buildGraph(
   return { nodes: ns, edges: es };
 }
 
+// Memoized flow chart - prevents re-render when detail panel changes
+const FlowChart = memo(({ nodes, edges, onNodeClick, onNodeDoubleClick }: {
+  nodes: Node[];
+  edges: Edge[];
+  onNodeClick: NodeMouseHandler;
+  onNodeDoubleClick: NodeMouseHandler;
+}) => {
+  const { fitView } = useReactFlow();
+  const initialFit = useRef(false);
+
+  useEffect(() => {
+    if (nodes.length > 0 && !initialFit.current) {
+      // Delay fitView to ensure the container is sized
+      setTimeout(() => fitView({ padding: 0.3 }), 50);
+      initialFit.current = true;
+    }
+  }, [nodes, fitView]);
+
+  return (
+    <ReactFlow
+      nodes={nodes} edges={edges} nodeTypes={nodeTypes}
+      onNodeClick={onNodeClick} onNodeDoubleClick={onNodeDoubleClick}
+      proOptions={{ hideAttribution: true }}
+      style={{ background: '#faf8f5' }}
+      minZoom={0.3} maxZoom={2}
+    />
+  );
+});
+
 export default function MapView({ projectRoot, address, onOpenTab }: MapViewProps) {
   const [detail, setDetail] = useState<DetailPanel | null>(null);
   const [mapData, setMapData] = useState<MapViewResponse | null>(null);
@@ -289,14 +320,12 @@ export default function MapView({ projectRoot, address, onOpenTab }: MapViewProp
         <Group orientation="vertical">
           <Panel defaultSize="55%" minSize="20%">
             <div style={{ width: '100%', height: '100%' }}>
-              <ReactFlow
-                nodes={nodes} edges={edges} nodeTypes={nodeTypes}
-                onNodeClick={onNodeClick} onNodeDoubleClick={onNodeDoubleClick}
-                fitView fitViewOptions={{ padding: 0.3 }}
-                proOptions={{ hideAttribution: true }}
-                style={{ background: '#faf8f5' }}
-                minZoom={0.3} maxZoom={2}
-              />
+              <ReactFlowProvider>
+                <FlowChart
+                  nodes={nodes} edges={edges}
+                  onNodeClick={onNodeClick} onNodeDoubleClick={onNodeDoubleClick}
+                />
+              </ReactFlowProvider>
             </div>
           </Panel>
           <Separator className="resize-handle-h" />
