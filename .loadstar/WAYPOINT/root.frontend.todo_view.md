@@ -1,6 +1,6 @@
 <WAYPOINT>
 ## [ADDRESS] W://root/frontend/todo_view
-## [STATUS] S_PRG
+## [STATUS] S_STB
 
 ### IDENTITY
 - SUMMARY: TODO 화면 — TODO 목록 (PENDING/ACTIVE/BLOCKED) + TODO History 탭 전환, CLI 연동 CRUD

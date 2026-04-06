@@ -133,3 +133,50 @@ export async function updateWayPoint(root: string, data: WayPointDetail): Promis
   });
   return res.data;
 }
+
+// --- TODO API ---
+
+export interface ApiTodoItem {
+  address: string;
+  time: string;
+  summary: string;
+  status: string;
+  dependsOn: string;
+}
+
+export interface ApiTodoHistoryItem {
+  address: string;
+  time: string;
+  summary: string;
+  action: string;
+  at: string;
+  dependsOn: string;
+}
+
+export async function fetchTodoList(root: string): Promise<ApiTodoItem[]> {
+  const res = await apiClient.get<ApiTodoItem[]>('/todo/list', { params: { root } });
+  return res.data;
+}
+
+export async function fetchTodoHistory(root: string, address?: string): Promise<ApiTodoHistoryItem[]> {
+  const params: Record<string, string> = { root };
+  if (address) params.address = address;
+  const res = await apiClient.get<ApiTodoHistoryItem[]>('/todo/history', { params });
+  return res.data;
+}
+
+export async function addTodo(root: string, address: string, summary: string, dependsOn?: string): Promise<void> {
+  await apiClient.post('/todo/add', { address, summary, dependsOn }, { params: { root } });
+}
+
+export async function updateTodoStatus(root: string, address: string, status: string): Promise<void> {
+  await apiClient.put('/todo/update', { address, status }, { params: { root } });
+}
+
+export async function doneTodo(root: string, address: string): Promise<void> {
+  await apiClient.post('/todo/done', { address }, { params: { root } });
+}
+
+export async function deleteTodo(root: string, address: string): Promise<void> {
+  await apiClient.delete('/todo/delete', { data: { address }, params: { root } });
+}

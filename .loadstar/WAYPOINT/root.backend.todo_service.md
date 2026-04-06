@@ -1,6 +1,6 @@
 <WAYPOINT>
 ## [ADDRESS] W://root/backend/todo_service
-## [STATUS] S_IDL
+## [STATUS] S_STB
 
 ### IDENTITY
 - SUMMARY: TODO 관리 — loadstar todo CLI 연동 (add, update, done, delete, list, history)

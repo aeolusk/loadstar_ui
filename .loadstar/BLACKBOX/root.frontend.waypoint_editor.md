@@ -16,5 +16,6 @@
 (없음)
 
 ### COMMENT
-(없음)
+- [2026-04-06T15:49:59] [MODIFIED] COMMENT changed
+- [2026-04-06T15:49:40] [MODIFIED] COMMENT changed
 </BLACKBOX>

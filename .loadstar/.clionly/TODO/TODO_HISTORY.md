@@ -23,3 +23,6 @@
 | W://root/backend/element_service | 2026-04-06 15:12 | WayPoint 수정 API + loadstar log CLI 변경 이력 기록 | UPDATED(PENDING→ACTIVE) | 2026-04-06 15:12 | - |
 | W://root/frontend/waypoint_editor | 2026-04-06 15:12 | WayPoint 편집 기능 구현: IDENTITY/TODO/ISSUE/COMMENT 편집 + Backend API + CLI 변경 이력 | DONE | 2026-04-06 15:26 | - |
 | W://root/backend/element_service | 2026-04-06 15:12 | WayPoint 수정 API + loadstar log CLI 변경 이력 기록 | DONE | 2026-04-06 15:26 | - |
+| W://root/frontend/todo_view | 2026-04-06 11:47 | TODO 목록 + History 탭 전환 화면 구현 | DONE | 2026-04-06 15:57 | - |
+| W://root/backend/todo_service | 2026-04-06 11:47 | TODO CLI 연동 API 구현 | DONE | 2026-04-06 15:57 | W://root/backend/cli_service |
+| W://root/backend/cli_service | 2026-04-06 11:47 | ProcessBuilder 기반 CLI 실행기 구현 | DONE | 2026-04-06 15:58 | - |

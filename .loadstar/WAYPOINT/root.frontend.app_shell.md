@@ -3,8 +3,8 @@
 ## [STATUS] S_STB
 
 ### IDENTITY
-- SUMMARY: 앱 골격 — Menu Bar, Toolbar, Element Tree, Editor Tabs, Status Bar 레이아웃 구성
-- METADATA: [Ver: 1.0, Created: 2026-04-06]
+- SUMMARY: 앱 골격 — Menu Bar, Toolbar, Element Tree, Editor Tabs, Status Bar 레이아웃 구성 (수정)
+- METADATA: [Ver: 1.0, Created: 2026-04-06, Priority: ]
 
 ### CONNECTIONS
 - PARENT: M://root/frontend

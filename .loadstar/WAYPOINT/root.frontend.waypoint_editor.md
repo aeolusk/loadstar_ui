@@ -3,7 +3,7 @@
 ## [STATUS] S_STB
 
 ### IDENTITY
-- SUMMARY: WayPoint 상세/편집 — IDENTITY, TODO, ISSUE, COMMENT 편집 + CLI 연동 변경 이력
+- SUMMARY: WayPoint 편집 기능 구현
 - METADATA: [Ver: 2.0, Created: 2026-04-06]
 
 ### CONNECTIONS
@@ -14,7 +14,6 @@
 
 ### TODO
 - ADDRESS: W://root/frontend/waypoint_editor
-- SUMMARY: WayPoint 편집 기능 구현
 - TECH_SPEC:
   - [x] WayPoint 상세 조회 화면 (API 연동)
   - [x] IDENTITY 편집: STATUS 드롭다운 변경
@@ -41,5 +40,6 @@
 
 ### COMMENT
 - 편집 흐름: UI 편집 → Backend API 호출 → md 파일 직접 수정 → loadstar log MODIFIED 실행 → 응답 반환
-- CONNECTIONS 편집은 별도 WayPoint에서 처리 (현재 스코프 외)
+CONNECTIONS 편집은 별도 WayPoint에서 처리 (현재 스코프 외)
+
 </WAYPOINT>

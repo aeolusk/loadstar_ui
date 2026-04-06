@@ -39,8 +39,8 @@ const TabContent = ({ tab, projectRoot, onOpenTab }: { tab: Tab; projectRoot: st
     case 'map': return <MapView projectRoot={projectRoot} address={tab.address || ''} onOpenTab={onOpenTab} />;
     case 'waypoint': return <WayPointEditor projectRoot={projectRoot} address={tab.address || ''} />;
     case 'blackbox': return <BlackBoxEditor projectRoot={projectRoot} address={tab.address || ''} />;
-    case 'todo': return <TodoView />;
-    case 'history': return <TodoView />;
+    case 'todo': return <TodoView projectRoot={projectRoot} />;
+    case 'history': return <TodoView projectRoot={projectRoot} />;
     case 'monitor': return <MonitorView />;
     case 'git': return <GitView />;
     case 'log': return <LogView />;
