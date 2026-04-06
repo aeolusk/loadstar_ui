@@ -28,9 +28,9 @@ export default function ProjectOpenDialog({ onProjectSelected }: ProjectOpenDial
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [validating, setValidating] = useState(false);
-  const [inputPath, setInputPath] = useState('');
-
   const recent = getRecentProjects();
+  const lastProject = recent.length > 0 ? recent[0] : '';
+  const [inputPath, setInputPath] = useState(lastProject);
 
   const loadDir = useCallback(async (path: string) => {
     setLoading(true);
@@ -50,8 +50,8 @@ export default function ProjectOpenDialog({ onProjectSelected }: ProjectOpenDial
   }, []);
 
   useEffect(() => {
-    loadDir('');
-  }, [loadDir]);
+    loadDir(lastProject);
+  }, [loadDir, lastProject]);
 
   const handleSelect = async (path: string) => {
     setValidating(true);
