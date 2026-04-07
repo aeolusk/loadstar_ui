@@ -44,7 +44,7 @@ const TabContent = ({ tab, projectRoot, onOpenTab }: { tab: Tab; projectRoot: st
     case 'monitor': return <MonitorView />;
     case 'git': return <GitView projectRoot={projectRoot} />;
     case 'log': return <LogView projectRoot={projectRoot} />;
-    case 'cli': return <CliConsole />;
+    case 'cli': return <CliConsole projectRoot={projectRoot} />;
     default: return <div>Unknown tab type</div>;
   }
 };

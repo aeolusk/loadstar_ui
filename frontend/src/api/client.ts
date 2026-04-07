@@ -240,6 +240,19 @@ export async function fetchGitBlackBoxVersion(root: string, address: string, has
   return res.data;
 }
 
+// --- CLI API ---
+
+export interface CliResult {
+  success: boolean;
+  output: string;
+  exitCode: number;
+}
+
+export async function executeCliCommand(root: string, args: string[]): Promise<CliResult> {
+  const res = await apiClient.post<CliResult>('/cli/execute', { root, args });
+  return res.data;
+}
+
 // --- Log API ---
 
 export interface LogEntry {
