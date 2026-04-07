@@ -13,11 +13,7 @@
 - BLACKBOX: B://root/backend/log_service
 
 ### TODO
-- ADDRESS: W://root/backend/log_service
-- SUMMARY: 로그 CLI 연동 API 구현
-- TECH_SPEC:
-  - [x] GET /api/log/find : 로그 조회 (offset/limit/address/kind)
-  - [x] CLI findlog 출력 파싱
+(없음)
 
 ### ISSUE
 (없음)

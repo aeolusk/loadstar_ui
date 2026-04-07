@@ -28,3 +28,6 @@
 | W://root/backend/cli_service | 2026-04-06 11:47 | ProcessBuilder 기반 CLI 실행기 구현 | DONE | 2026-04-06 15:58 | - |
 | W://root/frontend/log_view | 2026-04-06 11:47 | 로그 검색/조회 화면 구현 | DONE | 2026-04-06 16:06 | - |
 | W://root/backend/log_service | 2026-04-06 11:47 | 로그 CLI 연동 API 구현 | DONE | 2026-04-06 16:06 | - |
+| W://root/frontend/blackbox_editor | 2026-04-07 12:27 | BlackBox 편집 기능 구현: DESCRIPTION/TODO/ISSUE/COMMENT 편집 + 선택 툴바 + Backend API | DONE | 2026-04-07 12:27 | - |
+| W://root/frontend/waypoint_editor | 2026-04-07 12:27 | TECH_SPEC 전체선택 + 텍스트 필터 선택 툴바 추가 | DONE | 2026-04-07 12:27 | - |
+| W://root/backend/element_service | 2026-04-07 12:27 | BlackBox 수정 API (PUT /api/elements/blackbox) + 변경 이력 기록 | DONE | 2026-04-07 12:27 | - |

@@ -13,16 +13,7 @@
 - BLACKBOX: B://root/backend/element_service
 
 ### TODO
-- ADDRESS: W://root/backend/element_service
-- SUMMARY: 요소 편집 API 구현
-- TECH_SPEC:
-  - [x] GET /api/elements/tree : 트리 조회
-  - [x] GET /api/elements/map-view : Map 뷰 데이터
-  - [x] GET /api/elements/waypoint : WayPoint 상세 조회
-  - [x] GET /api/elements/blackbox : BlackBox 상세 조회
-  - [x] GET /api/elements/validate : 프로젝트 유효성 검증
-  - [x] PUT /api/elements/waypoint : WayPoint 수정 (md 파일 쓰기)
-  - [x] 수정 후 loadstar log MODIFIED CLI 호출로 변경 이력 기록
+(없음)
 
 ### ISSUE
 (없음)

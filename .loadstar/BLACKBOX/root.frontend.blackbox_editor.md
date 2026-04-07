@@ -16,5 +16,5 @@
 (없음)
 
 ### COMMENT
-(없음)
+- [2026-04-07T12:22:08] [NOTE] TECH_SPEC 전체 완료 (8/8) - TODO 섹션 정리
 </BLACKBOX>

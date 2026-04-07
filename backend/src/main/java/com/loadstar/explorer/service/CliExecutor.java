@@ -65,4 +65,16 @@ public class CliExecutor {
             log.warn("Failed to log modification for {}: {}", address, e.getMessage());
         }
     }
+
+    /**
+     * Register a TODO item and immediately mark it done, so it appears in TODO_HISTORY.
+     */
+    public void todoAddAndDone(String projectRoot, String address, String summary) {
+        try {
+            execute(projectRoot, "todo", "add", address, summary);
+            execute(projectRoot, "todo", "done", address);
+        } catch (Exception e) {
+            log.warn("Failed to todo add+done for {}: {}", address, e.getMessage());
+        }
+    }
 }

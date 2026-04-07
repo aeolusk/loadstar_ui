@@ -14,16 +14,7 @@
 - BLACKBOX: B://root/frontend/blackbox_editor
 
 ### TODO
-- ADDRESS: W://root/frontend/blackbox_editor
-- TECH_SPEC:
-  - [x] DESCRIPTION 편집: STATUS 드롭다운, SUMMARY 텍스트, SYNCED_AT 날짜 편집
-  - [x] TODO 관리: 체크박스 토글, 항목 추가/삭제/편집
-  - [x] TODO 관리: 전체선택 + 텍스트 필터 선택 툴바
-  - [x] ISSUE 관리: 항목 추가/삭제/편집
-  - [x] COMMENT 편집: 자유 텍스트 편집
-  - [x] Backend: BlackBox 수정 API (PUT /api/elements/blackbox)
-  - [x] Backend: 수정 후 loadstar log CLI로 변경 이력 기록
-  - [x] 저장 시 로딩 인디케이터 표시
+(없음)
 
 ### ISSUE
 (없음)

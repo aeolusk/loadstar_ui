@@ -141,6 +141,9 @@ public class ElementService {
         if (data.getCreated() == null) data.setCreated(existing.getCreated());
         if (data.getTodoAddress() == null) data.setTodoAddress(existing.getTodoAddress());
 
+        // Detect deleted TECH_SPEC items → register in TODO_HISTORY
+        recordDeletedTechSpec(projectRoot, address, existing.getTechSpec(), data.getTechSpec());
+
         // Write updated md
         writer.writeWayPoint(file, data);
 
@@ -149,6 +152,24 @@ public class ElementService {
 
         // Return fresh data
         return parser.parseWayPointDetail(file);
+    }
+
+    private void recordDeletedTechSpec(String projectRoot, String address,
+                                        List<WayPointDetailResponse.TechSpecItem> before,
+                                        List<WayPointDetailResponse.TechSpecItem> after) {
+        if (before == null || before.isEmpty()) return;
+        java.util.Set<String> afterTexts = new java.util.HashSet<>();
+        if (after != null) {
+            for (WayPointDetailResponse.TechSpecItem item : after) {
+                afterTexts.add(item.getText());
+            }
+        }
+        for (WayPointDetailResponse.TechSpecItem item : before) {
+            if (!afterTexts.contains(item.getText())) {
+                String summary = "[TECH_SPEC] " + item.getText() + (item.isDone() ? " (완료)" : " (미완료)");
+                cli.todoAddAndDone(projectRoot, address, summary);
+            }
+        }
     }
 
     private String buildChangeSummary(WayPointDetailResponse before, WayPointDetailResponse after) {
@@ -179,6 +200,9 @@ public class ElementService {
         BlackBoxDetailResponse existing = parser.parseBlackBoxDetail(file);
         if (data.getLinkedWp() == null) data.setLinkedWp(existing.getLinkedWp());
 
+        // Detect deleted TODO items → register in TODO_HISTORY
+        recordDeletedBlackBoxTodo(projectRoot, address, existing.getTodos(), data.getTodos());
+
         // Write updated md
         writer.writeBlackBox(file, data);
 
@@ -207,6 +231,24 @@ public class ElementService {
         if (beforeIssues != afterIssues) changes.add("ISSUE count " + beforeIssues + " -> " + afterIssues);
 
         return changes.isEmpty() ? "updated" : String.join(", ", changes);
+    }
+
+    private void recordDeletedBlackBoxTodo(String projectRoot, String address,
+                                            List<BlackBoxDetailResponse.TodoItem> before,
+                                            List<BlackBoxDetailResponse.TodoItem> after) {
+        if (before == null || before.isEmpty()) return;
+        java.util.Set<String> afterTexts = new java.util.HashSet<>();
+        if (after != null) {
+            for (BlackBoxDetailResponse.TodoItem item : after) {
+                afterTexts.add(item.getText());
+            }
+        }
+        for (BlackBoxDetailResponse.TodoItem item : before) {
+            if (!afterTexts.contains(item.getText())) {
+                String summary = "[TODO] " + item.getText() + (item.isDone() ? " (완료)" : " (미완료)");
+                cli.todoAddAndDone(projectRoot, address, summary);
+            }
+        }
     }
 
     private boolean eq(String a, String b) {
