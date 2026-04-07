@@ -89,6 +89,11 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
   const [newTechSpec, setNewTechSpec] = useState('');
   const [techSpecFilter, setTechSpecFilter] = useState('');
 
+  // CODE_MAP editing
+  const [codeMapScopes, setCodeMapScopes] = useState<string[]>([]);
+  const [editCodeMap, setEditCodeMap] = useState(false);
+  const [newScope, setNewScope] = useState('');
+
   // ISSUE editing
   const [issues, setIssues] = useState<string[]>([]);
   const [selectedIssues, setSelectedIssues] = useState<Set<number>>(new Set());
@@ -116,6 +121,7 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
         setTechSpecItems(d.techSpec.map(t => ({ ...t })));
         setIssues([...d.issues]);
         setOpenQuestions(d.openQuestions.map(q => ({ ...q })));
+        setCodeMapScopes([...(d.codeMapScopes || [])]);
       })
       .catch(e => setError(e.message || 'Failed to load'))
       .finally(() => setLoading(false));
@@ -137,6 +143,7 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
       setTechSpecItems(updated.techSpec.map(t => ({ ...t })));
       setIssues([...updated.issues]);
       setOpenQuestions(updated.openQuestions.map(q => ({ ...q })));
+      setCodeMapScopes([...(updated.codeMapScopes || [])]);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Save failed');
     } finally {
@@ -473,9 +480,69 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
             {data.references.map(r => <span key={r} style={{ ...s.link, marginRight: 8 }} onDoubleClick={() => navigateTo(r)}>{r}</span>)}
           </div>
         )}
-        {data.blackbox && <div><span style={s.label}>BlackBox: </span><span style={s.link} onDoubleClick={() => navigateTo(data.blackbox!)}>{data.blackbox}</span></div>}
-        {!data.parent && data.children.length === 0 && data.references.length === 0 && !data.blackbox && (
+        {!data.parent && data.children.length === 0 && data.references.length === 0 && (
           <div style={s.empty}>연결 정보 없음</div>
+        )}
+      </div>
+
+      {/* ===== CODE_MAP ===== */}
+      <div style={s.section}>
+        <div style={s.sectionHeader}>
+          <span style={s.sectionTitle}>CODE_MAP</span>
+          <div style={s.headerBtns}>
+            {!isReadOnly && (editCodeMap ? (
+              <>
+                <button style={s.btnPrimary} onClick={() => {
+                  saveToServer({ codeMapScopes });
+                  setEditCodeMap(false);
+                }}>Save</button>
+                <button style={s.btn} onClick={() => {
+                  setCodeMapScopes([...(data.codeMapScopes || [])]);
+                  setEditCodeMap(false);
+                }}>Cancel</button>
+              </>
+            ) : (
+              <button style={s.btn} onClick={() => setEditCodeMap(true)}>Edit</button>
+            ))}
+          </div>
+        </div>
+        {editCodeMap ? (
+          <div>
+            {codeMapScopes.map((scope, i) => (
+              <div key={i} style={{ display: 'flex', gap: 4, marginBottom: 4, alignItems: 'center' }}>
+                <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--text-primary)', flex: 1 }}>{scope}</span>
+                <button style={s.btnDanger} onClick={() => setCodeMapScopes(codeMapScopes.filter((_, j) => j !== i))}>x</button>
+              </div>
+            ))}
+            <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+              <input
+                style={{ ...s.inputSm, flex: 1, fontFamily: 'monospace' }}
+                placeholder="scope 경로 추가... (예: backend/src/main/java/.../service/)"
+                value={newScope}
+                onChange={e => setNewScope(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && newScope.trim()) {
+                    setCodeMapScopes([...codeMapScopes, newScope.trim()]);
+                    setNewScope('');
+                  }
+                }}
+              />
+              <button style={s.btnPrimary} onClick={() => {
+                if (newScope.trim()) { setCodeMapScopes([...codeMapScopes, newScope.trim()]); setNewScope(''); }
+              }} disabled={!newScope.trim()}>+ Add</button>
+            </div>
+          </div>
+        ) : (
+          codeMapScopes.length > 0 ? (
+            <div>
+              <div style={s.label}>scope:</div>
+              {codeMapScopes.map((scope, i) => (
+                <div key={i} style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--text-primary)', padding: '2px 0 2px 12px' }}>{scope}</div>
+              ))}
+            </div>
+          ) : (
+            <div style={s.empty}>CODE_MAP 없음 (코드 수정이 수반되는 경우 scope를 지정하세요)</div>
+          )
         )}
       </div>
 

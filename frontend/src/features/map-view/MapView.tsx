@@ -15,7 +15,7 @@ import { Group, Panel, Separator } from 'react-resizable-panels';
 import type { Tab } from '../../App';
 import { fetchMapView, type MapViewResponse, type MapViewItem } from '../../api/client';
 import WayPointEditor from '../waypoint-editor/WayPointEditor';
-import BlackBoxEditor from '../blackbox-editor/BlackBoxEditor';
+
 
 interface MapViewProps {
   projectRoot: string;
@@ -24,7 +24,7 @@ interface MapViewProps {
 }
 
 interface DetailPanel {
-  type: 'waypoint' | 'blackbox';
+  type: 'waypoint';
   address: string;
 }
 
@@ -34,20 +34,13 @@ import { getStatusLabel, getStatusColor } from '../../data/status-labels';
 
 function WayPointNode({ data }: { data: {
   label: string; status: string; summary: string; address: string;
-  hasBlackbox: boolean; blackboxAddr: string;
-  onBlackboxClick: (addr: string) => void;
-  onNodeSelect: (type: 'waypoint' | 'blackbox', addr: string) => void;
+  onNodeSelect: (type: 'waypoint', addr: string) => void;
 } }) {
   const color = getStatusColor(data.status);
 
-  const handleClick = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('.bb-icon')) return;
-    data.onNodeSelect('waypoint', data.address);
-  };
-
   return (
     <div
-      onClick={handleClick}
+      onClick={() => data.onNodeSelect('waypoint', data.address)}
       style={{
         background: '#ffffff', border: `2px solid ${color}`, borderRadius: 8,
         padding: '14px 18px', minWidth: 180,
@@ -57,22 +50,6 @@ function WayPointNode({ data }: { data: {
       <Handle type="target" position={Position.Left} style={{ background: color, width: 8, height: 8 }} />
       <Handle type="source" position={Position.Right} style={{ background: color, width: 8, height: 8 }} />
       <Handle type="source" position={Position.Bottom} id="bottom" style={{ background: '#9b8e7e', width: 6, height: 6 }} />
-
-      {data.hasBlackbox && (
-        <div
-          className="bb-icon"
-          onClick={(e) => { e.stopPropagation(); data.onNodeSelect('blackbox', data.blackboxAddr); }}
-          title={`BlackBox: ${data.blackboxAddr}`}
-          style={{
-            position: 'absolute', top: -8, right: -8,
-            width: 22, height: 22, background: '#f3efe8', border: '1px solid #bfb19c',
-            borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 12, cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#e8e0d4'; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '#f3efe8'; }}
-        >📦</div>
-      )}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
         <span style={{ fontSize: 14, color: '#3a7ca5' }}>◆</span>
@@ -139,8 +116,7 @@ const nodeTypes = { waypoint: WayPointNode, mapNode: MapNode, refWaypoint: RefWa
 
 function buildGraph(
   items: MapViewItem[],
-  handleBlackboxClick: (addr: string) => void,
-  onNodeSelect: (type: 'waypoint' | 'blackbox', addr: string) => void,
+  onNodeSelect: (type: 'waypoint', addr: string) => void,
 ): { nodes: Node[]; edges: Edge[] } {
   const ns: Node[] = [];
   const es: Edge[] = [];
@@ -172,9 +148,6 @@ function buildGraph(
         data: {
           label, status: item.status, summary: item.summary || '',
           address: item.address,
-          hasBlackbox: !!item.blackbox,
-          blackboxAddr: item.blackbox || '',
-          onBlackboxClick: handleBlackboxClick,
           onNodeSelect,
         },
         sourcePosition: Position.Right,
@@ -302,18 +275,14 @@ export default function MapView({ projectRoot, address, onOpenTab }: MapViewProp
       .finally(() => setLoading(false));
   }, [address]);
 
-  const handleBlackboxClick = useCallback((bbAddr: string) => {
-    setDetail({ type: 'blackbox', address: bbAddr });
-  }, []);
-
-  const handleNodeSelect = useCallback((type: 'waypoint' | 'blackbox', addr: string) => {
+  const handleNodeSelect = useCallback((type: 'waypoint', addr: string) => {
     setDetail({ type, address: addr });
   }, []);
 
   const { nodes, edges } = useMemo(() => {
     if (!mapData) return { nodes: [] as Node[], edges: [] as Edge[] };
-    return buildGraph(mapData.items, handleBlackboxClick, handleNodeSelect);
-  }, [mapData, handleBlackboxClick, handleNodeSelect]);
+    return buildGraph(mapData.items, handleNodeSelect);
+  }, [mapData, handleNodeSelect]);
 
   const onNodeDoubleClick: NodeMouseHandler = useCallback((_event, node) => {
     if (node.type === 'mapNode') {
@@ -377,10 +346,7 @@ export default function MapView({ projectRoot, address, onOpenTab }: MapViewProp
                   >×</button>
                 </div>
                 <div style={{ flex: 1, overflow: 'auto', padding: '12px 16px' }}>
-                  {detail.type === 'waypoint'
-                    ? <WayPointEditor projectRoot={projectRoot} address={detail.address} onOpenTab={onOpenTab} />
-                    : <BlackBoxEditor projectRoot={projectRoot} address={detail.address} onOpenTab={onOpenTab} />
-                  }
+                  <WayPointEditor projectRoot={projectRoot} address={detail.address} onOpenTab={onOpenTab} />
                 </div>
               </div>
             ) : (
@@ -388,7 +354,7 @@ export default function MapView({ projectRoot, address, onOpenTab }: MapViewProp
                 height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: 'var(--text-muted)', fontSize: 13, background: 'var(--bg-surface)',
               }}>
-                WayPoint를 클릭하면 상세 정보가 표시됩니다. BlackBox는 노드 우상단 📦 아이콘을 클릭하세요.
+                WayPoint를 클릭하면 상세 정보가 표시됩니다.
               </div>
             )}
           </Panel>

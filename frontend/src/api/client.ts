@@ -46,6 +46,7 @@ export interface WayPointDetail {
   children: string[];
   references: string[];
   blackbox: string | null;
+  codeMapScopes: string[];
   todoAddress: string | null;
   todoSummary: string | null;
   techSpec: { text: string; done: boolean }[];

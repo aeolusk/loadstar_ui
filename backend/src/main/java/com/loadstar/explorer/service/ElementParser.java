@@ -177,6 +177,7 @@ public class ElementParser {
         WayPointDetailResponse wp = new WayPointDetailResponse();
         wp.setChildren(new ArrayList<>());
         wp.setReferences(new ArrayList<>());
+        wp.setCodeMapScopes(new ArrayList<>());
         wp.setTechSpec(new ArrayList<>());
         wp.setIssues(new ArrayList<>());
         wp.setOpenQuestions(new ArrayList<>());
@@ -254,6 +255,20 @@ public class ElementParser {
             if (trimmed.startsWith("- BLACKBOX:")) {
                 String bb = trimmed.substring("- BLACKBOX:".length()).trim();
                 if (!bb.isEmpty() && bb.startsWith("B://")) wp.setBlackbox(bb);
+                continue;
+            }
+
+            // CODE_MAP scope
+            if (currentSection.contains("CODE_MAP") && trimmed.startsWith("- ") && !trimmed.equals("(없음)")) {
+                String scope = trimmed.substring(2).trim();
+                if (scope.startsWith("scope:")) {
+                    // "- scope: path/" format — extract the path
+                    scope = scope.substring(6).trim();
+                    if (!scope.isEmpty()) wp.getCodeMapScopes().add(scope);
+                } else if (!scope.startsWith("AI") && !scope.isEmpty()) {
+                    // bare path lines under scope
+                    wp.getCodeMapScopes().add(scope);
+                }
                 continue;
             }
 

@@ -74,7 +74,7 @@ const TreeNodeItem = ({
           <span className="tree-node-name">{id}</span>
         </span>
       </div>
-      {expanded && node.children.map(child => (
+      {expanded && node.children.filter(child => child.type !== 'BLACKBOX').map(child => (
         <TreeNodeItem
           key={child.address}
           node={child}

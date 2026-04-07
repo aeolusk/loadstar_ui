@@ -19,7 +19,10 @@ public class WayPointDetailResponse {
     private String parent;
     private List<String> children;
     private List<String> references;
-    private String blackbox;
+    private String blackbox; // deprecated, kept for backward compatibility
+
+    // CODE_MAP
+    private List<String> codeMapScopes;
 
     // TODO / TECH_SPEC
     private String todoAddress;

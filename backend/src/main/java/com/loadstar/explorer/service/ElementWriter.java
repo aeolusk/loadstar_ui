@@ -54,6 +54,16 @@ public class ElementWriter {
         }
         lines.add("");
 
+        // CODE_MAP
+        if (wp.getCodeMapScopes() != null && !wp.getCodeMapScopes().isEmpty()) {
+            lines.add("### CODE_MAP");
+            lines.add("- scope:");
+            for (String scope : wp.getCodeMapScopes()) {
+                lines.add("  - " + scope);
+            }
+            lines.add("");
+        }
+
         // TODO
         lines.add("### TODO");
         if (wp.getTechSpec() != null && !wp.getTechSpec().isEmpty()) {
