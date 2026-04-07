@@ -1,5 +1,6 @@
 package com.loadstar.explorer.controller;
 
+import com.loadstar.explorer.model.BlackBoxDetailResponse;
 import com.loadstar.explorer.model.GitCommitInfo;
 import com.loadstar.explorer.model.WayPointDetailResponse;
 import com.loadstar.explorer.service.ElementParser;
@@ -45,6 +46,26 @@ public class GitController {
             try {
                 Files.write(tempFile, content.getBytes(StandardCharsets.UTF_8));
                 WayPointDetailResponse detail = parser.parseWayPointDetail(tempFile);
+                return ResponseEntity.ok(detail);
+            } finally {
+                Files.deleteIfExists(tempFile);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/show-blackbox")
+    public ResponseEntity<BlackBoxDetailResponse> showBlackBoxAtCommit(
+            @RequestParam String root,
+            @RequestParam String address,
+            @RequestParam String hash) {
+        try {
+            String content = gitService.getFileAtCommit(root, address, hash);
+            Path tempFile = Files.createTempFile("loadstar-git-bb-", ".md");
+            try {
+                Files.write(tempFile, content.getBytes(StandardCharsets.UTF_8));
+                BlackBoxDetailResponse detail = parser.parseBlackBoxDetail(tempFile);
                 return ResponseEntity.ok(detail);
             } finally {
                 Files.deleteIfExists(tempFile);

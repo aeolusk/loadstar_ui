@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchBlackBox, updateBlackBox, type BlackBoxDetail } from '../../api/client';
+import { fetchBlackBox, updateBlackBox, fetchGitHistory, fetchGitBlackBoxVersion, type BlackBoxDetail, type GitCommitEntry } from '../../api/client';
 
 interface BlackBoxEditorProps {
   projectRoot: string;
@@ -114,6 +114,13 @@ export default function BlackBoxEditor({ projectRoot, address }: BlackBoxEditorP
   const [editIssueText, setEditIssueText] = useState('');
   const [newIssue, setNewIssue] = useState('');
 
+  // Git History
+  const [gitHistory, setGitHistory] = useState<GitCommitEntry[]>([]);
+  const [gitExpanded, setGitExpanded] = useState(false);
+  const [gitLoading, setGitLoading] = useState(false);
+  const [viewingCommit, setViewingCommit] = useState<GitCommitEntry | null>(null);
+  const [gitVersionLoading, setGitVersionLoading] = useState(false);
+
   useEffect(() => {
     setLoading(true);
     setError(null);
@@ -125,7 +132,46 @@ export default function BlackBoxEditor({ projectRoot, address }: BlackBoxEditorP
       })
       .catch(e => setError(e.message || 'Failed to load'))
       .finally(() => setLoading(false));
+    // Load git history
+    setGitLoading(true);
+    fetchGitHistory(projectRoot, address)
+      .then(setGitHistory)
+      .catch(() => setGitHistory([]))
+      .finally(() => setGitLoading(false));
   }, [projectRoot, address]);
+
+  const loadGitVersion = async (commit: GitCommitEntry) => {
+    setGitVersionLoading(true);
+    try {
+      const d = await fetchGitBlackBoxVersion(projectRoot, address, commit.hash);
+      setData(d);
+      setTodoItems(d.todos.map(t => ({ ...t })));
+      setIssues([...d.issues]);
+      setViewingCommit(commit);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load version');
+    } finally {
+      setGitVersionLoading(false);
+    }
+  };
+
+  const restoreCurrent = async () => {
+    setViewingCommit(null);
+    setLoading(true);
+    setError(null);
+    try {
+      const d = await fetchBlackBox(projectRoot, address);
+      setData(d);
+      setTodoItems(d.todos.map(t => ({ ...t })));
+      setIssues([...d.issues]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isReadOnly = viewingCommit !== null;
 
   const saveToServer = async (patch: Partial<BlackBoxDetail>, skipHistory = false) => {
     if (!data) return;
@@ -143,7 +189,7 @@ export default function BlackBoxEditor({ projectRoot, address }: BlackBoxEditorP
     }
   };
 
-  if (loading) return <div style={{ color: 'var(--text-muted)', padding: 12 }}>Loading...</div>;
+  if (loading || gitVersionLoading) return <div style={{ color: 'var(--text-muted)', padding: 12 }}>Loading...</div>;
   if (error || !data) return <div style={{ color: 'var(--status-error)', padding: 12 }}>Error: {error}</div>;
 
   const color = statusColors[data.status] || statusColors.S_IDL;
@@ -271,10 +317,76 @@ export default function BlackBoxEditor({ projectRoot, address }: BlackBoxEditorP
           </span>
         )}
       </div>
-      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: isReadOnly ? 8 : 12, display: 'flex', alignItems: 'center', gap: 8 }}>
         <span>{address}</span>
         {saving && <span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>Saving...</span>}
       </div>
+
+      {/* Read-only banner for historical version */}
+      {isReadOnly && viewingCommit && (
+        <div style={{
+          background: '#e8f4fd', border: '1px solid #90caf9', borderRadius: 6,
+          padding: '8px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}>
+          <span style={{ fontSize: 12, color: '#1565c0' }}>
+            과거 버전 보기 중 — {viewingCommit.date.substring(0, 19)} ({viewingCommit.hash.substring(0, 7)}) {viewingCommit.message}
+          </span>
+          <button
+            style={{ fontSize: 11, padding: '3px 10px', background: '#1976d2', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600, color: '#fff' }}
+            onClick={restoreCurrent}
+          >
+            현재 버전으로 돌아가기
+          </button>
+        </div>
+      )}
+
+      {/* ===== GIT HISTORY ===== */}
+      {gitHistory.length > 0 && (
+        <div style={{ ...s.section, marginBottom: 12 }}>
+          <div
+            style={{ ...s.sectionHeader, cursor: 'pointer', userSelect: 'none' }}
+            onClick={() => setGitExpanded(!gitExpanded)}
+          >
+            <span style={s.sectionTitle}>
+              <span style={{ marginRight: 6, fontSize: 10 }}>{gitExpanded ? '▼' : '▶'}</span>
+              GIT HISTORY ({gitHistory.length})
+            </span>
+            {gitLoading && <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>loading...</span>}
+          </div>
+          {gitExpanded && (
+            <div style={{ maxHeight: 200, overflowY: 'auto', fontSize: 11 }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border-light)', color: 'var(--text-muted)', textAlign: 'left' }}>
+                    <th style={{ padding: '2px 6px', fontWeight: 500, width: 140 }}>Date</th>
+                    <th style={{ padding: '2px 6px', fontWeight: 500, width: 90 }}>Author</th>
+                    <th style={{ padding: '2px 6px', fontWeight: 500 }}>Message</th>
+                    <th style={{ padding: '2px 6px', fontWeight: 500, width: 70 }}>Hash</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {gitHistory.map(c => (
+                    <tr
+                      key={c.hash}
+                      style={{
+                        borderBottom: '1px solid var(--border-light)',
+                        cursor: 'pointer',
+                        background: viewingCommit?.hash === c.hash ? 'var(--accent-bg)' : 'transparent',
+                      }}
+                      onClick={() => loadGitVersion(c)}
+                    >
+                      <td style={{ padding: '3px 6px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{c.date.substring(0, 19)}</td>
+                      <td style={{ padding: '3px 6px', color: 'var(--text-secondary)' }}>{c.author}</td>
+                      <td style={{ padding: '3px 6px', color: 'var(--text-primary)' }}>{c.message}</td>
+                      <td style={{ padding: '3px 6px', fontFamily: 'monospace', color: 'var(--accent-primary)', fontSize: 10 }}>{c.hash.substring(0, 7)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Drift Warning */}
       {driftExpired && (
@@ -296,14 +408,14 @@ export default function BlackBoxEditor({ projectRoot, address }: BlackBoxEditorP
         <div style={s.sectionHeader}>
           <span style={s.sectionTitle}>DESCRIPTION</span>
           <div style={s.headerBtns}>
-            {editDescription ? (
+            {!isReadOnly && (editDescription ? (
               <>
                 <button style={s.btnPrimary} onClick={saveDescription}>Save</button>
                 <button style={s.btn} onClick={cancelEditDescription}>Cancel</button>
               </>
             ) : (
               <button style={s.btn} onClick={startEditDescription}>Edit</button>
-            )}
+            ))}
           </div>
         </div>
         {editDescription ? (
@@ -364,7 +476,7 @@ export default function BlackBoxEditor({ projectRoot, address }: BlackBoxEditorP
         <div style={s.sectionHeader}>
           <span style={s.sectionTitle}>TODO {total > 0 && `(${done}/${total})`}</span>
           <div style={s.headerBtns}>
-            {selectedTodo.size > 0 && (
+            {!isReadOnly && selectedTodo.size > 0 && (
               <>
                 <button style={s.btn} onClick={() => { const idx = [...selectedTodo][0]; startEditTodoItem(idx); }}>Edit</button>
                 <button style={s.btnPrimary} onClick={doneSelectedTodo}>Done ({selectedTodo.size})</button>
@@ -477,7 +589,7 @@ export default function BlackBoxEditor({ projectRoot, address }: BlackBoxEditorP
         {total === 0 && <div style={s.empty}>항목 없음</div>}
 
         {/* Add new TODO */}
-        <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
+        {!isReadOnly && <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
           <input
             style={{ ...s.inputSm, flex: 1 }}
             placeholder="새 항목 추가..."
@@ -486,7 +598,7 @@ export default function BlackBoxEditor({ projectRoot, address }: BlackBoxEditorP
             onKeyDown={e => { if (e.key === 'Enter') addTodo(); }}
           />
           <button style={s.btnPrimary} onClick={addTodo} disabled={!newTodo.trim()}>+ Add</button>
-        </div>
+        </div>}
       </div>
 
       {/* ===== ISSUE ===== */}
@@ -494,7 +606,7 @@ export default function BlackBoxEditor({ projectRoot, address }: BlackBoxEditorP
         <div style={s.sectionHeader}>
           <span style={s.sectionTitle}>ISSUE</span>
           <div style={s.headerBtns}>
-            {selectedIssues.size > 0 && (
+            {!isReadOnly && selectedIssues.size > 0 && (
               <>
                 <button style={s.btn} onClick={() => { const idx = [...selectedIssues][0]; startEditIssueItem(idx); }}>Edit</button>
                 <button style={s.btnDanger} onClick={deleteSelectedIssues}>Delete ({selectedIssues.size})</button>
@@ -519,7 +631,7 @@ export default function BlackBoxEditor({ projectRoot, address }: BlackBoxEditorP
         ))}
         {issues.length === 0 && <div style={s.empty}>이슈 없음</div>}
 
-        <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
+        {!isReadOnly && <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
           <input
             style={{ ...s.inputSm, flex: 1 }}
             placeholder="새 이슈 추가..."
@@ -528,7 +640,7 @@ export default function BlackBoxEditor({ projectRoot, address }: BlackBoxEditorP
             onKeyDown={e => { if (e.key === 'Enter') addIssue(); }}
           />
           <button style={s.btnPrimary} onClick={addIssue} disabled={!newIssue.trim()}>+ Add</button>
-        </div>
+        </div>}
       </div>
 
       {/* ===== COMMENT ===== */}
@@ -536,14 +648,14 @@ export default function BlackBoxEditor({ projectRoot, address }: BlackBoxEditorP
         <div style={s.sectionHeader}>
           <span style={s.sectionTitle}>COMMENT</span>
           <div style={s.headerBtns}>
-            {editComment ? (
+            {!isReadOnly && (editComment ? (
               <>
                 <button style={s.btnPrimary} onClick={saveComment}>Save</button>
                 <button style={s.btn} onClick={cancelEditComment}>Cancel</button>
               </>
             ) : (
               <button style={s.btn} onClick={startEditComment}>Edit</button>
-            )}
+            ))}
           </div>
         </div>
         {editComment ? (

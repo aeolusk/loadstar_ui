@@ -211,6 +211,13 @@ export async function fetchGitVersion(root: string, address: string, hash: strin
   return res.data;
 }
 
+export async function fetchGitBlackBoxVersion(root: string, address: string, hash: string): Promise<BlackBoxDetail> {
+  const res = await apiClient.get<BlackBoxDetail>('/git/show-blackbox', {
+    params: { root, address, hash },
+  });
+  return res.data;
+}
+
 // --- Log API ---
 
 export interface LogEntry {
