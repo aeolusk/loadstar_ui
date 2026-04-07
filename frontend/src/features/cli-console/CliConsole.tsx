@@ -65,7 +65,10 @@ export default function CliConsole({ projectRoot }: CliConsoleProps) {
     if (outputRef.current) {
       outputRef.current.scrollTop = outputRef.current.scrollHeight;
     }
-  }, [history]);
+    if (!running) {
+      setTimeout(() => inputRef.current?.focus(), 0);
+    }
+  }, [history, running]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -136,7 +139,7 @@ export default function CliConsole({ projectRoot }: CliConsoleProps) {
       ]);
     } finally {
       setRunning(false);
-      inputRef.current?.focus();
+      setTimeout(() => inputRef.current?.focus(), 0);
     }
   };
 

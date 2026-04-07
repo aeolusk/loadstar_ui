@@ -35,3 +35,5 @@
 | W://root/frontend/blackbox_editor | 2026-04-07 14:17 | BlackBox 편집 기능 구현 + 선택 툴바 + Done/Delete 분리 + Git History 과거 버전 읽기전용 로드 | DONE | 2026-04-07 14:17 | - |
 | W://root/backend/element_service | 2026-04-07 14:17 | BlackBox 수정 API + TODO 삭제 시 history 자동 이관 (skipHistory 파라미터) | DONE | 2026-04-07 14:17 | - |
 | W://root/backend/git_service | 2026-04-06 11:47 | Git 이력/checkpoint API 구현 | DONE | 2026-04-07 14:17 | - |
+| W://root/frontend/git_view | 2026-04-06 11:47 | GIT 이력 조회 화면 구현 | DONE | 2026-04-07 14:29 | - |
+| W://root/frontend/cli_console | 2026-04-06 11:47 | CLI 콘솔 화면 구현 | DONE | 2026-04-07 14:36 | - |
