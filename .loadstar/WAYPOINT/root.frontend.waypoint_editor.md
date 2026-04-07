@@ -3,8 +3,8 @@
 ## [STATUS] S_STB
 
 ### IDENTITY
-- SUMMARY: WayPoint 편집 기능 구현 (TECH_SPEC 선택 툴바 포함)
-- METADATA: [Ver: 2.1, Created: 2026-04-06]
+- SUMMARY: WayPoint 편집 기능 구현 (선택 툴바 + Done/Delete 분리 + Git History 과거 버전 로드)
+- METADATA: [Ver: 3.0, Created: 2026-04-06]
 - SYNCED_AT: 2026-04-07
 
 ### CONNECTIONS

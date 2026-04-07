@@ -31,3 +31,7 @@
 | W://root/frontend/blackbox_editor | 2026-04-07 12:27 | BlackBox 편집 기능 구현: DESCRIPTION/TODO/ISSUE/COMMENT 편집 + 선택 툴바 + Backend API | DONE | 2026-04-07 12:27 | - |
 | W://root/frontend/waypoint_editor | 2026-04-07 12:27 | TECH_SPEC 전체선택 + 텍스트 필터 선택 툴바 추가 | DONE | 2026-04-07 12:27 | - |
 | W://root/backend/element_service | 2026-04-07 12:27 | BlackBox 수정 API (PUT /api/elements/blackbox) + 변경 이력 기록 | DONE | 2026-04-07 12:27 | - |
+| W://root/frontend/waypoint_editor | 2026-04-07 14:17 | TECH_SPEC 선택 툴바 + Done/Delete 분리 + Git History 과거 버전 읽기전용 로드 | DONE | 2026-04-07 14:17 | - |
+| W://root/frontend/blackbox_editor | 2026-04-07 14:17 | BlackBox 편집 기능 구현 + 선택 툴바 + Done/Delete 분리 + Git History 과거 버전 읽기전용 로드 | DONE | 2026-04-07 14:17 | - |
+| W://root/backend/element_service | 2026-04-07 14:17 | BlackBox 수정 API + TODO 삭제 시 history 자동 이관 (skipHistory 파라미터) | DONE | 2026-04-07 14:17 | - |
+| W://root/backend/git_service | 2026-04-06 11:47 | Git 이력/checkpoint API 구현 | DONE | 2026-04-07 14:17 | - |

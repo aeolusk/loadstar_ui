@@ -3,8 +3,9 @@
 ## [STATUS] S_STB
 
 ### IDENTITY
-- SUMMARY: 요소 파싱/조회/편집 — Map, WayPoint, BlackBox md 파일 읽기/쓰기, 트리 구조 JSON 변환
-- METADATA: [Ver: 2.0, Created: 2026-04-06]
+- SUMMARY: 요소 파싱/조회/편집 — Map, WayPoint, BlackBox md 파일 읽기/쓰기, 트리 구조 JSON 변환, 삭제 시 TODO_HISTORY 이관
+- METADATA: [Ver: 3.0, Created: 2026-04-06]
+- SYNCED_AT: 2026-04-07
 
 ### CONNECTIONS
 - PARENT: M://root/backend

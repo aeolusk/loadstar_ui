@@ -3,8 +3,8 @@
 ## [STATUS] S_STB
 
 ### IDENTITY
-- SUMMARY: BlackBox 상세/편집 — DESCRIPTION/TODO/ISSUE/COMMENT 편집 + 선택 툴바 + CODE_MAP 뷰어 + 드리프트 경고
-- METADATA: [Ver: 2.0, Created: 2026-04-06]
+- SUMMARY: BlackBox 상세/편집 — 편집 + 선택 툴바 + Done/Delete 분리 + Git History 과거 버전 로드 + 드리프트 경고
+- METADATA: [Ver: 3.0, Created: 2026-04-06]
 - SYNCED_AT: 2026-04-07
 
 ### CONNECTIONS
