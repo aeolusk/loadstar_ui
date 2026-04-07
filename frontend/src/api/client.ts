@@ -127,16 +127,16 @@ export async function fetchBlackBox(root: string, address: string): Promise<Blac
   return res.data;
 }
 
-export async function updateWayPoint(root: string, data: WayPointDetail): Promise<WayPointDetail> {
+export async function updateWayPoint(root: string, data: WayPointDetail, skipHistory = false): Promise<WayPointDetail> {
   const res = await apiClient.put<WayPointDetail>('/elements/waypoint', data, {
-    params: { root },
+    params: { root, skipHistory },
   });
   return res.data;
 }
 
-export async function updateBlackBox(root: string, data: BlackBoxDetail): Promise<BlackBoxDetail> {
+export async function updateBlackBox(root: string, data: BlackBoxDetail, skipHistory = false): Promise<BlackBoxDetail> {
   const res = await apiClient.put<BlackBoxDetail>('/elements/blackbox', data, {
-    params: { root },
+    params: { root, skipHistory },
   });
   return res.data;
 }

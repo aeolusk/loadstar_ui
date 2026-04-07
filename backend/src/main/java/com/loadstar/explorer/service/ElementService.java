@@ -127,7 +127,7 @@ public class ElementService {
         return parser.parseBlackBoxDetail(file);
     }
 
-    public WayPointDetailResponse updateWayPoint(String projectRoot, WayPointDetailResponse data) throws IOException {
+    public WayPointDetailResponse updateWayPoint(String projectRoot, WayPointDetailResponse data, boolean skipHistory) throws IOException {
         String address = data.getAddress();
         Path file = addressToPath(projectRoot, address);
         if (!Files.exists(file)) throw new IOException("WayPoint not found: " + file);
@@ -142,7 +142,9 @@ public class ElementService {
         if (data.getTodoAddress() == null) data.setTodoAddress(existing.getTodoAddress());
 
         // Detect deleted TECH_SPEC items → register in TODO_HISTORY
-        recordDeletedTechSpec(projectRoot, address, existing.getTechSpec(), data.getTechSpec());
+        if (!skipHistory) {
+            recordDeletedTechSpec(projectRoot, address, existing.getTechSpec(), data.getTechSpec());
+        }
 
         // Write updated md
         writer.writeWayPoint(file, data);
@@ -191,7 +193,7 @@ public class ElementService {
         return changes.isEmpty() ? "updated" : String.join(", ", changes);
     }
 
-    public BlackBoxDetailResponse updateBlackBox(String projectRoot, BlackBoxDetailResponse data) throws IOException {
+    public BlackBoxDetailResponse updateBlackBox(String projectRoot, BlackBoxDetailResponse data, boolean skipHistory) throws IOException {
         String address = data.getAddress();
         Path file = addressToPath(projectRoot, address);
         if (!Files.exists(file)) throw new IOException("BlackBox not found: " + file);
@@ -201,7 +203,9 @@ public class ElementService {
         if (data.getLinkedWp() == null) data.setLinkedWp(existing.getLinkedWp());
 
         // Detect deleted TODO items → register in TODO_HISTORY
-        recordDeletedBlackBoxTodo(projectRoot, address, existing.getTodos(), data.getTodos());
+        if (!skipHistory) {
+            recordDeletedBlackBoxTodo(projectRoot, address, existing.getTodos(), data.getTodos());
+        }
 
         // Write updated md
         writer.writeBlackBox(file, data);

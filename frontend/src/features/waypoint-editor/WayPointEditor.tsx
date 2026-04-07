@@ -119,12 +119,12 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
       .finally(() => setLoading(false));
   }, [projectRoot, address]);
 
-  const saveToServer = async (patch: Partial<WayPointDetail>) => {
+  const saveToServer = async (patch: Partial<WayPointDetail>, skipHistory = false) => {
     if (!data) return;
     setSaving(true);
     try {
       const payload: WayPointDetail = { ...data, ...patch };
-      const updated = await updateWayPoint(projectRoot, payload);
+      const updated = await updateWayPoint(projectRoot, payload, skipHistory);
       setData(updated);
       setTechSpecItems(updated.techSpec.map(t => ({ ...t })));
       setIssues([...updated.issues]);
@@ -194,11 +194,17 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
       return next;
     });
   };
+  const doneSelectedTechSpec = () => {
+    const updated = techSpecItems.filter((_, i) => !selectedTechSpec.has(i));
+    setTechSpecItems(updated);
+    setSelectedTechSpec(new Set());
+    saveToServer({ techSpec: updated }); // skipHistory=false → history에 기록
+  };
   const deleteSelectedTechSpec = () => {
     const updated = techSpecItems.filter((_, i) => !selectedTechSpec.has(i));
     setTechSpecItems(updated);
     setSelectedTechSpec(new Set());
-    saveToServer({ techSpec: updated });
+    saveToServer({ techSpec: updated }, true); // skipHistory=true → history 없이 삭제
   };
   const startEditTechSpecItem = (idx: number) => {
     setEditingTechSpec(idx);
@@ -364,6 +370,7 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
             {selectedTechSpec.size > 0 && (
               <>
                 <button style={s.btn} onClick={() => { const idx = [...selectedTechSpec][0]; startEditTechSpecItem(idx); }}>Edit</button>
+                <button style={s.btnPrimary} onClick={doneSelectedTechSpec}>Done ({selectedTechSpec.size})</button>
                 <button style={s.btnDanger} onClick={deleteSelectedTechSpec}>Delete ({selectedTechSpec.size})</button>
               </>
             )}

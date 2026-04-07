@@ -127,12 +127,12 @@ export default function BlackBoxEditor({ projectRoot, address }: BlackBoxEditorP
       .finally(() => setLoading(false));
   }, [projectRoot, address]);
 
-  const saveToServer = async (patch: Partial<BlackBoxDetail>) => {
+  const saveToServer = async (patch: Partial<BlackBoxDetail>, skipHistory = false) => {
     if (!data) return;
     setSaving(true);
     try {
       const payload: BlackBoxDetail = { ...data, ...patch };
-      const updated = await updateBlackBox(projectRoot, payload);
+      const updated = await updateBlackBox(projectRoot, payload, skipHistory);
       setData(updated);
       setTodoItems(updated.todos.map(t => ({ ...t })));
       setIssues([...updated.issues]);
@@ -190,11 +190,17 @@ export default function BlackBoxEditor({ projectRoot, address }: BlackBoxEditorP
       return next;
     });
   };
+  const doneSelectedTodo = () => {
+    const updated = todoItems.filter((_, i) => !selectedTodo.has(i));
+    setTodoItems(updated);
+    setSelectedTodo(new Set());
+    saveToServer({ todos: updated }); // skipHistory=false → history에 기록
+  };
   const deleteSelectedTodo = () => {
     const updated = todoItems.filter((_, i) => !selectedTodo.has(i));
     setTodoItems(updated);
     setSelectedTodo(new Set());
-    saveToServer({ todos: updated });
+    saveToServer({ todos: updated }, true); // skipHistory=true → history 없이 삭제
   };
   const startEditTodoItem = (idx: number) => {
     setEditingTodo(idx);
@@ -361,6 +367,7 @@ export default function BlackBoxEditor({ projectRoot, address }: BlackBoxEditorP
             {selectedTodo.size > 0 && (
               <>
                 <button style={s.btn} onClick={() => { const idx = [...selectedTodo][0]; startEditTodoItem(idx); }}>Edit</button>
+                <button style={s.btnPrimary} onClick={doneSelectedTodo}>Done ({selectedTodo.size})</button>
                 <button style={s.btnDanger} onClick={deleteSelectedTodo}>Delete ({selectedTodo.size})</button>
               </>
             )}

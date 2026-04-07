@@ -59,18 +59,24 @@ public class ElementController {
     }
 
     @PutMapping("/waypoint")
-    public ResponseEntity<WayPointDetailResponse> updateWayPoint(@RequestParam String root, @RequestBody WayPointDetailResponse data) {
+    public ResponseEntity<WayPointDetailResponse> updateWayPoint(
+            @RequestParam String root,
+            @RequestParam(defaultValue = "false") boolean skipHistory,
+            @RequestBody WayPointDetailResponse data) {
         try {
-            return ResponseEntity.ok(elementService.updateWayPoint(root, data));
+            return ResponseEntity.ok(elementService.updateWayPoint(root, data, skipHistory));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
     }
 
     @PutMapping("/blackbox")
-    public ResponseEntity<BlackBoxDetailResponse> updateBlackBox(@RequestParam String root, @RequestBody BlackBoxDetailResponse data) {
+    public ResponseEntity<BlackBoxDetailResponse> updateBlackBox(
+            @RequestParam String root,
+            @RequestParam(defaultValue = "false") boolean skipHistory,
+            @RequestBody BlackBoxDetailResponse data) {
         try {
-            return ResponseEntity.ok(elementService.updateBlackBox(root, data));
+            return ResponseEntity.ok(elementService.updateBlackBox(root, data, skipHistory));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
