@@ -378,8 +378,8 @@ export default function MapView({ projectRoot, address, onOpenTab }: MapViewProp
                 </div>
                 <div style={{ flex: 1, overflow: 'auto', padding: '12px 16px' }}>
                   {detail.type === 'waypoint'
-                    ? <WayPointEditor projectRoot={projectRoot} address={detail.address} />
-                    : <BlackBoxEditor projectRoot={projectRoot} address={detail.address} />
+                    ? <WayPointEditor projectRoot={projectRoot} address={detail.address} onOpenTab={onOpenTab} />
+                    : <BlackBoxEditor projectRoot={projectRoot} address={detail.address} onOpenTab={onOpenTab} />
                   }
                 </div>
               </div>
