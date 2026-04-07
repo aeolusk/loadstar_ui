@@ -28,12 +28,7 @@ interface DetailPanel {
   address: string;
 }
 
-const statusColors: Record<string, string> = {
-  S_IDL: '#9b8e7e', S_PRG: '#3a7ca5', S_STB: '#5a8a5e', S_ERR: '#b54a3f', S_REV: '#c47f17',
-};
-const statusLabels: Record<string, string> = {
-  S_IDL: 'Idle', S_PRG: 'In Progress', S_STB: 'Stable', S_ERR: 'Error', S_REV: 'Review',
-};
+import { getStatusLabel, getStatusColor } from '../../data/status-labels';
 
 // ===== Custom Nodes =====
 
@@ -43,7 +38,7 @@ function WayPointNode({ data }: { data: {
   onBlackboxClick: (addr: string) => void;
   onNodeSelect: (type: 'waypoint' | 'blackbox', addr: string) => void;
 } }) {
-  const color = statusColors[data.status] || statusColors.S_IDL;
+  const color = getStatusColor(data.status);
 
   const handleClick = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('.bb-icon')) return;
@@ -89,7 +84,7 @@ function WayPointNode({ data }: { data: {
           fontSize: 10, padding: '1px 6px', background: color + '20', color: color,
           borderRadius: 3, fontWeight: 600,
         }}>
-          {statusLabels[data.status] || data.status}
+          {getStatusLabel(data.status)}
         </span>
       </div>
 
@@ -103,7 +98,7 @@ function WayPointNode({ data }: { data: {
 }
 
 function MapNode({ data }: { data: { label: string; status: string } }) {
-  const color = statusColors[data.status] || statusColors.S_IDL;
+  const color = getStatusColor(data.status);
   return (
     <div style={{
       background: '#faf8f5', border: `2px solid ${color}`, borderRadius: 8,
@@ -122,7 +117,7 @@ function MapNode({ data }: { data: { label: string; status: string } }) {
 }
 
 function RefWayPointNode({ data }: { data: { label: string; status: string; address: string; onNodeSelect: (type: 'waypoint', addr: string) => void } }) {
-  const color = statusColors[data.status] || statusColors.S_IDL;
+  const color = getStatusColor(data.status);
   return (
     <div
       onClick={() => data.onNodeSelect('waypoint', data.address)}

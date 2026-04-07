@@ -1,18 +1,11 @@
 import { useState, useEffect } from 'react';
 import { fetchWayPoint, updateWayPoint, fetchGitHistory, fetchGitVersion, type WayPointDetail, type GitCommitEntry } from '../../api/client';
+import { statusOptions, getStatusLabel, getStatusColor } from '../../data/status-labels';
 
 interface WayPointEditorProps {
   projectRoot: string;
   address: string;
 }
-
-const statusOptions = ['S_IDL', 'S_PRG', 'S_STB', 'S_ERR', 'S_REV'];
-const statusColors: Record<string, string> = {
-  S_IDL: '#9b8e7e', S_PRG: '#3a7ca5', S_STB: '#5a8a5e', S_ERR: '#b54a3f', S_REV: '#c47f17',
-};
-const statusLabels: Record<string, string> = {
-  S_IDL: 'Idle', S_PRG: 'In Progress', S_STB: 'Stable', S_ERR: 'Error', S_REV: 'Review',
-};
 
 // ===== Styles =====
 const s = {
@@ -187,7 +180,7 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
   if (loading || gitVersionLoading) return <div style={{ color: 'var(--text-muted)', padding: 12 }}>Loading...</div>;
   if (error || !data) return <div style={{ color: 'var(--status-error)', padding: 12 }}>Error: {error}</div>;
 
-  const color = statusColors[data.status] || statusColors.S_IDL;
+  const color = getStatusColor(data.status);
   const done = techSpecItems.filter(t => t.done).length;
   const total = techSpecItems.length;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
@@ -332,7 +325,7 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
         <span style={{ fontSize: 16, color: '#3a7ca5' }}>◆</span>
         <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>{address.split('/').pop()}</span>
-        <span style={s.badge(color)}>{statusLabels[data.status] || data.status}</span>
+        <span style={s.badge(color)}>{getStatusLabel(data.status)}</span>
       </div>
       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: isReadOnly ? 8 : 16, display: 'flex', alignItems: 'center', gap: 8 }}>
         <span>{address}</span>
@@ -425,7 +418,7 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
             <div>
               <div style={s.label}>Status</div>
               <select style={s.select} value={editStatus} onChange={e => setEditStatus(e.target.value)}>
-                {statusOptions.map(st => <option key={st} value={st}>{st} - {statusLabels[st]}</option>)}
+                {statusOptions.map(st => <option key={st} value={st}>{st} - {getStatusLabel(st)}</option>)}
               </select>
             </div>
             <div>

@@ -1,18 +1,11 @@
 import { useState, useEffect } from 'react';
 import { fetchBlackBox, updateBlackBox, fetchGitHistory, fetchGitBlackBoxVersion, type BlackBoxDetail, type GitCommitEntry } from '../../api/client';
+import { statusOptions, getStatusLabel, getStatusColor } from '../../data/status-labels';
 
 interface BlackBoxEditorProps {
   projectRoot: string;
   address: string;
 }
-
-const statusOptions = ['S_IDL', 'S_PRG', 'S_STB', 'S_ERR', 'S_REV'];
-const statusColors: Record<string, string> = {
-  S_IDL: '#9b8e7e', S_PRG: '#3a7ca5', S_STB: '#5a8a5e', S_ERR: '#b54a3f', S_REV: '#c47f17',
-};
-const statusLabels: Record<string, string> = {
-  S_IDL: 'Idle', S_PRG: 'In Progress', S_STB: 'Stable', S_ERR: 'Error', S_REV: 'Review',
-};
 
 const s = {
   section: { marginBottom: 20 } as React.CSSProperties,
@@ -192,7 +185,7 @@ export default function BlackBoxEditor({ projectRoot, address }: BlackBoxEditorP
   if (loading || gitVersionLoading) return <div style={{ color: 'var(--text-muted)', padding: 12 }}>Loading...</div>;
   if (error || !data) return <div style={{ color: 'var(--status-error)', padding: 12 }}>Error: {error}</div>;
 
-  const color = statusColors[data.status] || statusColors.S_IDL;
+  const color = getStatusColor(data.status);
   const driftExpired = isDriftExpired(data.syncedAt);
   const days = daysSince(data.syncedAt);
   const done = todoItems.filter(t => t.done).length;
@@ -310,7 +303,7 @@ export default function BlackBoxEditor({ projectRoot, address }: BlackBoxEditorP
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <span style={{ fontSize: 16 }}>&#128230;</span>
         <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>{address.split('/').pop()}</span>
-        <span style={s.badge(color)}>{statusLabels[data.status] || data.status}</span>
+        <span style={s.badge(color)}>{getStatusLabel(data.status)}</span>
         {data.syncedAt && (
           <span style={{ fontSize: 11, color: driftExpired ? '#b54a3f' : 'var(--text-muted)' }}>
             SYNCED_AT: {data.syncedAt} ({days}d ago)
@@ -423,7 +416,7 @@ export default function BlackBoxEditor({ projectRoot, address }: BlackBoxEditorP
             <div>
               <div style={s.label}>Status</div>
               <select style={s.select} value={editStatus} onChange={e => setEditStatus(e.target.value)}>
-                {statusOptions.map(st => <option key={st} value={st}>{st} - {statusLabels[st]}</option>)}
+                {statusOptions.map(st => <option key={st} value={st}>{st} - {getStatusLabel(st)}</option>)}
               </select>
             </div>
             <div>
