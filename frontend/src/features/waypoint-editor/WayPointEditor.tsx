@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchWayPoint, updateWayPoint, type WayPointDetail } from '../../api/client';
+import { fetchWayPoint, updateWayPoint, fetchGitHistory, type WayPointDetail, type GitCommitEntry } from '../../api/client';
 
 interface WayPointEditorProps {
   projectRoot: string;
@@ -105,6 +105,11 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
   const [openQuestions, setOpenQuestions] = useState<{ id: string; text: string; resolved: boolean }[]>([]);
   const [newOqText, setNewOqText] = useState('');
 
+  // Git History
+  const [gitHistory, setGitHistory] = useState<GitCommitEntry[]>([]);
+  const [gitExpanded, setGitExpanded] = useState(false);
+  const [gitLoading, setGitLoading] = useState(false);
+
   useEffect(() => {
     setLoading(true);
     setError(null);
@@ -117,6 +122,12 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
       })
       .catch(e => setError(e.message || 'Failed to load'))
       .finally(() => setLoading(false));
+    // Load git history
+    setGitLoading(true);
+    fetchGitHistory(projectRoot, address)
+      .then(setGitHistory)
+      .catch(() => setGitHistory([]))
+      .finally(() => setGitLoading(false));
   }, [projectRoot, address]);
 
   const saveToServer = async (patch: Partial<WayPointDetail>, skipHistory = false) => {
@@ -290,6 +301,46 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
         <span>{address}</span>
         {saving && <span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>Saving...</span>}
       </div>
+
+      {/* ===== GIT HISTORY ===== */}
+      {gitHistory.length > 0 && (
+        <div style={{ ...s.section, marginBottom: 12 }}>
+          <div
+            style={{ ...s.sectionHeader, cursor: 'pointer', userSelect: 'none' }}
+            onClick={() => setGitExpanded(!gitExpanded)}
+          >
+            <span style={s.sectionTitle}>
+              <span style={{ marginRight: 6, fontSize: 10 }}>{gitExpanded ? '▼' : '▶'}</span>
+              GIT HISTORY ({gitHistory.length})
+            </span>
+            {gitLoading && <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>loading...</span>}
+          </div>
+          {gitExpanded && (
+            <div style={{ maxHeight: 200, overflowY: 'auto', fontSize: 11 }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border-light)', color: 'var(--text-muted)', textAlign: 'left' }}>
+                    <th style={{ padding: '2px 6px', fontWeight: 500, width: 140 }}>Date</th>
+                    <th style={{ padding: '2px 6px', fontWeight: 500, width: 90 }}>Author</th>
+                    <th style={{ padding: '2px 6px', fontWeight: 500 }}>Message</th>
+                    <th style={{ padding: '2px 6px', fontWeight: 500, width: 70 }}>Hash</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {gitHistory.map(c => (
+                    <tr key={c.hash} style={{ borderBottom: '1px solid var(--border-light)' }}>
+                      <td style={{ padding: '3px 6px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{c.date.substring(0, 19)}</td>
+                      <td style={{ padding: '3px 6px', color: 'var(--text-secondary)' }}>{c.author}</td>
+                      <td style={{ padding: '3px 6px', color: 'var(--text-primary)' }}>{c.message}</td>
+                      <td style={{ padding: '3px 6px', fontFamily: 'monospace', color: 'var(--accent-primary)', fontSize: 10 }}>{c.hash.substring(0, 7)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ===== IDENTITY ===== */}
       <div style={s.section}>

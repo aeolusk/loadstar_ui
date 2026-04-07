@@ -188,6 +188,22 @@ export async function deleteTodo(root: string, address: string): Promise<void> {
   await apiClient.delete('/todo/delete', { data: { address }, params: { root } });
 }
 
+// --- Git History API ---
+
+export interface GitCommitEntry {
+  hash: string;
+  date: string;
+  author: string;
+  message: string;
+}
+
+export async function fetchGitHistory(root: string, address: string): Promise<GitCommitEntry[]> {
+  const res = await apiClient.get<GitCommitEntry[]>('/git/history', {
+    params: { root, address },
+  });
+  return res.data;
+}
+
 // --- Log API ---
 
 export interface LogEntry {
