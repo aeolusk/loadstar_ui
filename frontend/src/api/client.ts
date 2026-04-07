@@ -134,6 +134,13 @@ export async function updateWayPoint(root: string, data: WayPointDetail): Promis
   return res.data;
 }
 
+export async function updateBlackBox(root: string, data: BlackBoxDetail): Promise<BlackBoxDetail> {
+  const res = await apiClient.put<BlackBoxDetail>('/elements/blackbox', data, {
+    params: { root },
+  });
+  return res.data;
+}
+
 // --- TODO API ---
 
 export interface ApiTodoItem {

@@ -170,6 +170,45 @@ public class ElementService {
         return changes.isEmpty() ? "updated" : String.join(", ", changes);
     }
 
+    public BlackBoxDetailResponse updateBlackBox(String projectRoot, BlackBoxDetailResponse data) throws IOException {
+        String address = data.getAddress();
+        Path file = addressToPath(projectRoot, address);
+        if (!Files.exists(file)) throw new IOException("BlackBox not found: " + file);
+
+        // Read existing to preserve LINKED_WP
+        BlackBoxDetailResponse existing = parser.parseBlackBoxDetail(file);
+        if (data.getLinkedWp() == null) data.setLinkedWp(existing.getLinkedWp());
+
+        // Write updated md
+        writer.writeBlackBox(file, data);
+
+        // Log change via CLI
+        cli.logModified(projectRoot, address, buildBlackBoxChangeSummary(existing, data));
+
+        // Return fresh data
+        return parser.parseBlackBoxDetail(file);
+    }
+
+    private String buildBlackBoxChangeSummary(BlackBoxDetailResponse before, BlackBoxDetailResponse after) {
+        List<String> changes = new ArrayList<>();
+        if (!eq(before.getStatus(), after.getStatus())) changes.add("STATUS " + before.getStatus() + " -> " + after.getStatus());
+        if (!eq(before.getSummary(), after.getSummary())) changes.add("SUMMARY changed");
+        if (!eq(before.getComment(), after.getComment())) changes.add("COMMENT changed");
+        if (!eq(before.getCodeMapPhase(), after.getCodeMapPhase())) changes.add("CODE_MAP phase changed");
+
+        int beforeDone = before.getTodos() != null ? (int) before.getTodos().stream().filter(BlackBoxDetailResponse.TodoItem::isDone).count() : 0;
+        int afterDone = after.getTodos() != null ? (int) after.getTodos().stream().filter(BlackBoxDetailResponse.TodoItem::isDone).count() : 0;
+        int beforeTotal = before.getTodos() != null ? before.getTodos().size() : 0;
+        int afterTotal = after.getTodos() != null ? after.getTodos().size() : 0;
+        if (beforeDone != afterDone || beforeTotal != afterTotal) changes.add("TODO " + beforeDone + "/" + beforeTotal + " -> " + afterDone + "/" + afterTotal);
+
+        int beforeIssues = before.getIssues() != null ? before.getIssues().size() : 0;
+        int afterIssues = after.getIssues() != null ? after.getIssues().size() : 0;
+        if (beforeIssues != afterIssues) changes.add("ISSUE count " + beforeIssues + " -> " + afterIssues);
+
+        return changes.isEmpty() ? "updated" : String.join(", ", changes);
+    }
+
     private boolean eq(String a, String b) {
         if (a == null && b == null) return true;
         if (a == null || b == null) return false;

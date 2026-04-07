@@ -92,6 +92,7 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
   const [editingTechSpec, setEditingTechSpec] = useState<number | null>(null);
   const [editTechSpecText, setEditTechSpecText] = useState('');
   const [newTechSpec, setNewTechSpec] = useState('');
+  const [techSpecFilter, setTechSpecFilter] = useState('');
 
   // ISSUE editing
   const [issues, setIssues] = useState<string[]>([]);
@@ -388,6 +389,67 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
         {/* Progress bar */}
         {total > 0 && (
           <div style={s.progressBar}><div style={s.progressFill(pct)} /></div>
+        )}
+
+        {/* Selection toolbar */}
+        {total > 0 && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0 6px',
+            borderBottom: '1px solid var(--border-light)', marginBottom: 4,
+          }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-secondary)', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              <input
+                type="checkbox"
+                checked={selectedTechSpec.size === total && total > 0}
+                ref={el => { if (el) el.indeterminate = selectedTechSpec.size > 0 && selectedTechSpec.size < total; }}
+                onChange={() => {
+                  if (selectedTechSpec.size === total) {
+                    setSelectedTechSpec(new Set());
+                  } else {
+                    setSelectedTechSpec(new Set(techSpecItems.map((_, i) => i)));
+                  }
+                }}
+              />
+              All
+            </label>
+            <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+              <input
+                style={{ ...s.inputSm, width: '100%', paddingRight: 50, fontSize: 11 }}
+                placeholder="텍스트 필터로 선택..."
+                value={techSpecFilter}
+                onChange={e => setTechSpecFilter(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && techSpecFilter.trim()) {
+                    const keyword = techSpecFilter.trim().toLowerCase();
+                    const matched = new Set<number>();
+                    techSpecItems.forEach((item, i) => {
+                      if (item.text.toLowerCase().includes(keyword)) matched.add(i);
+                    });
+                    setSelectedTechSpec(matched);
+                  }
+                }}
+              />
+              {techSpecFilter && (
+                <button
+                  style={{ ...s.btnPrimary, position: 'absolute', right: 2, top: '50%', transform: 'translateY(-50%)', padding: '1px 6px', fontSize: 10 }}
+                  onClick={() => {
+                    const keyword = techSpecFilter.trim().toLowerCase();
+                    if (!keyword) return;
+                    const matched = new Set<number>();
+                    techSpecItems.forEach((item, i) => {
+                      if (item.text.toLowerCase().includes(keyword)) matched.add(i);
+                    });
+                    setSelectedTechSpec(matched);
+                  }}
+                >
+                  Select
+                </button>
+              )}
+            </div>
+            {selectedTechSpec.size > 0 && (
+              <span style={{ fontSize: 10, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{selectedTechSpec.size}건</span>
+            )}
+          </div>
         )}
 
         {/* TECH_SPEC items */}

@@ -3,8 +3,9 @@
 ## [STATUS] S_STB
 
 ### IDENTITY
-- SUMMARY: WayPoint 편집 기능 구현
-- METADATA: [Ver: 2.0, Created: 2026-04-06]
+- SUMMARY: WayPoint 편집 기능 구현 (TECH_SPEC 선택 툴바 포함)
+- METADATA: [Ver: 2.1, Created: 2026-04-06]
+- SYNCED_AT: 2026-04-07
 
 ### CONNECTIONS
 - PARENT: M://root/frontend
@@ -33,6 +34,7 @@
   - [x] COMMENT 편집: 자유 텍스트 편집
   - [x] Backend: WayPoint 수정 API (PUT /api/elements/waypoint)
   - [x] Backend: 수정 후 loadstar log CLI로 변경 이력 기록
+  - [x] TODO 관리: 전체선택 + 텍스트 필터 선택 툴바
   - [x] 저장 �� 로딩 인디케이터 표시
 
 ### ISSUE

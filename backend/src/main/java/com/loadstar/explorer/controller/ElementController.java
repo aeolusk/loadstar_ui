@@ -66,4 +66,13 @@ public class ElementController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    @PutMapping("/blackbox")
+    public ResponseEntity<BlackBoxDetailResponse> updateBlackBox(@RequestParam String root, @RequestBody BlackBoxDetailResponse data) {
+        try {
+            return ResponseEntity.ok(elementService.updateBlackBox(root, data));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }
