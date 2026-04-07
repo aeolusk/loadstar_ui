@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { fetchBlackBox, updateBlackBox, fetchGitHistory, fetchGitBlackBoxVersion, type BlackBoxDetail, type GitCommitEntry } from '../../api/client';
 import { statusOptions, getStatusLabel, getStatusColor } from '../../data/status-labels';
+import type { Tab } from '../../App';
 
 interface BlackBoxEditorProps {
   projectRoot: string;
   address: string;
+  onOpenTab?: (tab: Tab) => void;
 }
 
 const s = {
@@ -76,7 +78,7 @@ function daysSince(syncedAt: string | null): number {
 
 type TodoItem = { text: string; wpRef: number; done: boolean };
 
-export default function BlackBoxEditor({ projectRoot, address }: BlackBoxEditorProps) {
+export default function BlackBoxEditor({ projectRoot, address, onOpenTab }: BlackBoxEditorProps) {
   const [data, setData] = useState<BlackBoxDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -165,6 +167,14 @@ export default function BlackBoxEditor({ projectRoot, address }: BlackBoxEditorP
   };
 
   const isReadOnly = viewingCommit !== null;
+
+  const navigateTo = (addr: string) => {
+    if (!onOpenTab || !addr) return;
+    let type: Tab['type'] = 'waypoint';
+    if (addr.startsWith('M://')) type = 'map';
+    else if (addr.startsWith('B://')) type = 'blackbox';
+    onOpenTab({ id: addr, title: addr.split('/').pop() || addr, type, address: addr });
+  };
 
   const saveToServer = async (patch: Partial<BlackBoxDetail>, skipHistory = false) => {
     if (!data) return;
@@ -433,7 +443,7 @@ export default function BlackBoxEditor({ projectRoot, address }: BlackBoxEditorP
             <div style={s.label}>Summary</div>
             <div style={s.value}>{data.summary || '-'}</div>
             {data.linkedWp && (
-              <div><span style={s.label}>Linked WP: </span><span style={s.link}>{data.linkedWp}</span></div>
+              <div><span style={s.label}>Linked WP: </span><span style={s.link} onDoubleClick={() => navigateTo(data.linkedWp!)}>{data.linkedWp}</span></div>
             )}
           </>
         )}

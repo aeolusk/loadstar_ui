@@ -37,8 +37,8 @@ const TabContent = ({ tab, projectRoot, onOpenTab }: { tab: Tab; projectRoot: st
   switch (tab.type) {
     case 'dashboard': return <DashboardView />;
     case 'map': return <MapView projectRoot={projectRoot} address={tab.address || ''} onOpenTab={onOpenTab} />;
-    case 'waypoint': return <WayPointEditor projectRoot={projectRoot} address={tab.address || ''} />;
-    case 'blackbox': return <BlackBoxEditor projectRoot={projectRoot} address={tab.address || ''} />;
+    case 'waypoint': return <WayPointEditor projectRoot={projectRoot} address={tab.address || ''} onOpenTab={onOpenTab} />;
+    case 'blackbox': return <BlackBoxEditor projectRoot={projectRoot} address={tab.address || ''} onOpenTab={onOpenTab} />;
     case 'todo': return <TodoView projectRoot={projectRoot} />;
     case 'history': return <TodoView projectRoot={projectRoot} />;
     case 'monitor': return <MonitorView />;

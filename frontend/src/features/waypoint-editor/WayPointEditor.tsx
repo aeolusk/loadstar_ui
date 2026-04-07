@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { fetchWayPoint, updateWayPoint, fetchGitHistory, fetchGitVersion, type WayPointDetail, type GitCommitEntry } from '../../api/client';
 import { statusOptions, getStatusLabel, getStatusColor } from '../../data/status-labels';
+import type { Tab } from '../../App';
 
 interface WayPointEditorProps {
   projectRoot: string;
   address: string;
+  onOpenTab?: (tab: Tab) => void;
 }
 
 // ===== Styles =====
@@ -59,7 +61,7 @@ const s = {
   empty: { fontSize: 12, color: 'var(--text-muted)', padding: '4px 0', fontStyle: 'italic' as const } as React.CSSProperties,
 };
 
-export default function WayPointEditor({ projectRoot, address }: WayPointEditorProps) {
+export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayPointEditorProps) {
   const [data, setData] = useState<WayPointDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -176,6 +178,14 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
   };
 
   const isReadOnly = viewingCommit !== null;
+
+  const navigateTo = (addr: string) => {
+    if (!onOpenTab || !addr) return;
+    let type: Tab['type'] = 'waypoint';
+    if (addr.startsWith('M://')) type = 'map';
+    else if (addr.startsWith('B://')) type = 'blackbox';
+    onOpenTab({ id: addr, title: addr.split('/').pop() || addr, type, address: addr });
+  };
 
   if (loading || gitVersionLoading) return <div style={{ color: 'var(--text-muted)', padding: 12 }}>Loading...</div>;
   if (error || !data) return <div style={{ color: 'var(--status-error)', padding: 12 }}>Error: {error}</div>;
@@ -450,20 +460,20 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
         <div style={s.sectionHeader}>
           <span style={s.sectionTitle}>CONNECTIONS</span>
         </div>
-        {data.parent && <div style={{ marginBottom: 4 }}><span style={s.label}>Parent: </span><span style={s.link}>{data.parent}</span></div>}
+        {data.parent && <div style={{ marginBottom: 4 }}><span style={s.label}>Parent: </span><span style={s.link} onDoubleClick={() => navigateTo(data.parent!)}>{data.parent}</span></div>}
         {data.children.length > 0 && (
           <div style={{ marginBottom: 4 }}>
             <span style={s.label}>Children: </span>
-            {data.children.map(c => <span key={c} style={{ ...s.link, marginRight: 8 }}>{c}</span>)}
+            {data.children.map(c => <span key={c} style={{ ...s.link, marginRight: 8 }} onDoubleClick={() => navigateTo(c)}>{c}</span>)}
           </div>
         )}
         {data.references.length > 0 && (
           <div style={{ marginBottom: 4 }}>
             <span style={s.label}>Reference: </span>
-            {data.references.map(r => <span key={r} style={{ ...s.link, marginRight: 8 }}>{r}</span>)}
+            {data.references.map(r => <span key={r} style={{ ...s.link, marginRight: 8 }} onDoubleClick={() => navigateTo(r)}>{r}</span>)}
           </div>
         )}
-        {data.blackbox && <div><span style={s.label}>BlackBox: </span><span style={s.link}>{data.blackbox}</span></div>}
+        {data.blackbox && <div><span style={s.label}>BlackBox: </span><span style={s.link} onDoubleClick={() => navigateTo(data.blackbox!)}>{data.blackbox}</span></div>}
         {!data.parent && data.children.length === 0 && data.references.length === 0 && !data.blackbox && (
           <div style={s.empty}>연결 정보 없음</div>
         )}
