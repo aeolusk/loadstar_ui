@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchWayPoint, updateWayPoint, fetchGitHistory, fetchGitVersion, type WayPointDetail, type GitCommitEntry } from '../../api/client';
+import { fetchWayPoint, updateWayPoint, fetchGitHistory, fetchGitVersion, browseDirectory, type WayPointDetail, type GitCommitEntry, type DirEntry } from '../../api/client';
 import { statusOptions, getStatusLabel, getStatusColor } from '../../data/status-labels';
 import type { Tab } from '../../App';
 
@@ -93,6 +93,11 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
   const [codeMapScopes, setCodeMapScopes] = useState<string[]>([]);
   const [editCodeMap, setEditCodeMap] = useState(false);
   const [newScope, setNewScope] = useState('');
+  const [showDirBrowser, setShowDirBrowser] = useState(false);
+  const [dirBrowserPath, setDirBrowserPath] = useState('');
+  const [dirBrowserParent, setDirBrowserParent] = useState<string | null>(null);
+  const [dirBrowserEntries, setDirBrowserEntries] = useState<DirEntry[]>([]);
+  const [dirBrowserLoading, setDirBrowserLoading] = useState(false);
 
   // ISSUE editing
   const [issues, setIssues] = useState<string[]>([]);
@@ -185,6 +190,46 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
   };
 
   const isReadOnly = viewingCommit !== null;
+
+  const openDirBrowser = async () => {
+    setShowDirBrowser(true);
+    setDirBrowserLoading(true);
+    try {
+      const res = await browseDirectory(projectRoot);
+      setDirBrowserPath(res.path);
+      setDirBrowserParent(null); // don't go above project root
+      setDirBrowserEntries(res.entries);
+    } catch { /* ignore */ }
+    finally { setDirBrowserLoading(false); }
+  };
+
+  const browseDirTo = async (path: string) => {
+    setDirBrowserLoading(true);
+    try {
+      const res = await browseDirectory(path);
+      setDirBrowserPath(res.path);
+      // Only allow going up to project root
+      setDirBrowserParent(res.parent && res.path !== projectRoot ? res.parent : null);
+      setDirBrowserEntries(res.entries);
+    } catch { /* ignore */ }
+    finally { setDirBrowserLoading(false); }
+  };
+
+  const selectDirAsScope = () => {
+    if (!dirBrowserPath) return;
+    // Convert absolute path to relative from project root
+    let relative = dirBrowserPath.replace(/\\/g, '/');
+    const root = projectRoot.replace(/\\/g, '/');
+    if (relative.startsWith(root)) {
+      relative = relative.substring(root.length);
+      if (relative.startsWith('/')) relative = relative.substring(1);
+    }
+    if (relative && !relative.endsWith('/')) relative += '/';
+    if (relative && !codeMapScopes.includes(relative)) {
+      setCodeMapScopes([...codeMapScopes, relative]);
+    }
+    setShowDirBrowser(false);
+  };
 
   const navigateTo = (addr: string) => {
     if (!onOpenTab || !addr) return;
@@ -530,7 +575,76 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
               <button style={s.btnPrimary} onClick={() => {
                 if (newScope.trim()) { setCodeMapScopes([...codeMapScopes, newScope.trim()]); setNewScope(''); }
               }} disabled={!newScope.trim()}>+ Add</button>
+              <button style={s.btn} onClick={openDirBrowser}>Browse</button>
             </div>
+
+            {/* Directory Browser Popup */}
+            {showDirBrowser && (
+              <div style={{
+                marginTop: 8, border: '1px solid var(--border-medium)', borderRadius: 6,
+                background: 'var(--bg-surface)', maxHeight: 250, display: 'flex', flexDirection: 'column',
+              }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '6px 10px', borderBottom: '1px solid var(--border-light)', background: 'var(--bg-tertiary)',
+                }}>
+                  <span style={{ fontSize: 11, fontFamily: 'monospace', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                    {dirBrowserPath}
+                  </span>
+                  <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                    <button style={s.btnPrimary} onClick={selectDirAsScope}>Select</button>
+                    <button style={s.btn} onClick={() => setShowDirBrowser(false)}>Close</button>
+                  </div>
+                </div>
+                <div style={{ overflow: 'auto', flex: 1, maxHeight: 200 }}>
+                  {dirBrowserLoading ? (
+                    <div style={{ padding: 12, fontSize: 11, color: 'var(--text-muted)' }}>Loading...</div>
+                  ) : (
+                    <>
+                      {dirBrowserParent && (
+                        <div
+                          style={{ padding: '4px 10px', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}
+                          onClick={() => browseDirTo(dirBrowserParent)}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-tertiary)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                        >
+                          <span>📂</span><span style={{ color: 'var(--text-muted)' }}>..</span>
+                        </div>
+                      )}
+                      {dirBrowserEntries.map(entry => (
+                        <div
+                          key={entry.path}
+                          style={{ padding: '4px 10px', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}
+                          onClick={() => browseDirTo(entry.path)}
+                          onDoubleClick={() => {
+                            // Double-click to select this directory as scope
+                            let relative = entry.path.replace(/\\/g, '/');
+                            const root = projectRoot.replace(/\\/g, '/');
+                            if (relative.startsWith(root)) {
+                              relative = relative.substring(root.length);
+                              if (relative.startsWith('/')) relative = relative.substring(1);
+                            }
+                            if (relative && !relative.endsWith('/')) relative += '/';
+                            if (relative && !codeMapScopes.includes(relative)) {
+                              setCodeMapScopes([...codeMapScopes, relative]);
+                            }
+                            setShowDirBrowser(false);
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-tertiary)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                        >
+                          <span>{entry.hasChildren ? '📂' : '📁'}</span>
+                          <span style={{ fontFamily: 'monospace', color: 'var(--text-primary)' }}>{entry.name}</span>
+                        </div>
+                      ))}
+                      {dirBrowserEntries.length === 0 && (
+                        <div style={{ padding: 12, fontSize: 11, color: 'var(--text-muted)' }}>하위 폴더 없음</div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           codeMapScopes.length > 0 ? (
