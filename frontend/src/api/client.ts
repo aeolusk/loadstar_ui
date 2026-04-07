@@ -204,6 +204,13 @@ export async function fetchGitHistory(root: string, address: string): Promise<Gi
   return res.data;
 }
 
+export async function fetchGitVersion(root: string, address: string, hash: string): Promise<WayPointDetail> {
+  const res = await apiClient.get<WayPointDetail>('/git/show', {
+    params: { root, address, hash },
+  });
+  return res.data;
+}
+
 // --- Log API ---
 
 export interface LogEntry {

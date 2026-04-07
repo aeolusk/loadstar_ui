@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchWayPoint, updateWayPoint, fetchGitHistory, type WayPointDetail, type GitCommitEntry } from '../../api/client';
+import { fetchWayPoint, updateWayPoint, fetchGitHistory, fetchGitVersion, type WayPointDetail, type GitCommitEntry } from '../../api/client';
 
 interface WayPointEditorProps {
   projectRoot: string;
@@ -109,6 +109,8 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
   const [gitHistory, setGitHistory] = useState<GitCommitEntry[]>([]);
   const [gitExpanded, setGitExpanded] = useState(false);
   const [gitLoading, setGitLoading] = useState(false);
+  const [viewingCommit, setViewingCommit] = useState<GitCommitEntry | null>(null);
+  const [gitVersionLoading, setGitVersionLoading] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -147,7 +149,42 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
     }
   };
 
-  if (loading) return <div style={{ color: 'var(--text-muted)', padding: 12 }}>Loading...</div>;
+  const loadGitVersion = async (commit: GitCommitEntry) => {
+    setGitVersionLoading(true);
+    try {
+      const d = await fetchGitVersion(projectRoot, address, commit.hash);
+      setData(d);
+      setTechSpecItems(d.techSpec.map(t => ({ ...t })));
+      setIssues([...d.issues]);
+      setOpenQuestions(d.openQuestions.map(q => ({ ...q })));
+      setViewingCommit(commit);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load version');
+    } finally {
+      setGitVersionLoading(false);
+    }
+  };
+
+  const restoreCurrent = async () => {
+    setViewingCommit(null);
+    setLoading(true);
+    setError(null);
+    try {
+      const d = await fetchWayPoint(projectRoot, address);
+      setData(d);
+      setTechSpecItems(d.techSpec.map(t => ({ ...t })));
+      setIssues([...d.issues]);
+      setOpenQuestions(d.openQuestions.map(q => ({ ...q })));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isReadOnly = viewingCommit !== null;
+
+  if (loading || gitVersionLoading) return <div style={{ color: 'var(--text-muted)', padding: 12 }}>Loading...</div>;
   if (error || !data) return <div style={{ color: 'var(--status-error)', padding: 12 }}>Error: {error}</div>;
 
   const color = statusColors[data.status] || statusColors.S_IDL;
@@ -297,10 +334,28 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
         <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>{address.split('/').pop()}</span>
         <span style={s.badge(color)}>{statusLabels[data.status] || data.status}</span>
       </div>
-      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: isReadOnly ? 8 : 16, display: 'flex', alignItems: 'center', gap: 8 }}>
         <span>{address}</span>
         {saving && <span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>Saving...</span>}
       </div>
+
+      {/* Read-only banner for historical version */}
+      {isReadOnly && viewingCommit && (
+        <div style={{
+          background: '#e8f4fd', border: '1px solid #90caf9', borderRadius: 6,
+          padding: '8px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}>
+          <span style={{ fontSize: 12, color: '#1565c0' }}>
+            과거 버전 보기 중 — {viewingCommit.date.substring(0, 19)} ({viewingCommit.hash.substring(0, 7)}) {viewingCommit.message}
+          </span>
+          <button
+            style={{ fontSize: 11, padding: '3px 10px', background: '#1976d2', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600, color: '#fff' }}
+            onClick={restoreCurrent}
+          >
+            현재 버전으로 돌아가기
+          </button>
+        </div>
+      )}
 
       {/* ===== GIT HISTORY ===== */}
       {gitHistory.length > 0 && (
@@ -328,7 +383,15 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
                 </thead>
                 <tbody>
                   {gitHistory.map(c => (
-                    <tr key={c.hash} style={{ borderBottom: '1px solid var(--border-light)' }}>
+                    <tr
+                      key={c.hash}
+                      style={{
+                        borderBottom: '1px solid var(--border-light)',
+                        cursor: 'pointer',
+                        background: viewingCommit?.hash === c.hash ? 'var(--accent-bg)' : 'transparent',
+                      }}
+                      onClick={() => loadGitVersion(c)}
+                    >
                       <td style={{ padding: '3px 6px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{c.date.substring(0, 19)}</td>
                       <td style={{ padding: '3px 6px', color: 'var(--text-secondary)' }}>{c.author}</td>
                       <td style={{ padding: '3px 6px', color: 'var(--text-primary)' }}>{c.message}</td>
@@ -347,14 +410,14 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
         <div style={s.sectionHeader}>
           <span style={s.sectionTitle}>IDENTITY</span>
           <div style={s.headerBtns}>
-            {editIdentity ? (
+            {!isReadOnly && (editIdentity ? (
               <>
                 <button style={s.btnPrimary} onClick={saveIdentity}>Save</button>
                 <button style={s.btn} onClick={cancelEditIdentity}>Cancel</button>
               </>
             ) : (
               <button style={s.btn} onClick={startEditIdentity}>Edit</button>
-            )}
+            ))}
           </div>
         </div>
         {editIdentity ? (
@@ -418,7 +481,7 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
         <div style={s.sectionHeader}>
           <span style={s.sectionTitle}>TODO / TECH_SPEC {total > 0 && `(${done}/${total})`}</span>
           <div style={s.headerBtns}>
-            {selectedTechSpec.size > 0 && (
+            {!isReadOnly && selectedTechSpec.size > 0 && (
               <>
                 <button style={s.btn} onClick={() => { const idx = [...selectedTechSpec][0]; startEditTechSpecItem(idx); }}>Edit</button>
                 <button style={s.btnPrimary} onClick={doneSelectedTechSpec}>Done ({selectedTechSpec.size})</button>
@@ -438,7 +501,7 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
               <button style={s.btn} onClick={cancelEditTodoSummary}>X</button>
             </div>
           ) : (
-            <div style={{ ...s.value, cursor: 'pointer' }} onDoubleClick={startEditTodoSummary}>
+            <div style={{ ...s.value, cursor: isReadOnly ? 'default' : 'pointer' }} onDoubleClick={isReadOnly ? undefined : startEditTodoSummary}>
               {data.todoSummary || <span style={s.empty}>-</span>}
             </div>
           )}
@@ -544,7 +607,7 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
         {total === 0 && <div style={s.empty}>항목 없음</div>}
 
         {/* Add new TECH_SPEC */}
-        <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
+        {!isReadOnly && <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
           <input
             style={{ ...s.inputSm, flex: 1 }}
             placeholder="새 항목 추가..."
@@ -553,7 +616,7 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
             onKeyDown={e => { if (e.key === 'Enter') addTechSpec(); }}
           />
           <button style={s.btnPrimary} onClick={addTechSpec} disabled={!newTechSpec.trim()}>+ Add</button>
-        </div>
+        </div>}
       </div>
 
       {/* ===== ISSUE ===== */}
@@ -561,7 +624,7 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
         <div style={s.sectionHeader}>
           <span style={s.sectionTitle}>ISSUE</span>
           <div style={s.headerBtns}>
-            {selectedIssues.size > 0 && (
+            {!isReadOnly && selectedIssues.size > 0 && (
               <>
                 <button style={s.btn} onClick={() => { const idx = [...selectedIssues][0]; startEditIssueItem(idx); }}>Edit</button>
                 <button style={s.btnDanger} onClick={deleteSelectedIssues}>Delete ({selectedIssues.size})</button>
@@ -586,7 +649,7 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
         ))}
         {issues.length === 0 && <div style={s.empty}>이슈 없음</div>}
 
-        <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
+        {!isReadOnly && <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
           <input
             style={{ ...s.inputSm, flex: 1 }}
             placeholder="새 이슈 추가..."
@@ -595,7 +658,7 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
             onKeyDown={e => { if (e.key === 'Enter') addIssue(); }}
           />
           <button style={s.btnPrimary} onClick={addIssue} disabled={!newIssue.trim()}>+ Add</button>
-        </div>
+        </div>}
       </div>
 
       {/* ===== OPEN_QUESTIONS ===== */}
@@ -619,7 +682,7 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
         ))}
         {openQuestions.length === 0 && <div style={s.empty}>미결 질문 없음</div>}
 
-        <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
+        {!isReadOnly && <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
           <input
             style={{ ...s.inputSm, flex: 1 }}
             placeholder="새 질문 추가..."
@@ -628,7 +691,7 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
             onKeyDown={e => { if (e.key === 'Enter') addOpenQuestion(); }}
           />
           <button style={s.btnPrimary} onClick={addOpenQuestion} disabled={!newOqText.trim()}>+ Add</button>
-        </div>
+        </div>}
       </div>
 
       {/* ===== COMMENT ===== */}
@@ -636,14 +699,14 @@ export default function WayPointEditor({ projectRoot, address }: WayPointEditorP
         <div style={s.sectionHeader}>
           <span style={s.sectionTitle}>COMMENT</span>
           <div style={s.headerBtns}>
-            {editComment ? (
+            {!isReadOnly && (editComment ? (
               <>
                 <button style={s.btnPrimary} onClick={saveComment}>Save</button>
                 <button style={s.btn} onClick={cancelEditComment}>Cancel</button>
               </>
             ) : (
               <button style={s.btn} onClick={startEditComment}>Edit</button>
-            )}
+            ))}
           </div>
         </div>
         {editComment ? (

@@ -65,6 +65,48 @@ public class GitService {
     }
 
     /**
+     * Get file content at a specific commit hash.
+     * Uses: git show {hash}:{relativePath}
+     */
+    public String getFileAtCommit(String projectRoot, String address, String hash) {
+        Path filePath = addressToRelativePath(address);
+        String gitPath = filePath.toString().replace("\\", "/");
+
+        try {
+            ProcessBuilder pb = new ProcessBuilder(
+                    "git", "show", hash + ":" + gitPath
+            );
+            pb.directory(new File(projectRoot));
+            pb.redirectErrorStream(true);
+
+            Process process = pb.start();
+            StringBuilder content = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    content.append(line).append("\n");
+                }
+            }
+
+            boolean finished = process.waitFor(15, TimeUnit.SECONDS);
+            if (!finished) {
+                process.destroyForcibly();
+                throw new RuntimeException("git show timed out");
+            }
+
+            if (process.exitValue() != 0) {
+                throw new RuntimeException("git show failed: " + content);
+            }
+
+            return content.toString();
+        } catch (Exception e) {
+            log.error("Failed to get file at commit {} for {}: {}", hash, address, e.getMessage());
+            throw new RuntimeException("Failed to get file at commit: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * Convert LOADSTAR address to relative file path within project.
      */
     private Path addressToRelativePath(String address) {
