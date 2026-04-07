@@ -42,7 +42,7 @@ const TabContent = ({ tab, projectRoot, onOpenTab }: { tab: Tab; projectRoot: st
     case 'todo': return <TodoView projectRoot={projectRoot} />;
     case 'history': return <TodoView projectRoot={projectRoot} />;
     case 'monitor': return <MonitorView />;
-    case 'git': return <GitView />;
+    case 'git': return <GitView projectRoot={projectRoot} />;
     case 'log': return <LogView projectRoot={projectRoot} />;
     case 'cli': return <CliConsole />;
     default: return <div>Unknown tab type</div>;

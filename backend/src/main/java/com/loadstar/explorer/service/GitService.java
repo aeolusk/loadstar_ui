@@ -1,5 +1,6 @@
 package com.loadstar.explorer.service;
 
+import com.loadstar.explorer.model.GitCommitDetail;
 import com.loadstar.explorer.model.GitCommitInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -104,6 +105,103 @@ public class GitService {
             log.error("Failed to get file at commit {} for {}: {}", hash, address, e.getMessage());
             throw new RuntimeException("Failed to get file at commit: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Get project-wide git log for .loadstar/ directory.
+     */
+    public List<GitCommitInfo> getProjectLog(String projectRoot, int limit) {
+        List<GitCommitInfo> result = new ArrayList<>();
+        try {
+            ProcessBuilder pb = new ProcessBuilder(
+                    "git", "log",
+                    "--pretty=format:%H|%ai|%an|%s",
+                    "-n", String.valueOf(limit),
+                    "--", ".loadstar/"
+            );
+            pb.directory(new File(projectRoot));
+            pb.redirectErrorStream(true);
+
+            Process process = pb.start();
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.trim().isEmpty()) continue;
+                    String[] parts = line.split("\\|", 4);
+                    if (parts.length >= 4) {
+                        GitCommitInfo info = new GitCommitInfo();
+                        info.setHash(parts[0].trim());
+                        info.setDate(parts[1].trim());
+                        info.setAuthor(parts[2].trim());
+                        info.setMessage(parts[3].trim());
+                        result.add(info);
+                    }
+                }
+            }
+            process.waitFor(15, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            log.error("Failed to get project log: {}", e.getMessage());
+        }
+        return result;
+    }
+
+    /**
+     * Get commit detail: changed files with stat.
+     */
+    public GitCommitDetail getCommitDetail(String projectRoot, String hash) {
+        GitCommitDetail detail = new GitCommitDetail();
+        detail.setHash(hash);
+        detail.setFiles(new ArrayList<>());
+
+        try {
+            // Get commit message and meta
+            ProcessBuilder pb1 = new ProcessBuilder(
+                    "git", "show", "--no-patch", "--pretty=format:%ai|%an|%s", hash
+            );
+            pb1.directory(new File(projectRoot));
+            pb1.redirectErrorStream(true);
+            Process p1 = pb1.start();
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(p1.getInputStream(), StandardCharsets.UTF_8))) {
+                String line = reader.readLine();
+                if (line != null) {
+                    String[] parts = line.split("\\|", 3);
+                    if (parts.length >= 3) {
+                        detail.setDate(parts[0].trim());
+                        detail.setAuthor(parts[1].trim());
+                        detail.setMessage(parts[2].trim());
+                    }
+                }
+            }
+            p1.waitFor(10, TimeUnit.SECONDS);
+
+            // Get changed files (stat)
+            ProcessBuilder pb2 = new ProcessBuilder(
+                    "git", "diff-tree", "--no-commit-id", "-r", "--name-status", hash, "--", ".loadstar/"
+            );
+            pb2.directory(new File(projectRoot));
+            pb2.redirectErrorStream(true);
+            Process p2 = pb2.start();
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(p2.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.trim().isEmpty()) continue;
+                    String[] parts = line.split("\\t", 2);
+                    if (parts.length >= 2) {
+                        GitCommitDetail.FileChange fc = new GitCommitDetail.FileChange();
+                        fc.setChangeType(parts[0].trim());
+                        fc.setFilePath(parts[1].trim());
+                        detail.getFiles().add(fc);
+                    }
+                }
+            }
+            p2.waitFor(10, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            log.error("Failed to get commit detail for {}: {}", hash, e.getMessage());
+        }
+        return detail;
     }
 
     /**

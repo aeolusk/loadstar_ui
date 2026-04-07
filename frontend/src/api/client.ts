@@ -197,6 +197,28 @@ export interface GitCommitEntry {
   message: string;
 }
 
+export interface GitCommitDetailEntry {
+  hash: string;
+  date: string;
+  author: string;
+  message: string;
+  files: { changeType: string; filePath: string }[];
+}
+
+export async function fetchProjectGitLog(root: string, limit = 50): Promise<GitCommitEntry[]> {
+  const res = await apiClient.get<GitCommitEntry[]>('/git/log', {
+    params: { root, limit },
+  });
+  return res.data;
+}
+
+export async function fetchGitDetail(root: string, hash: string): Promise<GitCommitDetailEntry> {
+  const res = await apiClient.get<GitCommitDetailEntry>('/git/detail', {
+    params: { root, hash },
+  });
+  return res.data;
+}
+
 export async function fetchGitHistory(root: string, address: string): Promise<GitCommitEntry[]> {
   const res = await apiClient.get<GitCommitEntry[]>('/git/history', {
     params: { root, address },

@@ -1,6 +1,7 @@
 package com.loadstar.explorer.controller;
 
 import com.loadstar.explorer.model.BlackBoxDetailResponse;
+import com.loadstar.explorer.model.GitCommitDetail;
 import com.loadstar.explorer.model.GitCommitInfo;
 import com.loadstar.explorer.model.WayPointDetailResponse;
 import com.loadstar.explorer.service.ElementParser;
@@ -21,6 +22,28 @@ public class GitController {
 
     private final GitService gitService;
     private final ElementParser parser;
+
+    @GetMapping("/log")
+    public ResponseEntity<List<GitCommitInfo>> getProjectLog(
+            @RequestParam String root,
+            @RequestParam(defaultValue = "50") int limit) {
+        try {
+            return ResponseEntity.ok(gitService.getProjectLog(root, limit));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/detail")
+    public ResponseEntity<GitCommitDetail> getCommitDetail(
+            @RequestParam String root,
+            @RequestParam String hash) {
+        try {
+            return ResponseEntity.ok(gitService.getCommitDetail(root, hash));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 
     @GetMapping("/history")
     public ResponseEntity<List<GitCommitInfo>> getHistory(
