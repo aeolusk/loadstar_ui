@@ -148,8 +148,8 @@ public class ElementService {
         // Write updated md
         writer.writeWayPoint(file, data);
 
-        // Log changes via CLI (single call)
-        String itemChanges = skipHistory ? "" : buildTechSpecItemChanges(existing.getTechSpec(), data.getTechSpec());
+        // Log changes via CLI (single call — item changes always tracked regardless of skipHistory)
+        String itemChanges = buildTechSpecItemChanges(existing.getTechSpec(), data.getTechSpec());
         String otherChanges = buildChangeSummary(existing, data);
         String logMsg;
         if (!itemChanges.isEmpty()) {
