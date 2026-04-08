@@ -217,9 +217,6 @@ public class GitService {
         } else if (address.startsWith("W://")) {
             typeDir = "WAYPOINT";
             pathPart = address.substring(4);
-        } else if (address.startsWith("B://")) {
-            typeDir = "BLACKBOX";
-            pathPart = address.substring(4);
         } else {
             throw new IllegalArgumentException("Unknown address type: " + address);
         }

@@ -10,7 +10,6 @@
 - PARENT: M://root/backend
 - CHILDREN: []
 - REFERENCE: []
-- BLACKBOX: B://root/backend/log_service
 
 ### TODO
 (없음)

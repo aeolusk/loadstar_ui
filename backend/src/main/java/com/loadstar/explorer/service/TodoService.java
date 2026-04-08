@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,12 +18,15 @@ public class TodoService {
 
     private final CliExecutor cli;
 
-    private static final Pattern TABLE_ROW = Pattern.compile(
-            "\\|\\s*(.+?)\\s*\\|\\s*(.+?)\\s*\\|\\s*(.+?)\\s*\\|\\s*(.+?)\\s*\\|\\s*(.+?)\\s*\\|"
+    // History cache: projectRoot → cached history items
+    private final ConcurrentHashMap<String, List<TodoHistoryItem>> historyCache = new ConcurrentHashMap<>();
+
+    private static final Pattern LIST_ROW = Pattern.compile(
+            "\\|\\s*(.+?)\\s*\\|\\s*(.+?)\\s*\\|\\s*(.+?)\\s*\\|"
     );
 
     private static final Pattern HISTORY_ROW = Pattern.compile(
-            "\\|\\s*(.+?)\\s*\\|\\s*(.+?)\\s*\\|\\s*(.+?)\\s*\\|\\s*(.+?)\\s*\\|\\s*(.+?)\\s*\\|\\s*(.+?)\\s*\\|"
+            "\\|\\s*(.+?)\\s*\\|\\s*(.+?)\\s*\\|\\s*(.+?)\\s*\\|"
     );
 
     public List<TodoItem> list(String projectRoot) {
@@ -30,33 +34,39 @@ public class TodoService {
         return parseListOutput(output);
     }
 
-    public List<TodoHistoryItem> history(String projectRoot, String address) {
+    public SyncResult sync(String projectRoot, String address) {
         String output;
         if (address != null && !address.isEmpty()) {
-            output = cli.execute(projectRoot, "todo", "history", address);
+            output = cli.execute(projectRoot, "todo", "sync", address);
+        } else {
+            output = cli.execute(projectRoot, "todo", "sync");
+        }
+        // Invalidate history cache after sync
+        historyCache.remove(projectRoot);
+        return parseSyncOutput(output);
+    }
+
+    public List<TodoHistoryItem> history(String projectRoot, String mapAddress) {
+        // Check cache first
+        String cacheKey = projectRoot + "|" + (mapAddress != null ? mapAddress : "");
+        List<TodoHistoryItem> cached = historyCache.get(cacheKey);
+        if (cached != null) {
+            return cached;
+        }
+
+        String output;
+        if (mapAddress != null && !mapAddress.isEmpty()) {
+            output = cli.execute(projectRoot, "todo", "history", mapAddress);
         } else {
             output = cli.execute(projectRoot, "todo", "history");
         }
-        return parseHistoryOutput(output);
+        List<TodoHistoryItem> items = parseHistoryOutput(output);
+        historyCache.put(cacheKey, items);
+        return items;
     }
 
-    public String add(String projectRoot, String address, String summary, String dependsOn) {
-        if (dependsOn != null && !dependsOn.isEmpty() && !dependsOn.equals("-")) {
-            return cli.execute(projectRoot, "todo", "add", address, summary, "--depends", dependsOn);
-        }
-        return cli.execute(projectRoot, "todo", "add", address, summary);
-    }
-
-    public String update(String projectRoot, String address, String status) {
-        return cli.execute(projectRoot, "todo", "update", address, status);
-    }
-
-    public String done(String projectRoot, String address) {
-        return cli.execute(projectRoot, "todo", "done", address);
-    }
-
-    public String delete(String projectRoot, String address) {
-        return cli.execute(projectRoot, "todo", "delete", address);
+    public void clearHistoryCache(String projectRoot) {
+        historyCache.keySet().removeIf(k -> k.startsWith(projectRoot));
     }
 
     private List<TodoItem> parseListOutput(String output) {
@@ -65,16 +75,17 @@ public class TodoService {
 
         for (String line : output.split("\n")) {
             String trimmed = line.trim();
-            if (trimmed.startsWith("| :") || trimmed.startsWith("| 주소")) continue;
-            Matcher m = TABLE_ROW.matcher(trimmed);
+            if (trimmed.startsWith("ADDRESS") || trimmed.startsWith("-------") || trimmed.isEmpty()) continue;
+            if (trimmed.endsWith("item(s)")) continue;
+
+            Matcher m = LIST_ROW.matcher(trimmed);
             if (m.matches()) {
+                String addr = m.group(1).trim();
+                if (addr.equals("주소 (Address)") || addr.contains(":---")) continue;
                 TodoItem item = new TodoItem();
-                item.setAddress(m.group(1).trim());
-                item.setTime(m.group(2).trim());
+                item.setAddress(addr);
+                item.setStatus(m.group(2).trim().replaceAll("[\\[\\]]", ""));
                 item.setSummary(m.group(3).trim());
-                String status = m.group(4).trim().replaceAll("[\\[\\]]", "");
-                item.setStatus(status);
-                item.setDependsOn(m.group(5).trim());
                 items.add(item);
             }
         }
@@ -87,38 +98,61 @@ public class TodoService {
 
         for (String line : output.split("\n")) {
             String trimmed = line.trim();
-            if (trimmed.startsWith("| :") || trimmed.startsWith("| 주소") || trimmed.startsWith("| Address")) continue;
+            if (trimmed.startsWith("ADDRESS") || trimmed.startsWith("-------") || trimmed.isEmpty()) continue;
+            if (trimmed.endsWith("item(s)")) continue;
+            if (trimmed.equals("no completed items found")) continue;
+
             Matcher m = HISTORY_ROW.matcher(trimmed);
             if (m.matches()) {
+                String addr = m.group(1).trim();
+                if (addr.equals("주소 (Address)") || addr.contains(":---")) continue;
                 TodoHistoryItem item = new TodoHistoryItem();
-                item.setAddress(m.group(1).trim());
-                item.setTime(m.group(2).trim());
-                item.setSummary(m.group(3).trim());
-                item.setAction(m.group(4).trim());
-                item.setAt(m.group(5).trim());
-                item.setDependsOn(m.group(6).trim());
+                item.setAddress(addr);
+                item.setDate(m.group(2).trim());
+                item.setItem(m.group(3).trim());
                 items.add(item);
             }
         }
         return items;
     }
 
+    private SyncResult parseSyncOutput(String output) {
+        SyncResult result = new SyncResult();
+        result.setOutput(output != null ? output.trim() : "");
+        // Parse "sync complete: N added, N updated, N removed (N total)"
+        if (output != null && output.contains("sync complete:")) {
+            Pattern p = Pattern.compile("(\\d+) added, (\\d+) updated, (\\d+) removed \\((\\d+) total\\)");
+            Matcher m = p.matcher(output);
+            if (m.find()) {
+                result.setAdded(Integer.parseInt(m.group(1)));
+                result.setUpdated(Integer.parseInt(m.group(2)));
+                result.setRemoved(Integer.parseInt(m.group(3)));
+                result.setTotal(Integer.parseInt(m.group(4)));
+            }
+        }
+        return result;
+    }
+
     @Data
     public static class TodoItem {
         private String address;
-        private String time;
-        private String summary;
         private String status;
-        private String dependsOn;
+        private String summary;
     }
 
     @Data
     public static class TodoHistoryItem {
         private String address;
-        private String time;
-        private String summary;
-        private String action;
-        private String at;
-        private String dependsOn;
+        private String date;
+        private String item;
+    }
+
+    @Data
+    public static class SyncResult {
+        private String output;
+        private int added;
+        private int updated;
+        private int removed;
+        private int total;
     }
 }

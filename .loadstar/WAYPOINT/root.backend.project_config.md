@@ -10,7 +10,6 @@
 - PARENT: M://root/backend
 - CHILDREN: []
 - REFERENCE: []
-- BLACKBOX: B://root/backend/project_config
 
 ### TODO
 (없음)

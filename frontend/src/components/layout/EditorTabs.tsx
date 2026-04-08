@@ -2,9 +2,7 @@ import type { Tab } from '../../App';
 import DashboardView from '../../features/dashboard/DashboardView';
 import MapView from '../../features/map-view/MapView';
 import WayPointEditor from '../../features/waypoint-editor/WayPointEditor';
-import BlackBoxEditor from '../../features/blackbox-editor/BlackBoxEditor';
 import TodoView from '../../features/todo-view/TodoView';
-import MonitorView from '../../features/monitor-view/MonitorView';
 import GitView from '../../features/git-view/GitView';
 import LogView from '../../features/log-view/LogView';
 import CliConsole from '../../features/cli-console/CliConsole';
@@ -16,32 +14,29 @@ interface EditorTabsProps {
   onSelectTab: (tabId: string) => void;
   onCloseTab: (tabId: string) => void;
   onOpenTab: (tab: Tab) => void;
+  onStructureChange?: () => void;
 }
 
 const tabTypeIcon = (type: Tab['type']): string => {
   switch (type) {
     case 'map': return '📁';
     case 'waypoint': return '◆';
-    case 'blackbox': return '📦';
     case 'dashboard': return '⊞';
     case 'todo': return '☑';
     case 'history': return '↻';
-    case 'monitor': return '◎';
     case 'git': return '⑂';
     case 'log': return '☰';
     case 'cli': return '▸';
   }
 };
 
-const TabContent = ({ tab, projectRoot, onOpenTab }: { tab: Tab; projectRoot: string; onOpenTab: (tab: Tab) => void }) => {
+const TabContent = ({ tab, projectRoot, onOpenTab, onStructureChange }: { tab: Tab; projectRoot: string; onOpenTab: (tab: Tab) => void; onStructureChange?: () => void }) => {
   switch (tab.type) {
     case 'dashboard': return <DashboardView />;
-    case 'map': return <MapView projectRoot={projectRoot} address={tab.address || ''} onOpenTab={onOpenTab} />;
+    case 'map': return <MapView projectRoot={projectRoot} address={tab.address || ''} onOpenTab={onOpenTab} onStructureChange={onStructureChange} />;
     case 'waypoint': return <WayPointEditor projectRoot={projectRoot} address={tab.address || ''} onOpenTab={onOpenTab} />;
-    case 'blackbox': return <BlackBoxEditor projectRoot={projectRoot} address={tab.address || ''} onOpenTab={onOpenTab} />;
     case 'todo': return <TodoView projectRoot={projectRoot} />;
     case 'history': return <TodoView projectRoot={projectRoot} />;
-    case 'monitor': return <MonitorView />;
     case 'git': return <GitView projectRoot={projectRoot} />;
     case 'log': return <LogView projectRoot={projectRoot} />;
     case 'cli': return <CliConsole projectRoot={projectRoot} />;
@@ -49,7 +44,7 @@ const TabContent = ({ tab, projectRoot, onOpenTab }: { tab: Tab; projectRoot: st
   }
 };
 
-const EditorTabs = ({ projectRoot, tabs, activeTabId, onSelectTab, onCloseTab, onOpenTab }: EditorTabsProps) => {
+const EditorTabs = ({ projectRoot, tabs, activeTabId, onSelectTab, onCloseTab, onOpenTab, onStructureChange }: EditorTabsProps) => {
 
   return (
     <div className="editor-area">
@@ -88,7 +83,7 @@ const EditorTabs = ({ projectRoot, tabs, activeTabId, onSelectTab, onCloseTab, o
             key={tab.id}
             style={{ display: tab.id === activeTabId ? 'contents' : 'none' }}
           >
-            <TabContent tab={tab} projectRoot={projectRoot} onOpenTab={onOpenTab} />
+            <TabContent tab={tab} projectRoot={projectRoot} onOpenTab={onOpenTab} onStructureChange={onStructureChange} />
           </div>
         ))}
       </div>

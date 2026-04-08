@@ -56,25 +56,14 @@ public class CliExecutor {
     }
 
     /**
-     * Log a MODIFIED change via loadstar log CLI.
+     * Log a MODIFIED change via loadstar log add CLI.
      */
     public void logModified(String projectRoot, String address, String message) {
         try {
-            execute(projectRoot, "log", address, "MODIFIED", message);
+            String truncated = message.length() > 100 ? message.substring(0, 100) + "..." : message;
+            execute(projectRoot, "log", "add", address, "MODIFIED", truncated);
         } catch (Exception e) {
             log.warn("Failed to log modification for {}: {}", address, e.getMessage());
-        }
-    }
-
-    /**
-     * Register a TODO item and immediately mark it done, so it appears in TODO_HISTORY.
-     */
-    public void todoAddAndDone(String projectRoot, String address, String summary) {
-        try {
-            execute(projectRoot, "todo", "add", address, summary);
-            execute(projectRoot, "todo", "done", address);
-        } catch (Exception e) {
-            log.warn("Failed to todo add+done for {}: {}", address, e.getMessage());
         }
     }
 }

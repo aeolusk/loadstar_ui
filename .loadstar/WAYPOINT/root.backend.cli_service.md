@@ -10,7 +10,6 @@
 - PARENT: M://root/backend
 - CHILDREN: []
 - REFERENCE: []
-- BLACKBOX: B://root/backend/cli_service
 
 ### TODO
 (없음)

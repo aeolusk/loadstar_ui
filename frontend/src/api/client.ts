@@ -17,9 +17,6 @@ export interface MapViewItem {
   type: 'MAP' | 'WAYPOINT';
   status: string;
   summary: string;
-  blackbox: string | null;
-  blackboxStatus: string | null;
-  blackboxSyncedAt: string | null;
   children: string[];
   references: string[];
 }
@@ -32,6 +29,7 @@ export interface MapViewResponse {
     waypoints: string[];
   };
   items: MapViewItem[];
+  childDetails?: Record<string, { status: string; summary: string }>;
 }
 
 export interface WayPointDetail {
@@ -45,26 +43,12 @@ export interface WayPointDetail {
   parent: string | null;
   children: string[];
   references: string[];
-  blackbox: string | null;
   codeMapScopes: string[];
   todoAddress: string | null;
   todoSummary: string | null;
   techSpec: { text: string; done: boolean }[];
   issues: string[];
   openQuestions: { id: string; text: string; resolved: boolean }[];
-  comment: string | null;
-}
-
-export interface BlackBoxDetail {
-  address: string;
-  status: string;
-  syncedAt: string | null;
-  summary: string | null;
-  linkedWp: string | null;
-  codeMapPhase: 'plan' | 'actual';
-  codeMap: { file: string; items: { name: string; description: string }[] }[];
-  todos: { text: string; wpRef: number; done: boolean }[];
-  issues: string[];
   comment: string | null;
 }
 
@@ -121,13 +105,6 @@ export async function fetchWayPoint(root: string, address: string): Promise<WayP
   return res.data;
 }
 
-export async function fetchBlackBox(root: string, address: string): Promise<BlackBoxDetail> {
-  const res = await apiClient.get<BlackBoxDetail>('/elements/blackbox', {
-    params: { root, address },
-  });
-  return res.data;
-}
-
 export async function updateWayPoint(root: string, data: WayPointDetail, skipHistory = false): Promise<WayPointDetail> {
   const res = await apiClient.put<WayPointDetail>('/elements/waypoint', data, {
     params: { root, skipHistory },
@@ -135,9 +112,47 @@ export async function updateWayPoint(root: string, data: WayPointDetail, skipHis
   return res.data;
 }
 
-export async function updateBlackBox(root: string, data: BlackBoxDetail, skipHistory = false): Promise<BlackBoxDetail> {
-  const res = await apiClient.put<BlackBoxDetail>('/elements/blackbox', data, {
-    params: { root, skipHistory },
+// --- Map Structure API ---
+
+export async function addToMap(root: string, mapAddress: string, childAddress: string, position?: string, summary?: string): Promise<MapViewResponse> {
+  const params: Record<string, string> = { root, mapAddress, childAddress };
+  if (position) params.position = position;
+  if (summary) params.summary = summary;
+  const res = await apiClient.post<MapViewResponse>('/elements/map/add', null, { params });
+  return res.data;
+}
+
+export async function addChildToWayPoint(root: string, parentWpAddress: string, childId: string, mapAddress: string, summary?: string): Promise<MapViewResponse> {
+  const params: Record<string, string> = { root, parentWpAddress, childId, mapAddress };
+  if (summary) params.summary = summary;
+  const res = await apiClient.post<MapViewResponse>('/elements/waypoint/add-child', null, { params });
+  return res.data;
+}
+
+export async function removeChildFromWayPoint(root: string, parentWpAddress: string, childAddress: string, mapAddress: string): Promise<MapViewResponse> {
+  const res = await apiClient.delete<MapViewResponse>('/elements/waypoint/remove-child', {
+    params: { root, parentWpAddress, childAddress, mapAddress },
+  });
+  return res.data;
+}
+
+export async function removeFromMap(root: string, mapAddress: string, childAddress: string): Promise<MapViewResponse> {
+  const res = await apiClient.delete<MapViewResponse>('/elements/map/remove', {
+    params: { root, mapAddress, childAddress },
+  });
+  return res.data;
+}
+
+export async function deleteMap(root: string, mapAddress: string): Promise<{ success: boolean; error?: string }> {
+  const res = await apiClient.delete<{ success: boolean; error?: string }>('/elements/map/delete', {
+    params: { root, mapAddress },
+  });
+  return res.data;
+}
+
+export async function createSubMap(root: string, parentMapAddress: string, id: string, summary?: string): Promise<MapViewResponse> {
+  const res = await apiClient.post<MapViewResponse>('/elements/map/create-child', null, {
+    params: { root, parentMapAddress, id, summary: summary || '' },
   });
   return res.data;
 }
@@ -146,19 +161,22 @@ export async function updateBlackBox(root: string, data: BlackBoxDetail, skipHis
 
 export interface ApiTodoItem {
   address: string;
-  time: string;
-  summary: string;
   status: string;
-  dependsOn: string;
+  summary: string;
 }
 
 export interface ApiTodoHistoryItem {
   address: string;
-  time: string;
-  summary: string;
-  action: string;
-  at: string;
-  dependsOn: string;
+  date: string;
+  item: string;
+}
+
+export interface ApiSyncResult {
+  output: string;
+  added: number;
+  updated: number;
+  removed: number;
+  total: number;
 }
 
 export async function fetchTodoList(root: string): Promise<ApiTodoItem[]> {
@@ -166,27 +184,18 @@ export async function fetchTodoList(root: string): Promise<ApiTodoItem[]> {
   return res.data;
 }
 
-export async function fetchTodoHistory(root: string, address?: string): Promise<ApiTodoHistoryItem[]> {
+export async function syncTodo(root: string, address?: string): Promise<ApiSyncResult> {
   const params: Record<string, string> = { root };
   if (address) params.address = address;
-  const res = await apiClient.get<ApiTodoHistoryItem[]>('/todo/history', { params });
+  const res = await apiClient.post<ApiSyncResult>('/todo/sync', null, { params });
   return res.data;
 }
 
-export async function addTodo(root: string, address: string, summary: string, dependsOn?: string): Promise<void> {
-  await apiClient.post('/todo/add', { address, summary, dependsOn }, { params: { root } });
-}
-
-export async function updateTodoStatus(root: string, address: string, status: string): Promise<void> {
-  await apiClient.put('/todo/update', { address, status }, { params: { root } });
-}
-
-export async function doneTodo(root: string, address: string): Promise<void> {
-  await apiClient.post('/todo/done', { address }, { params: { root } });
-}
-
-export async function deleteTodo(root: string, address: string): Promise<void> {
-  await apiClient.delete('/todo/delete', { data: { address }, params: { root } });
+export async function fetchTodoHistory(root: string, mapAddress?: string): Promise<ApiTodoHistoryItem[]> {
+  const params: Record<string, string> = { root };
+  if (mapAddress) params.mapAddress = mapAddress;
+  const res = await apiClient.get<ApiTodoHistoryItem[]>('/todo/history', { params });
+  return res.data;
 }
 
 // --- Git History API ---
@@ -229,13 +238,6 @@ export async function fetchGitHistory(root: string, address: string): Promise<Gi
 
 export async function fetchGitVersion(root: string, address: string, hash: string): Promise<WayPointDetail> {
   const res = await apiClient.get<WayPointDetail>('/git/show', {
-    params: { root, address, hash },
-  });
-  return res.data;
-}
-
-export async function fetchGitBlackBoxVersion(root: string, address: string, hash: string): Promise<BlackBoxDetail> {
-  const res = await apiClient.get<BlackBoxDetail>('/git/show-blackbox', {
     params: { root, address, hash },
   });
   return res.data;

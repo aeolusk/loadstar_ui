@@ -10,7 +10,6 @@
 - PARENT: M://root/frontend
 - CHILDREN: []
 - REFERENCE: [W://root/test/test_search]
-- BLACKBOX: B://root/frontend/search
 
 ### TODO
 - ADDRESS: W://root/frontend/search

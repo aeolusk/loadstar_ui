@@ -11,7 +11,6 @@
 - PARENT: M://root/frontend
 - CHILDREN: []
 - REFERENCE: [W://root/test/test_cli_console]
-- BLACKBOX: B://root/frontend/cli_console
 
 ### TODO
 (없음)

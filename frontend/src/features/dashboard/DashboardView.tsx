@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { TreeNode } from '../../types/loadstar';
-import { sampleTree, sampleTodos } from '../../data/sampleData';
+import { sampleTree } from '../../data/sampleData';
 
 function flattenTree(nodes: TreeNode[]): TreeNode[] {
   const result: TreeNode[] = [];
@@ -119,7 +119,6 @@ export default function DashboardView() {
 
   const maps = allNodes.filter((n) => n.type === 'MAP');
   const waypoints = allNodes.filter((n) => n.type === 'WAYPOINT');
-  const blackboxes = allNodes.filter((n) => n.type === 'BLACKBOX');
 
   const statusCounts = useMemo(() => {
     const counts = { S_IDL: 0, S_PRG: 0, S_STB: 0, S_ERR: 0, S_REV: 0 };
@@ -129,9 +128,9 @@ export default function DashboardView() {
     return counts;
   }, [allNodes]);
 
-  const activeTodos = sampleTodos.filter((t) => t.status === 'ACTIVE');
+  const activeTodos: { summary: string }[] = [];
 
-  const expiredSyncCount = 1; // sampleBlackbox syncedAt is 2026-03-01, > 30 days
+  const expiredSyncCount = 0;
   const openQuestionCount = 1;
 
   return (
@@ -147,10 +146,6 @@ export default function DashboardView() {
         <div style={styles.card}>
           <div style={styles.cardLabel}>WayPoints</div>
           <div style={styles.cardValue}>{waypoints.length}</div>
-        </div>
-        <div style={styles.card}>
-          <div style={styles.cardLabel}>BlackBoxes</div>
-          <div style={styles.cardValue}>{blackboxes.length}</div>
         </div>
       </div>
 

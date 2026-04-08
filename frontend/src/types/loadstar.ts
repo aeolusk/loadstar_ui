@@ -1,6 +1,6 @@
 // LOADSTAR Element Types
 
-export type ElementType = 'MAP' | 'WAYPOINT' | 'BLACKBOX';
+export type ElementType = 'MAP' | 'WAYPOINT';
 
 export type StatusCode = 'S_IDL' | 'S_PRG' | 'S_STB' | 'S_ERR' | 'S_REV';
 
@@ -20,7 +20,6 @@ export interface TreeNode {
   summary: string;
   children: TreeNode[];
   references?: string[];  // CONNECTIONS.REFERENCE 주소 목록
-  blackbox?: string;      // CONNECTIONS.BLACKBOX 주소
 }
 
 export interface TodoItem {

@@ -10,7 +10,6 @@
 - PARENT: M://root/test
 - CHILDREN: []
 - REFERENCE: [W://root/frontend/search]
-- BLACKBOX: B://root/test/test_search
 
 ### TODO
 (없음)

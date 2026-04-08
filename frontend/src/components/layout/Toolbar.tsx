@@ -8,7 +8,6 @@ const toolbarItems: { label: string; type: Tab['type']; icon: string }[] = [
   { label: '대시보드', type: 'dashboard', icon: '⊞' },
   { label: 'TODO', type: 'todo', icon: '☑' },
   { label: 'History', type: 'history', icon: '↻' },
-  { label: '모니터링', type: 'monitor', icon: '◎' },
   { label: 'GIT', type: 'git', icon: '⑂' },
   { label: '로그', type: 'log', icon: '☰' },
   { label: 'CLI', type: 'cli', icon: '▸' },

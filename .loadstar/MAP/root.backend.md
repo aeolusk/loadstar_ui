@@ -11,7 +11,6 @@
 - W://root/backend/element_service
 - W://root/backend/todo_service
 - W://root/backend/git_service
-- W://root/backend/monitor_service
 - W://root/backend/log_service
 - W://root/backend/cli_service
 

@@ -11,7 +11,6 @@
 - PARENT: M://root/frontend
 - CHILDREN: []
 - REFERENCE: [W://root/test/test_git_view]
-- BLACKBOX: B://root/frontend/git_view
 
 ### TODO
 (없음)

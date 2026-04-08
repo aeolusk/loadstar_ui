@@ -10,7 +10,6 @@
 - PARENT: M://root/frontend
 - CHILDREN: []
 - REFERENCE: [W://root/test/test_log_view]
-- BLACKBOX: B://root/frontend/log_view
 
 ### TODO
 (없음)

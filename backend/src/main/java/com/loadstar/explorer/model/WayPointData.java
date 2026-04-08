@@ -12,5 +12,4 @@ public class WayPointData {
     private String parent;
     private List<String> children;
     private List<String> references;
-    private String blackbox;
 }

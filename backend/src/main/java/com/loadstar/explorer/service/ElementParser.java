@@ -109,14 +109,6 @@ public class ElementParser {
                 continue;
             }
 
-            if (trimmed.startsWith("- BLACKBOX:")) {
-                String bb = trimmed.substring("- BLACKBOX:".length()).trim();
-                if (!bb.isEmpty() && bb.startsWith("B://")) {
-                    wp.setBlackbox(bb);
-                }
-                continue;
-            }
-
             if (trimmed.startsWith("- CHILDREN:")) {
                 String val = trimmed.substring("- CHILDREN:".length()).trim();
                 wp.setChildren(parseAddressList(val));
@@ -131,45 +123,6 @@ public class ElementParser {
         }
 
         return wp;
-    }
-
-    public BlackBoxData parseBlackBox(Path file) throws IOException {
-        List<String> lines = Files.readAllLines(file, java.nio.charset.StandardCharsets.UTF_8);
-        BlackBoxData bb = new BlackBoxData();
-
-        for (String line : lines) {
-            String trimmed = line.trim();
-
-            Matcher addrMatch = ADDRESS_PATTERN.matcher(trimmed);
-            if (addrMatch.matches()) {
-                bb.setAddress(addrMatch.group(1).trim());
-                continue;
-            }
-
-            Matcher statusMatch = STATUS_PATTERN.matcher(trimmed);
-            if (statusMatch.matches()) {
-                bb.setStatus(statusMatch.group(1).trim());
-                continue;
-            }
-
-            Matcher syncedMatch = SYNCED_AT_PATTERN.matcher(trimmed);
-            if (syncedMatch.matches()) {
-                bb.setSyncedAt(syncedMatch.group(1).trim());
-                continue;
-            }
-
-            if (trimmed.startsWith("- SUMMARY:")) {
-                bb.setSummary(trimmed.substring("- SUMMARY:".length()).trim());
-                continue;
-            }
-
-            if (trimmed.startsWith("- LINKED_WP:")) {
-                bb.setLinkedWp(trimmed.substring("- LINKED_WP:".length()).trim());
-                continue;
-            }
-        }
-
-        return bb;
     }
 
     public WayPointDetailResponse parseWayPointDetail(Path file) throws IOException {
@@ -252,12 +205,6 @@ public class ElementParser {
                 wp.setReferences(parseAddressList(trimmed.substring("- REFERENCE:".length()).trim()));
                 continue;
             }
-            if (trimmed.startsWith("- BLACKBOX:")) {
-                String bb = trimmed.substring("- BLACKBOX:".length()).trim();
-                if (!bb.isEmpty() && bb.startsWith("B://")) wp.setBlackbox(bb);
-                continue;
-            }
-
             // CODE_MAP scope
             if (currentSection.contains("CODE_MAP") && trimmed.startsWith("- ") && !trimmed.equals("(없음)")) {
                 String scope = trimmed.substring(2).trim();
@@ -337,151 +284,6 @@ public class ElementParser {
         String comment = commentBuilder.toString().trim();
         wp.setComment(comment.isEmpty() ? null : comment);
         return wp;
-    }
-
-    public BlackBoxDetailResponse parseBlackBoxDetail(Path file) throws IOException {
-        List<String> lines = Files.readAllLines(file, java.nio.charset.StandardCharsets.UTF_8);
-        BlackBoxDetailResponse bb = new BlackBoxDetailResponse();
-        bb.setCodeMap(new ArrayList<>());
-        bb.setTodos(new ArrayList<>());
-        bb.setIssues(new ArrayList<>());
-
-        String currentSection = "";
-        String currentCodeMapFile = null;
-        List<BlackBoxDetailResponse.CodeMapItem> currentItems = null;
-        boolean inTodo = false;
-        boolean inIssue = false;
-        StringBuilder commentBuilder = new StringBuilder();
-        boolean inComment = false;
-
-        for (String line : lines) {
-            String trimmed = line.trim();
-
-            Matcher addrMatch = ADDRESS_PATTERN.matcher(trimmed);
-            if (addrMatch.matches()) { bb.setAddress(addrMatch.group(1).trim()); continue; }
-
-            Matcher statusMatch = STATUS_PATTERN.matcher(trimmed);
-            if (statusMatch.matches()) { bb.setStatus(statusMatch.group(1).trim()); continue; }
-
-            Matcher syncedMatch = SYNCED_AT_PATTERN.matcher(trimmed);
-            if (syncedMatch.matches()) { bb.setSyncedAt(syncedMatch.group(1).trim()); continue; }
-
-            if (trimmed.startsWith("### ")) {
-                // Flush code map entry
-                if (currentCodeMapFile != null && currentItems != null) {
-                    BlackBoxDetailResponse.CodeMapEntry entry = new BlackBoxDetailResponse.CodeMapEntry();
-                    entry.setFile(currentCodeMapFile);
-                    entry.setItems(currentItems);
-                    bb.getCodeMap().add(entry);
-                    currentCodeMapFile = null;
-                    currentItems = null;
-                }
-                currentSection = trimmed;
-                inTodo = currentSection.contains("TODO");
-                inIssue = currentSection.contains("ISSUE");
-                inComment = currentSection.contains("COMMENT");
-                continue;
-            }
-
-            // DESCRIPTION
-            if (trimmed.startsWith("- SUMMARY:") && currentSection.contains("DESCRIPTION")) {
-                bb.setSummary(trimmed.substring("- SUMMARY:".length()).trim());
-                continue;
-            }
-            if (trimmed.startsWith("- LINKED_WP:")) {
-                bb.setLinkedWp(trimmed.substring("- LINKED_WP:".length()).trim());
-                continue;
-            }
-
-            // CODE_MAP
-            if (currentSection.contains("CODE_MAP")) {
-                if (trimmed.startsWith("**") && trimmed.contains("계획")) {
-                    bb.setCodeMapPhase("plan");
-                    continue;
-                }
-                if (trimmed.startsWith("**") && (trimmed.contains("실측") || trimmed.contains("완료"))) {
-                    bb.setCodeMapPhase("actual");
-                    continue;
-                }
-                if (trimmed.startsWith("- `") && trimmed.contains("`")) {
-                    // Flush previous entry
-                    if (currentCodeMapFile != null && currentItems != null) {
-                        BlackBoxDetailResponse.CodeMapEntry entry = new BlackBoxDetailResponse.CodeMapEntry();
-                        entry.setFile(currentCodeMapFile);
-                        entry.setItems(currentItems);
-                        bb.getCodeMap().add(entry);
-                    }
-                    int end = trimmed.indexOf('`', 3);
-                    currentCodeMapFile = end > 3 ? trimmed.substring(3, end) : trimmed.substring(3);
-                    currentItems = new ArrayList<>();
-                    continue;
-                }
-                if (currentItems != null && trimmed.startsWith("- `")) {
-                    // Sub-item: function/method
-                    BlackBoxDetailResponse.CodeMapItem item = new BlackBoxDetailResponse.CodeMapItem();
-                    int nameEnd = trimmed.indexOf('`', 3);
-                    if (nameEnd > 3) {
-                        item.setName(trimmed.substring(3, nameEnd));
-                        String rest = trimmed.substring(nameEnd + 1).trim();
-                        if (rest.startsWith("→") || rest.startsWith("->")) {
-                            item.setDescription(rest.substring(1).trim());
-                        } else {
-                            item.setDescription(rest);
-                        }
-                    } else {
-                        item.setName(trimmed.substring(3));
-                        item.setDescription("");
-                    }
-                    currentItems.add(item);
-                    continue;
-                }
-            }
-
-            // TODO
-            if (inTodo && (trimmed.startsWith("- [x]") || trimmed.startsWith("- [ ]"))) {
-                BlackBoxDetailResponse.TodoItem item = new BlackBoxDetailResponse.TodoItem();
-                item.setDone(trimmed.startsWith("- [x]"));
-                String text = trimmed.substring(5).trim();
-                // Extract [WP_REF:N]
-                int refStart = text.indexOf("[WP_REF:");
-                if (refStart >= 0) {
-                    int refEnd = text.indexOf(']', refStart);
-                    if (refEnd > refStart) {
-                        String refNum = text.substring(refStart + 8, refEnd).trim();
-                        try { item.setWpRef(Integer.parseInt(refNum)); } catch (NumberFormatException ignored) {}
-                        text = (text.substring(0, refStart) + text.substring(refEnd + 1)).trim();
-                    }
-                }
-                item.setText(text);
-                bb.getTodos().add(item);
-                continue;
-            }
-
-            // ISSUE
-            if (inIssue && trimmed.startsWith("- ") && !trimmed.equals("(없음)")) {
-                bb.getIssues().add(trimmed.substring(2).trim());
-                continue;
-            }
-
-            // COMMENT
-            if (inComment && !trimmed.equals("(없음)") && !trimmed.startsWith("</")) {
-                if (trimmed.startsWith("- ")) commentBuilder.append(trimmed.substring(2)).append("\n");
-                else if (!trimmed.isEmpty()) commentBuilder.append(trimmed).append("\n");
-            }
-        }
-
-        // Flush last code map entry
-        if (currentCodeMapFile != null && currentItems != null) {
-            BlackBoxDetailResponse.CodeMapEntry entry = new BlackBoxDetailResponse.CodeMapEntry();
-            entry.setFile(currentCodeMapFile);
-            entry.setItems(currentItems);
-            bb.getCodeMap().add(entry);
-        }
-
-        String comment = commentBuilder.toString().trim();
-        bb.setComment(comment.isEmpty() ? null : comment);
-        if (bb.getCodeMapPhase() == null) bb.setCodeMapPhase("plan");
-        return bb;
     }
 
     private List<String> parseAddressList(String value) {

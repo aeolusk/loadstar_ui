@@ -10,7 +10,6 @@
 - PARENT: M://root/test
 - CHILDREN: []
 - REFERENCE: [W://root/frontend/waypoint_editor]
-- BLACKBOX: B://root/test/test_waypoint_editor
 
 ### TODO
 (없음)

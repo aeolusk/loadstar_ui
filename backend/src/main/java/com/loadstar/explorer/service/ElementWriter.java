@@ -1,6 +1,6 @@
 package com.loadstar.explorer.service;
 
-import com.loadstar.explorer.model.BlackBoxDetailResponse;
+import com.loadstar.explorer.model.MapData;
 import com.loadstar.explorer.model.WayPointDetailResponse;
 import org.springframework.stereotype.Component;
 
@@ -49,9 +49,6 @@ public class ElementWriter {
         lines.add("- PARENT: " + nvl(wp.getParent()));
         lines.add("- CHILDREN: " + formatList(wp.getChildren()));
         lines.add("- REFERENCE: " + formatList(wp.getReferences()));
-        if (wp.getBlackbox() != null && !wp.getBlackbox().isEmpty()) {
-            lines.add("- BLACKBOX: " + wp.getBlackbox());
-        }
         lines.add("");
 
         // CODE_MAP
@@ -118,79 +115,60 @@ public class ElementWriter {
         return val == null ? "" : val;
     }
 
-    public void writeBlackBox(Path file, BlackBoxDetailResponse bb) throws IOException {
+    public void writeMap(Path file, MapData map) throws IOException {
         List<String> lines = new ArrayList<>();
 
-        lines.add("<BLACKBOX>");
-        lines.add("## [ADDRESS] " + bb.getAddress());
-        lines.add("## [STATUS] " + bb.getStatus());
-        if (bb.getSyncedAt() != null && !bb.getSyncedAt().isEmpty()) {
-            lines.add("- SYNCED_AT: " + bb.getSyncedAt());
-        }
+        lines.add("<MAP>");
+        lines.add("## [ADDRESS] " + map.getAddress());
+        lines.add("## [STATUS] " + map.getStatus());
         lines.add("");
 
-        // DESCRIPTION
-        lines.add("### DESCRIPTION");
-        lines.add("- SUMMARY: " + nvl(bb.getSummary()));
-        if (bb.getLinkedWp() != null && !bb.getLinkedWp().isEmpty()) {
-            lines.add("- LINKED_WP: " + bb.getLinkedWp());
-        }
+        lines.add("### IDENTITY");
+        lines.add("- SUMMARY: " + nvl(map.getSummary()));
         lines.add("");
 
-        // CODE_MAP
-        lines.add("### CODE_MAP");
-        if ("actual".equals(bb.getCodeMapPhase())) {
-            lines.add("**실측 (완료)**");
-        } else {
-            lines.add("**계획**");
-        }
-        if (bb.getCodeMap() != null) {
-            for (com.loadstar.explorer.model.BlackBoxDetailResponse.CodeMapEntry entry : bb.getCodeMap()) {
-                lines.add("- `" + entry.getFile() + "`");
-                if (entry.getItems() != null) {
-                    for (com.loadstar.explorer.model.BlackBoxDetailResponse.CodeMapItem item : entry.getItems()) {
-                        String desc = item.getDescription() != null && !item.getDescription().isEmpty()
-                                ? " → " + item.getDescription() : "";
-                        lines.add("  - `" + item.getName() + "`" + desc);
-                    }
-                }
-            }
-        }
-        lines.add("");
-
-        // TODO
-        lines.add("### TODO");
-        if (bb.getTodos() != null && !bb.getTodos().isEmpty()) {
-            for (com.loadstar.explorer.model.BlackBoxDetailResponse.TodoItem item : bb.getTodos()) {
-                String check = item.isDone() ? "[x]" : "[ ]";
-                String wpRef = item.getWpRef() > 0 ? " [WP_REF:" + item.getWpRef() + "]" : "";
-                lines.add("- " + check + " " + item.getText() + wpRef);
+        lines.add("### WAYPOINTS");
+        if (map.getWaypoints() != null && !map.getWaypoints().isEmpty()) {
+            for (String wp : map.getWaypoints()) {
+                lines.add("- " + wp);
             }
         } else {
             lines.add("(없음)");
         }
         lines.add("");
 
-        // ISSUE
-        lines.add("### ISSUE");
-        if (bb.getIssues() != null && !bb.getIssues().isEmpty()) {
-            for (String issue : bb.getIssues()) {
-                lines.add("- " + issue);
-            }
-        } else {
-            lines.add("(없음)");
-        }
-        lines.add("");
-
-        // COMMENT
         lines.add("### COMMENT");
-        if (bb.getComment() != null && !bb.getComment().isEmpty()) {
-            lines.add("- " + bb.getComment());
-        } else {
-            lines.add("(없음)");
-        }
+        lines.add("(없음)");
+        lines.add("</MAP>");
 
-        lines.add("</BLACKBOX>");
+        Files.write(file, lines, StandardCharsets.UTF_8);
+    }
+
+    public void writeWayPointSkeleton(Path file, String address, String parentAddress, String summary) throws IOException {
+        List<String> lines = new ArrayList<>();
+
+        lines.add("<WAYPOINT>");
+        lines.add("## [ADDRESS] " + address);
+        lines.add("## [STATUS] S_IDL");
+        lines.add("");
+        lines.add("### IDENTITY");
+        lines.add("- SUMMARY: " + (summary != null ? summary : ""));
+        lines.add("- METADATA: [Created: " + java.time.LocalDate.now() + "]");
+        lines.add("");
+        lines.add("### CONNECTIONS");
+        lines.add("- PARENT: " + parentAddress);
+        lines.add("- CHILDREN: []");
+        lines.add("- REFERENCE: []");
+        lines.add("");
+        lines.add("### TODO");
+        lines.add("(없음)");
+        lines.add("");
+        lines.add("### ISSUE");
+        lines.add("(없음)");
+        lines.add("");
+        lines.add("### COMMENT");
+        lines.add("(없음)");
+        lines.add("</WAYPOINT>");
 
         Files.write(file, lines, StandardCharsets.UTF_8);
     }

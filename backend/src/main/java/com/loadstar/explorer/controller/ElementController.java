@@ -49,10 +49,79 @@ public class ElementController {
         }
     }
 
-    @GetMapping("/blackbox")
-    public ResponseEntity<BlackBoxDetailResponse> getBlackBox(@RequestParam String root, @RequestParam String address) {
+    @PostMapping("/map/add")
+    public ResponseEntity<MapViewResponse> addToMap(
+            @RequestParam String root,
+            @RequestParam String mapAddress,
+            @RequestParam String childAddress,
+            @RequestParam(required = false) String position,
+            @RequestParam(required = false) String summary) {
         try {
-            return ResponseEntity.ok(elementService.getBlackBoxDetail(root, address));
+            return ResponseEntity.ok(elementService.addToMap(root, mapAddress, childAddress, position, summary));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @PostMapping("/waypoint/add-child")
+    public ResponseEntity<MapViewResponse> addChildToWayPoint(
+            @RequestParam String root,
+            @RequestParam String parentWpAddress,
+            @RequestParam String childId,
+            @RequestParam String mapAddress,
+            @RequestParam(required = false) String summary) {
+        try {
+            return ResponseEntity.ok(elementService.addChildToWayPoint(root, parentWpAddress, childId, mapAddress, summary));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @DeleteMapping("/waypoint/remove-child")
+    public ResponseEntity<MapViewResponse> removeChildFromWayPoint(
+            @RequestParam String root,
+            @RequestParam String parentWpAddress,
+            @RequestParam String childAddress,
+            @RequestParam String mapAddress) {
+        try {
+            return ResponseEntity.ok(elementService.removeChildFromWayPoint(root, parentWpAddress, childAddress, mapAddress));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @DeleteMapping("/map/remove")
+    public ResponseEntity<MapViewResponse> removeFromMap(
+            @RequestParam String root,
+            @RequestParam String mapAddress,
+            @RequestParam String childAddress) {
+        try {
+            return ResponseEntity.ok(elementService.removeFromMap(root, mapAddress, childAddress));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @DeleteMapping("/map/delete")
+    public ResponseEntity<Map<String, Object>> deleteMap(
+            @RequestParam String root,
+            @RequestParam String mapAddress) {
+        try {
+            elementService.deleteMap(root, mapAddress);
+            return ResponseEntity.ok(Map.of("success", true));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/map/create-child")
+    public ResponseEntity<MapViewResponse> createSubMap(
+            @RequestParam String root,
+            @RequestParam String parentMapAddress,
+            @RequestParam String id,
+            @RequestParam(required = false) String summary) {
+        try {
+            return ResponseEntity.ok(elementService.createSubMap(root, parentMapAddress, id, summary));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
@@ -70,15 +139,4 @@ public class ElementController {
         }
     }
 
-    @PutMapping("/blackbox")
-    public ResponseEntity<BlackBoxDetailResponse> updateBlackBox(
-            @RequestParam String root,
-            @RequestParam(defaultValue = "false") boolean skipHistory,
-            @RequestBody BlackBoxDetailResponse data) {
-        try {
-            return ResponseEntity.ok(elementService.updateBlackBox(root, data, skipHistory));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
-    }
 }

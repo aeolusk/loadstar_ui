@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  fetchTodoList, fetchTodoHistory,
+  fetchTodoList, fetchTodoHistory, syncTodo,
   type ApiTodoItem, type ApiTodoHistoryItem,
 } from '../../api/client';
 
@@ -11,41 +11,7 @@ const statusBadgeColors: Record<string, { bg: string; color: string }> = {
   ACTIVE: { bg: '#3a7ca5', color: '#fff' },
   PENDING: { bg: '#9b8e7e', color: '#fff' },
   BLOCKED: { bg: '#b54a3f', color: '#fff' },
-  DONE: { bg: '#5a8a5e', color: '#fff' },
-  UPDATED: { bg: '#c47f17', color: '#fff' },
-  DELETED: { bg: '#b54a3f', color: '#fff' },
 };
-
-type TimeRange = 'none' | '1h' | '6h' | '1d' | '3d' | '7d';
-
-const timeRangeLabels: Record<TimeRange, string> = {
-  none: '기한 없음',
-  '1h': '1시간 전',
-  '6h': '6시간 전',
-  '1d': '1일 전',
-  '3d': '3일 전',
-  '7d': '7일 전',
-};
-
-function getTimeRangeCutoff(range: TimeRange): Date | null {
-  if (range === 'none') return null;
-  const now = new Date();
-  switch (range) {
-    case '1h': return new Date(now.getTime() - 1 * 60 * 60 * 1000);
-    case '6h': return new Date(now.getTime() - 6 * 60 * 60 * 1000);
-    case '1d': return new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    case '3d': return new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
-    case '7d': return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  }
-}
-
-function isWithinRange(dateStr: string, range: TimeRange): boolean {
-  const cutoff = getTimeRangeCutoff(range);
-  if (!cutoff) return true; // no filter
-  const d = dateStr ? new Date(dateStr.replace(' ', 'T')) : null;
-  if (!d || isNaN(d.getTime())) return true;
-  return d >= cutoff;
-}
 
 interface TodoViewProps {
   projectRoot: string;
@@ -55,17 +21,19 @@ export default function TodoView({ projectRoot }: TodoViewProps) {
   const [tab, setTab] = useState<TabType>('list');
   const [loading, setLoading] = useState(false);
 
-  // List filters
+  // List state
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [addressFilter, setAddressFilter] = useState('');
-  const [timeRange, setTimeRange] = useState<TimeRange>('none');
   const [listResult, setListResult] = useState<ApiTodoItem[] | null>(null);
 
-  // History filters
-  const [histAddressFilter, setHistAddressFilter] = useState('');
-  const [histActionFilter, setHistActionFilter] = useState('ALL');
-  const [histTimeRange, setHistTimeRange] = useState<TimeRange>('none');
+  // History state
+  const [histMapFilter, setHistMapFilter] = useState('');
   const [histResult, setHistResult] = useState<ApiTodoHistoryItem[] | null>(null);
+
+  // Sync state
+  const [syncing, setSyncing] = useState(false);
+  const [showSyncConfirm, setShowSyncConfirm] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   const handleListSearch = async () => {
     if (!projectRoot) return;
@@ -74,7 +42,6 @@ export default function TodoView({ projectRoot }: TodoViewProps) {
       let items = await fetchTodoList(projectRoot);
       if (statusFilter !== 'ALL') items = items.filter(t => t.status === statusFilter);
       if (addressFilter.trim()) items = items.filter(t => t.address.toLowerCase().includes(addressFilter.toLowerCase()));
-      items = items.filter(t => isWithinRange(t.time, timeRange));
       setListResult(items);
     } catch (e) {
       console.error('Failed to fetch todo list', e);
@@ -88,9 +55,7 @@ export default function TodoView({ projectRoot }: TodoViewProps) {
     if (!projectRoot) return;
     setLoading(true);
     try {
-      let items = await fetchTodoHistory(projectRoot, histAddressFilter.trim() || undefined);
-      if (histActionFilter !== 'ALL') items = items.filter(h => h.action === histActionFilter);
-      items = items.filter(h => isWithinRange(h.at || h.time, histTimeRange));
+      const items = await fetchTodoHistory(projectRoot, histMapFilter.trim() || undefined);
       setHistResult(items);
     } catch (e) {
       console.error('Failed to fetch todo history', e);
@@ -100,22 +65,48 @@ export default function TodoView({ projectRoot }: TodoViewProps) {
     }
   };
 
-  const handleListClear = () => {
-    setStatusFilter('ALL');
-    setAddressFilter('');
-    setTimeRange('none');
-    setListResult(null);
-  };
-
-  const handleHistoryClear = () => {
-    setHistActionFilter('ALL');
-    setHistAddressFilter('');
-    setHistTimeRange('none');
-    setHistResult(null);
+  const handleSync = async () => {
+    setShowSyncConfirm(false);
+    setSyncing(true);
+    setSyncMessage(null);
+    try {
+      const result = await syncTodo(projectRoot);
+      setSyncMessage(`동기화 완료: ${result.added} 추가, ${result.updated} 갱신, ${result.removed} 제거 (총 ${result.total}건)`);
+      // Refresh list
+      handleListSearch();
+    } catch (e) {
+      setSyncMessage('동기화 실패: ' + (e instanceof Error ? e.message : 'Unknown error'));
+    } finally {
+      setSyncing(false);
+    }
   };
 
   return (
     <div style={s.container}>
+      {/* Sync Confirm Popup */}
+      {showSyncConfirm && (
+        <div style={s.overlay}>
+          <div style={s.popup}>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8, color: 'var(--text-primary)' }}>TODO 동기화</div>
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 16 }}>
+              전체 WayPoint를 스캔하여 TODO 목록을 갱신합니다.<br/>
+              대규모 프로젝트의 경우 시간이 걸릴 수 있습니다.
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button style={s.btn} onClick={() => setShowSyncConfirm(false)}>취소</button>
+              <button style={s.btnPrimary} onClick={handleSync}>동기화 실행</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      {syncMessage && (
+        <div style={s.toast} onClick={() => setSyncMessage(null)}>
+          {syncMessage}
+        </div>
+      )}
+
       {/* Tab Bar */}
       <div style={s.tabBar}>
         <div style={{ ...s.tab, ...(tab === 'list' ? s.tabActive : {}) }} onClick={() => setTab('list')}>
@@ -124,12 +115,20 @@ export default function TodoView({ projectRoot }: TodoViewProps) {
         <div style={{ ...s.tab, ...(tab === 'history' ? s.tabActive : {}) }} onClick={() => setTab('history')}>
           History
         </div>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', paddingRight: 12 }}>
+          <button
+            style={{ ...s.btnPrimary, fontSize: 11, padding: '4px 12px' }}
+            onClick={() => setShowSyncConfirm(true)}
+            disabled={syncing || !projectRoot}
+          >
+            {syncing ? '동기화 중...' : '⟳ Sync'}
+          </button>
+        </div>
       </div>
 
       {/* ===== LIST TAB ===== */}
       {tab === 'list' && (
         <>
-          {/* Filter Bar */}
           <div style={s.filterSection}>
             <div style={s.filterRow}>
               <div style={s.filterGroup}>
@@ -146,22 +145,13 @@ export default function TodoView({ projectRoot }: TodoViewProps) {
                 <input style={s.input} value={addressFilter} onChange={e => setAddressFilter(e.target.value)}
                   placeholder="W://..." spellCheck={false} />
               </div>
-              <div style={s.filterGroup}>
-                <span style={s.filterLabel}>기간</span>
-                <select style={s.select} value={timeRange} onChange={e => setTimeRange(e.target.value as TimeRange)}>
-                  {Object.entries(timeRangeLabels).map(([k, v]) => (
-                    <option key={k} value={k}>{v}</option>
-                  ))}
-                </select>
-              </div>
               <div style={{ ...s.filterGroup, alignSelf: 'flex-end' }}>
                 <button style={s.btnPrimary} onClick={handleListSearch} disabled={loading}>{loading ? '...' : '조회'}</button>
-                <button style={s.btn} onClick={handleListClear}>초기화</button>
+                <button style={s.btn} onClick={() => { setStatusFilter('ALL'); setAddressFilter(''); setListResult(null); }}>초기화</button>
               </div>
             </div>
           </div>
 
-          {/* Results */}
           {listResult === null ? (
             <div style={s.empty}>필터 조건을 설정하고 [조회] 버튼을 클릭하세요.</div>
           ) : listResult.length === 0 ? (
@@ -171,10 +161,8 @@ export default function TodoView({ projectRoot }: TodoViewProps) {
               <thead>
                 <tr>
                   <th style={s.th}>Status</th>
-                  <th style={s.th}>Summary</th>
                   <th style={s.th}>Address</th>
-                  <th style={s.th}>Time</th>
-                  <th style={s.th}>Depends On</th>
+                  <th style={s.th}>Summary</th>
                 </tr>
               </thead>
               <tbody>
@@ -185,10 +173,8 @@ export default function TodoView({ projectRoot }: TodoViewProps) {
                       <td style={s.td}>
                         <span style={{ ...s.badge, background: badge.bg, color: badge.color }}>{t.status}</span>
                       </td>
-                      <td style={s.td}>{t.summary}</td>
                       <td style={{ ...s.td, ...s.mono }}>{t.address}</td>
-                      <td style={{ ...s.td, ...s.muted }}>{t.time}</td>
-                      <td style={{ ...s.td, ...s.mono }}>{t.dependsOn !== '-' ? t.dependsOn : ''}</td>
+                      <td style={s.td}>{t.summary}</td>
                     </tr>
                   );
                 })}
@@ -204,67 +190,39 @@ export default function TodoView({ projectRoot }: TodoViewProps) {
         <>
           <div style={s.filterSection}>
             <div style={s.filterRow}>
-              <div style={s.filterGroup}>
-                <span style={s.filterLabel}>Action</span>
-                <select style={s.select} value={histActionFilter} onChange={e => setHistActionFilter(e.target.value)}>
-                  <option value="ALL">ALL</option>
-                  <option value="DONE">DONE</option>
-                  <option value="UPDATED">UPDATED</option>
-                  <option value="DELETED">DELETED</option>
-                </select>
-              </div>
               <div style={{ ...s.filterGroup, flex: 1 }}>
-                <span style={s.filterLabel}>Address</span>
-                <input style={s.input} value={histAddressFilter} onChange={e => setHistAddressFilter(e.target.value)}
-                  placeholder="W://..." spellCheck={false} />
-              </div>
-              <div style={s.filterGroup}>
-                <span style={s.filterLabel}>기간</span>
-                <select style={s.select} value={histTimeRange} onChange={e => setHistTimeRange(e.target.value as TimeRange)}>
-                  {Object.entries(timeRangeLabels).map(([k, v]) => (
-                    <option key={k} value={k}>{v}</option>
-                  ))}
-                </select>
+                <span style={s.filterLabel}>Map 필터</span>
+                <input style={s.input} value={histMapFilter} onChange={e => setHistMapFilter(e.target.value)}
+                  placeholder="M://root/cli (비우면 전체)" spellCheck={false} />
               </div>
               <div style={{ ...s.filterGroup, alignSelf: 'flex-end' }}>
                 <button style={s.btnPrimary} onClick={handleHistorySearch} disabled={loading}>{loading ? '...' : '조회'}</button>
-                <button style={s.btn} onClick={handleHistoryClear}>초기화</button>
+                <button style={s.btn} onClick={() => { setHistMapFilter(''); setHistResult(null); }}>초기화</button>
               </div>
             </div>
           </div>
 
           {histResult === null ? (
-            <div style={s.empty}>필터 조건을 설정하고 [조회] 버튼을 클릭하세요.</div>
+            <div style={s.empty}>[조회] 버튼을 클릭하면 WayPoint TECH_SPEC의 완료 항목을 수집합니다.</div>
           ) : histResult.length === 0 ? (
-            <div style={s.empty}>조건에 맞는 항목이 없습니다.</div>
+            <div style={s.empty}>완료된 항목이 없습니다.</div>
           ) : (
             <table style={s.table}>
               <thead>
                 <tr>
-                  <th style={s.th}>Action</th>
-                  <th style={s.th}>Summary</th>
+                  <th style={s.th}>Date</th>
                   <th style={s.th}>Address</th>
-                  <th style={s.th}>Time</th>
-                  <th style={s.th}>Completed At</th>
-                  <th style={s.th}>Depends On</th>
+                  <th style={s.th}>Item</th>
                 </tr>
               </thead>
               <tbody>
-                {histResult.map((h, i) => {
-                  const badge = statusBadgeColors[h.action] || statusBadgeColors.DONE;
-                  return (
-                    <tr key={i} style={i % 2 === 0 ? {} : { background: 'var(--bg-secondary)' }}>
-                      <td style={s.td}>
-                        <span style={{ ...s.badge, background: badge.bg, color: badge.color }}>{h.action}</span>
-                      </td>
-                      <td style={s.td}>{h.summary}</td>
-                      <td style={{ ...s.td, ...s.mono }}>{h.address}</td>
-                      <td style={{ ...s.td, ...s.muted }}>{h.time}</td>
-                      <td style={{ ...s.td, ...s.muted }}>{h.at}</td>
-                      <td style={{ ...s.td, ...s.mono }}>{h.dependsOn !== '-' ? h.dependsOn : ''}</td>
-                    </tr>
-                  );
-                })}
+                {histResult.map((h, i) => (
+                  <tr key={i} style={i % 2 === 0 ? {} : { background: 'var(--bg-secondary)' }}>
+                    <td style={{ ...s.td, ...s.muted, whiteSpace: 'nowrap' }}>{h.date}</td>
+                    <td style={{ ...s.td, ...s.mono }}>{h.address}</td>
+                    <td style={s.td}>{h.item}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           )}
@@ -276,10 +234,10 @@ export default function TodoView({ projectRoot }: TodoViewProps) {
 }
 
 const s = {
-  container: { height: '100%', overflow: 'auto', fontSize: 13 } as React.CSSProperties,
+  container: { height: '100%', overflow: 'auto', fontSize: 13, position: 'relative' as const } as React.CSSProperties,
   tabBar: {
     display: 'flex', gap: 0, borderBottom: '1px solid var(--border-light)',
-    position: 'sticky' as const, top: 0, background: 'var(--bg-surface)', zIndex: 1,
+    position: 'sticky' as const, top: 0, background: 'var(--bg-surface)', zIndex: 2,
   } as React.CSSProperties,
   tab: {
     padding: '10px 24px', fontSize: 13, fontWeight: 500, cursor: 'pointer',
@@ -307,7 +265,7 @@ const s = {
   input: {
     padding: '5px 8px', border: '1px solid var(--border-medium)', borderRadius: 4,
     fontSize: 12, fontFamily: 'monospace', background: 'var(--bg-surface)', color: 'var(--text-primary)',
-    outline: 'none', minWidth: 150,
+    outline: 'none', minWidth: 200,
   } as React.CSSProperties,
   btnPrimary: {
     padding: '5px 14px', border: '1px solid var(--accent-primary)', borderRadius: 4,
@@ -344,5 +302,19 @@ const s = {
   } as React.CSSProperties,
   resultCount: {
     padding: '8px 16px', fontSize: 11, color: 'var(--text-muted)', textAlign: 'right' as const,
+  } as React.CSSProperties,
+  overlay: {
+    position: 'fixed' as const, top: 0, left: 0, right: 0, bottom: 0,
+    background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    zIndex: 1000,
+  } as React.CSSProperties,
+  popup: {
+    background: 'var(--bg-surface)', borderRadius: 8, padding: '24px',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.2)', maxWidth: 400, width: '90%',
+  } as React.CSSProperties,
+  toast: {
+    position: 'absolute' as const, top: 48, left: '50%', transform: 'translateX(-50%)', zIndex: 50,
+    background: '#2c2417', color: '#fff', padding: '8px 20px', borderRadius: 6,
+    fontSize: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.2)', cursor: 'pointer',
   } as React.CSSProperties,
 };

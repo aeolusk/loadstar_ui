@@ -10,7 +10,6 @@
 - PARENT: M://root/test
 - CHILDREN: []
 - REFERENCE: [W://root/frontend/app_shell]
-- BLACKBOX: B://root/test/test_app_shell
 
 ### TODO
 (없음)

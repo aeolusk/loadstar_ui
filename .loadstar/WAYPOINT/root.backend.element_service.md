@@ -11,7 +11,6 @@
 - PARENT: M://root/backend
 - CHILDREN: []
 - REFERENCE: [W://root/backend/cli_service]
-- BLACKBOX: B://root/backend/element_service
 
 ### TODO
 (없음)

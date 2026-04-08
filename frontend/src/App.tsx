@@ -12,7 +12,7 @@ import './App.css';
 export interface Tab {
   id: string;
   title: string;
-  type: 'map' | 'waypoint' | 'blackbox' | 'dashboard' | 'todo' | 'history' | 'monitor' | 'git' | 'log' | 'cli';
+  type: 'map' | 'waypoint' | 'dashboard' | 'todo' | 'history' | 'git' | 'log' | 'cli';
   address?: string;
 }
 
@@ -21,6 +21,9 @@ function App() {
   const [showOpenDialog, setShowOpenDialog] = useState(true);
   const [tabs, setTabs] = useState<Tab[]>([]);
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
+  const [treeVersion, setTreeVersion] = useState(0);
+
+  const handleStructureChange = () => setTreeVersion(v => v + 1);
 
   const openTab = (tab: Tab) => {
     const existing = tabs.find(t => t.id === tab.id);
@@ -68,7 +71,7 @@ function App() {
                 onOpenDialog={() => setShowOpenDialog(true)}
               />
               <div style={{ flex: 1, overflow: 'hidden' }}>
-                <ElementTree projectRoot={projectRoot} onOpenTab={openTab} />
+                <ElementTree projectRoot={projectRoot} onOpenTab={openTab} treeVersion={treeVersion} />
               </div>
             </div>
           </Panel>
@@ -81,6 +84,7 @@ function App() {
               onSelectTab={setActiveTabId}
               onCloseTab={closeTab}
               onOpenTab={openTab}
+              onStructureChange={handleStructureChange}
             />
           </Panel>
         </Group>

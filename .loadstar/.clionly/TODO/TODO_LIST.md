@@ -1,6 +1,13 @@
-| 주소 (Address) | 발생 시간 (Time) | 작업 요약 (Summary) | 상태 (Status) | 선행 조건 (Depends_On) |
-| :--- | :--- | :--- | :--- | :--- |
-| W://root/backend/monitor_service | 2026-04-06 11:47 | 모니터링 CLI 연동 API 구현 | PENDING | - |
-| W://root/frontend/search | 2026-04-06 11:47 | Command Palette 검색 구현 | ACTIVE | - |
-| W://root/frontend/monitor_view | 2026-04-06 11:47 | 모니터링/드리프트 현황 화면 구현 | ACTIVE | - |
-| W://root/frontend/dashboard | 2026-04-06 11:47 | 프로젝트 대시보드 화면 구현 | ACTIVE | - |
+| 주소 (Address) | 상태 (Status) | 작업 요약 (Summary) |
+| :--- | :--- | :--- |
+| W://root/test/test_log_view | PENDING | Log View 테스트 (findlog 연동, KIND/Address 필터, 페이징) |
+| W://root/frontend/search | [BLOCKED] | 검색 — Command Palette (Ctrl+K), 주소/키워드 통합 검색, 결과에서 요소 탭 열기 |
+| W://root/test/test_git_view | PENDING | Git View 테스트 (커밋 이력, 요소 태그, checkpoint 실행) |
+| W://root/test/test_app_shell | PENDING | App Shell 레이아웃 테스트 (MenuBar, Toolbar, ElementTree, EditorTabs, StatusBar, 리사이즈 패널) |
+| W://root/test/test_waypoint_editor | PENDING | WayPoint Editor 테스트 (IDENTITY, CONNECTIONS, TECH_SPEC 체크박스, OPEN_QUESTIONS 표시/편집) |
+| W://root/test/test_search | [BLOCKED] | Search 테스트 (Command Palette, 주소/키워드 검색, 결과 탭 열기) |
+| W://root/test/test_todo_view | PENDING | TODO View 테스트 (목록/History 탭 전환, 상태 필터, CLI 연동 CRUD) |
+| W://root/test/test_map_view | PENDING | Map Viewer 테스트 (React Flow 노드 배치, WP 체인 흐름도, BlackBox/참조 연결, 노드 클릭) |
+| W://root/test/test_dashboard | [BLOCKED] | Dashboard 테스트 (요소 통계, 상태 분포, 건강 경고) |
+| W://root/test/test_cli_console | PENDING | CLI Console 테스트 (명령 실행, 결과 표시, 실행 이력) |
+| W://root/frontend/dashboard | [BLOCKED] | 프로젝트 대시보드 화면 구현 |

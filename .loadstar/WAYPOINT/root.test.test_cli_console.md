@@ -10,7 +10,6 @@
 - PARENT: M://root/test
 - CHILDREN: []
 - REFERENCE: [W://root/frontend/cli_console]
-- BLACKBOX: B://root/test/test_cli_console
 
 ### TODO
 (없음)

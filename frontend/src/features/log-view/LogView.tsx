@@ -103,7 +103,7 @@ export default function LogView({ projectRoot }: LogViewProps) {
           <div style={{ ...s.filterGroup, flex: 1 }}>
             <span style={s.filterLabel}>Address</span>
             <input style={s.input} value={addressFilter} onChange={e => setAddressFilter(e.target.value)}
-              placeholder="W://... 또는 B://..." spellCheck={false} />
+              placeholder="W://..." spellCheck={false} />
           </div>
           <div style={s.filterGroup}>
             <span style={s.filterLabel}>기간</span>

@@ -235,7 +235,6 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
     if (!onOpenTab || !addr) return;
     let type: Tab['type'] = 'waypoint';
     if (addr.startsWith('M://')) type = 'map';
-    else if (addr.startsWith('B://')) type = 'blackbox';
     onOpenTab({ id: addr, title: addr.split('/').pop() || addr, type, address: addr });
   };
 
@@ -766,12 +765,13 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
               onChange={() => toggleSelectTechSpec(i)}
               style={{ marginTop: 2 }}
             />
-            <input
-              type="checkbox"
-              checked={item.done}
-              onChange={() => toggleTechSpec(i)}
-              style={{ marginTop: 2 }}
-            />
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: 16, height: 16, marginTop: 2, flexShrink: 0,
+              color: item.done ? '#5a8a5e' : 'var(--text-muted)', fontSize: 13,
+            }}>
+              {item.done ? '✓' : '○'}
+            </span>
             {editingTechSpec === i ? (
               <div style={{ display: 'flex', gap: 4, flex: 1 }}>
                 <input style={{ ...s.inputSm, flex: 1 }} value={editTechSpecText} onChange={e => setEditTechSpecText(e.target.value)}

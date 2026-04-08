@@ -3,14 +3,13 @@ import type { CSSProperties } from 'react';
 
 interface SearchResult {
   address: string;
-  type: 'MAP' | 'WAYPOINT' | 'BLACKBOX';
+  type: 'MAP' | 'WAYPOINT';
   summary: string;
 }
 
 const allResults: SearchResult[] = [
   { address: 'M://root/backend', type: 'MAP', summary: 'Spring Boot Backend' },
   { address: 'W://root/backend/element_service', type: 'WAYPOINT', summary: 'Element Service' },
-  { address: 'B://root/backend/element_service', type: 'BLACKBOX', summary: 'Element Service BB' },
   { address: 'M://root/frontend', type: 'MAP', summary: 'React Frontend' },
   { address: 'W://root/frontend/app_shell', type: 'WAYPOINT', summary: 'App Shell' },
   { address: 'W://root/frontend/map_view', type: 'WAYPOINT', summary: 'Map View' },
@@ -21,13 +20,11 @@ const allResults: SearchResult[] = [
 const typeIcons: Record<string, string> = {
   MAP: '\u{1F5FA}',
   WAYPOINT: '\u{1F4CD}',
-  BLACKBOX: '\u{1F4E6}',
 };
 
 const typeColors: Record<string, string> = {
   MAP: 'var(--accent-primary)',
   WAYPOINT: 'var(--status-progress)',
-  BLACKBOX: 'var(--text-muted)',
 };
 
 const styles: Record<string, CSSProperties> = {
