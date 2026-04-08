@@ -145,22 +145,25 @@ public class ElementService {
         if (data.getCreated() == null) data.setCreated(existing.getCreated());
         if (data.getTodoAddress() == null) data.setTodoAddress(existing.getTodoAddress());
 
-        // Detect added/deleted TECH_SPEC items → log
-        if (!skipHistory) {
-            recordTechSpecChanges(projectRoot, address, existing.getTechSpec(), data.getTechSpec());
-        }
-
         // Write updated md
         writer.writeWayPoint(file, data);
 
-        // Log change via CLI
-        cli.logModified(projectRoot, address, buildChangeSummary(existing, data));
+        // Log changes via CLI (single call)
+        String itemChanges = skipHistory ? "" : buildTechSpecItemChanges(existing.getTechSpec(), data.getTechSpec());
+        String otherChanges = buildChangeSummary(existing, data);
+        String logMsg;
+        if (!itemChanges.isEmpty()) {
+            logMsg = itemChanges;
+        } else {
+            logMsg = otherChanges;
+        }
+        cli.logModified(projectRoot, address, logMsg);
 
         // Return fresh data
         return parser.parseWayPointDetail(file);
     }
 
-    private void recordTechSpecChanges(String projectRoot, String address,
+    private String buildTechSpecItemChanges(
                                         List<WayPointDetailResponse.TechSpecItem> before,
                                         List<WayPointDetailResponse.TechSpecItem> after) {
         java.util.Set<String> beforeTexts = new java.util.HashSet<>();
@@ -176,24 +179,26 @@ public class ElementService {
             }
         }
 
-        // Deleted items
+        List<String> parts = new ArrayList<>();
+
         if (before != null) {
             for (WayPointDetailResponse.TechSpecItem item : before) {
                 if (!afterTexts.contains(item.getText())) {
                     String status = item.isDone() ? "완료" : "미완료";
-                    cli.logModified(projectRoot, address, "삭제:" + truncateLog(item.getText()) + " (" + status + ")");
+                    parts.add("delete:" + truncateLog(item.getText()) + "(" + status + ")");
                 }
             }
         }
 
-        // Added items
         if (after != null) {
             for (WayPointDetailResponse.TechSpecItem item : after) {
                 if (!beforeTexts.contains(item.getText())) {
-                    cli.logModified(projectRoot, address, "추가:" + truncateLog(item.getText()));
+                    parts.add("add:" + truncateLog(item.getText()));
                 }
             }
         }
+
+        return String.join(", ", parts);
     }
 
     private String truncateLog(String s) {
@@ -206,12 +211,6 @@ public class ElementService {
         if (!eq(before.getStatus(), after.getStatus())) changes.add("STATUS " + before.getStatus() + " -> " + after.getStatus());
         if (!eq(before.getSummary(), after.getSummary())) changes.add("SUMMARY changed");
         if (!eq(before.getComment(), after.getComment())) changes.add("COMMENT changed");
-
-        int beforeDone = before.getTechSpec() != null ? (int) before.getTechSpec().stream().filter(WayPointDetailResponse.TechSpecItem::isDone).count() : 0;
-        int afterDone = after.getTechSpec() != null ? (int) after.getTechSpec().stream().filter(WayPointDetailResponse.TechSpecItem::isDone).count() : 0;
-        int beforeTotal = before.getTechSpec() != null ? before.getTechSpec().size() : 0;
-        int afterTotal = after.getTechSpec() != null ? after.getTechSpec().size() : 0;
-        if (beforeDone != afterDone || beforeTotal != afterTotal) changes.add("TECH_SPEC " + beforeDone + "/" + beforeTotal + " -> " + afterDone + "/" + afterTotal);
 
         int beforeIssues = before.getIssues() != null ? before.getIssues().size() : 0;
         int afterIssues = after.getIssues() != null ? after.getIssues().size() : 0;
