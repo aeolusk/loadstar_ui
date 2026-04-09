@@ -1,6 +1,6 @@
 <WAYPOINT>
 ## [ADDRESS] W://root/backend/project_config
-## [STATUS] S_STB
+## [STATUS] S_PRG
 
 ### IDENTITY
 - SUMMARY: 프로젝트 초기화 및 설정 — .loadstar 경로 지정, 연결 상태 확인, 프로젝트 정보 반환
@@ -12,7 +12,7 @@
 - REFERENCE: []
 
 ### TODO
-(없음)
+- [ ] GitHub Actions CI 워크플로우 설정 (.github/workflows/ — gradle test + 리포트)
 
 ### ISSUE
 (없음)

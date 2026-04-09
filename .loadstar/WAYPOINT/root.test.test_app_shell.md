@@ -12,7 +12,9 @@
 - REFERENCE: [W://root/frontend/app_shell]
 
 ### TODO
-(없음)
+- [ ] ElementTree 렌더링 테스트 (트리 노드 표시, 선택 하이라이트)
+- [ ] EditorTabs 탭 전환 테스트 (탭 열기/닫기/활성화)
+- [ ] 리사이즈 패널 동작 테스트
 
 ### ISSUE
 (없음)

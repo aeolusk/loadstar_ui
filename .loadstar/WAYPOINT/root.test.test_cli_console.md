@@ -12,7 +12,9 @@
 - REFERENCE: [W://root/frontend/cli_console]
 
 ### TODO
-(없음)
+- [ ] 명령 입력 및 실행 결과 표시 테스트
+- [ ] 명령 이력 화살표 탐색 테스트
+- [ ] clear/help 내장 명령 테스트
 
 ### ISSUE
 (없음)

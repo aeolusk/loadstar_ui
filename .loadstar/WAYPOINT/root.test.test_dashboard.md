@@ -12,7 +12,8 @@
 - REFERENCE: [W://root/frontend/dashboard]
 
 ### TODO
-(없음)
+- [ ] 대시보드 레이아웃 렌더링 테스트
+- [ ] 요소 통계/상태 분포 표시 테스트 (API 연동 후)
 
 ### ISSUE
 (없음)

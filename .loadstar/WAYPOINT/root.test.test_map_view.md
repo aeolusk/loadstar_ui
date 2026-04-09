@@ -12,7 +12,10 @@
 - REFERENCE: [W://root/frontend/map_view]
 
 ### TODO
-(없음)
+- [ ] React Flow 노드 배치 테스트 (Map 상단/WP 하단 분리)
+- [ ] WP 추가 드롭다운 동작 테스트 (앞/뒤/child)
+- [ ] WP 삭제 confirm 대화상자 테스트
+- [ ] child/ref 배지 펼침 테스트
 
 ### ISSUE
 (없음)

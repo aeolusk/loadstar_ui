@@ -12,7 +12,9 @@
 - REFERENCE: [W://root/frontend/search]
 
 ### TODO
-(없음)
+- [ ] Command Palette 열기/닫기 테스트 (Ctrl+K)
+- [ ] 검색 결과 렌더링 테스트
+- [ ] 결과 선택 시 탭 열기 테스트
 
 ### ISSUE
 (없음)

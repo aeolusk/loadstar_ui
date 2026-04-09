@@ -12,7 +12,8 @@
 - REFERENCE: [W://root/frontend/git_view]
 
 ### TODO
-(없음)
+- [ ] 커밋 이력 목록 렌더링 테스트
+- [ ] 커밋 선택 시 변경 파일 목록 표시 테스트
 
 ### ISSUE
 (없음)

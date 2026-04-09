@@ -12,7 +12,9 @@
 - REFERENCE: [W://root/frontend/todo_view]
 
 ### TODO
-(없음)
+- [ ] TODO 목록 탭 렌더링 테스트 (ACTIVE/PENDING/BLOCKED 표시)
+- [ ] Sync 버튼 동작 테스트 (확인 팝업 + 결과 토스트)
+- [ ] History 탭 테스트 (완료 항목 수집, Map 필터)
 
 ### ISSUE
 (없음)

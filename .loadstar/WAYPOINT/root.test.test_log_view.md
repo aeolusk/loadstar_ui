@@ -12,7 +12,9 @@
 - REFERENCE: [W://root/frontend/log_view]
 
 ### TODO
-(없음)
+- [ ] 로그 목록 렌더링 테스트
+- [ ] KIND/Address 필터링 테스트
+- [ ] 페이징 동작 테스트
 
 ### ISSUE
 (없음)
