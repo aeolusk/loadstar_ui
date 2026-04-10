@@ -30,8 +30,8 @@
     "status": "S_STB"
   },
   "W://root/frontend/app_shell": {
-    "modTime": "2026-04-08T15:36:20+09:00",
-    "size": 429,
+    "modTime": "2026-04-08T16:12:29+09:00",
+    "size": 1014,
     "status": "S_STB"
   },
   "W://root/frontend/blackbox_editor": {
@@ -70,13 +70,13 @@
     "status": "S_PRG"
   },
   "W://root/frontend/todo_view": {
-    "modTime": "2026-04-08T16:03:52+09:00",
+    "modTime": "2026-04-08T16:27:42+09:00",
     "size": 1238,
     "status": "S_STB"
   },
   "W://root/frontend/waypoint_editor": {
-    "modTime": "2026-04-08T15:36:21+09:00",
-    "size": 801,
+    "modTime": "2026-04-08T16:12:53+09:00",
+    "size": 1131,
     "status": "S_STB"
   },
   "W://root/test/test_app_shell": {

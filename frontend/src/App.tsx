@@ -48,8 +48,9 @@ function App() {
   const handleProjectChange = (root: string) => {
     setProjectRoot(root);
     setShowOpenDialog(false);
-    setTabs([]);
-    setActiveTabId(null);
+    const dashboardTab: Tab = { id: 'tool-dashboard', title: 'Dashboard', type: 'dashboard' };
+    setTabs([dashboardTab]);
+    setActiveTabId(dashboardTab.id);
   };
 
   return (

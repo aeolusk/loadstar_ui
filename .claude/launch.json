@@ -6,6 +6,12 @@
       "runtimeExecutable": "mvn",
       "runtimeArgs": ["-f", "backend/pom.xml", "spring-boot:run"],
       "port": 8080
+    },
+    {
+      "name": "frontend-dev",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "--host"],
+      "port": 5173
     }
   ]
 }

@@ -32,7 +32,7 @@ const tabTypeIcon = (type: Tab['type']): string => {
 
 const TabContent = ({ tab, projectRoot, onOpenTab, onStructureChange }: { tab: Tab; projectRoot: string; onOpenTab: (tab: Tab) => void; onStructureChange?: () => void }) => {
   switch (tab.type) {
-    case 'dashboard': return <DashboardView />;
+    case 'dashboard': return <DashboardView projectRoot={projectRoot} />;
     case 'map': return <MapView projectRoot={projectRoot} address={tab.address || ''} onOpenTab={onOpenTab} onStructureChange={onStructureChange} />;
     case 'waypoint': return <WayPointEditor projectRoot={projectRoot} address={tab.address || ''} onOpenTab={onOpenTab} />;
     case 'todo': return <TodoView projectRoot={projectRoot} />;

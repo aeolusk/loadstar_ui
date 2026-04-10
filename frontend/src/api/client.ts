@@ -256,6 +256,66 @@ export async function executeCliCommand(root: string, args: string[]): Promise<C
   return res.data;
 }
 
+// --- Dashboard API ---
+
+export interface DashboardSummary {
+  totalMaps: number;
+  totalWaypoints: number;
+  statusCounts: Record<string, number>;
+  mapGroups: MapGroupSummary[];
+  blockedItems: BlockedItem[];
+}
+
+export interface MapGroupSummary {
+  address: string;
+  summary: string;
+  statusCounts: Record<string, number>;
+  totalWaypoints: number;
+}
+
+export interface BlockedItem {
+  address: string;
+  summary: string;
+}
+
+export interface NoticeItem {
+  id: string;
+  title: string;
+  category: string;
+  priority: string;
+  status: string;
+  created: string;
+  resolved: string | null;
+  content: string;
+  filePath: string;
+}
+
+export async function fetchDashboardSummary(root: string): Promise<DashboardSummary> {
+  const res = await apiClient.get<DashboardSummary>('/dashboard/summary', { params: { root } });
+  return res.data;
+}
+
+export async function fetchNotices(root: string, category?: string): Promise<NoticeItem[]> {
+  const params: Record<string, string> = { root };
+  if (category) params.category = category;
+  const res = await apiClient.get<NoticeItem[]>('/dashboard/notices', { params });
+  return res.data;
+}
+
+export async function createNotice(root: string, notice: Omit<NoticeItem, 'id' | 'filePath'>): Promise<NoticeItem> {
+  const res = await apiClient.post<NoticeItem>('/dashboard/notices', notice, { params: { root } });
+  return res.data;
+}
+
+export async function updateNotice(root: string, id: string, notice: Omit<NoticeItem, 'id' | 'filePath'>): Promise<NoticeItem> {
+  const res = await apiClient.put<NoticeItem>(`/dashboard/notices/${id}`, notice, { params: { root } });
+  return res.data;
+}
+
+export async function deleteNotice(root: string, id: string): Promise<void> {
+  await apiClient.delete(`/dashboard/notices/${id}`, { params: { root } });
+}
+
 // --- Log API ---
 
 export interface LogEntry {
