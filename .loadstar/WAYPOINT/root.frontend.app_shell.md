@@ -5,7 +5,7 @@
 ### IDENTITY
 - SUMMARY: 앱 골격 — Menu Bar, Toolbar, Element Tree (Map 추가/삭제, 선택 하이라이트), Editor Tabs, Status Bar
 - METADATA: [Ver: 2.0, Created: 2026-04-06]
-- SYNCED_AT: 2026-04-08
+- SYNCED_AT: 2026-04-10
 
 ### CONNECTIONS
 - PARENT: M://root/frontend
@@ -20,6 +20,7 @@
   - [x] 2026-04-08 Toolbar: 모니터링 버튼 제거
   - [x] 2026-04-08 EditorTabs: BlackBox editor 제거
   - [x] 2026-04-08 구조 변경 시 트리 자동 갱신 (treeVersion)
+  - [x] 2026-04-10 프로젝트 선택 시 대시보드 탭 자동 오픈
 
 ### ISSUE
 (없음)
