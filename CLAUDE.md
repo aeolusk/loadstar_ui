@@ -1,5 +1,13 @@
 # LOADSTAR UI — Claude Agent 운영 규칙
 
+## 세션 시작 절차 (권장)
+
+1. 이 파일을 읽는다.
+2. `.loadstar/LOADSTAR_INIT.md` 를 읽어 현재 프로젝트 상태를 파악한다.
+3. `loadstar check` 를 실행하여 WP 동기화 상태를 확인한다.
+
+---
+
 ## 프로젝트 개요
 
 - **스택**: Spring Boot 3 (backend) + React 19 + TypeScript + Vite (frontend)
