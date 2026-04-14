@@ -1,4 +1,8 @@
 import type { Tab } from '../../App';
+import {
+  Folder, Diamond, SquaresFour, CheckSquare, ClockCounterClockwise,
+  GitBranch, Scroll, Terminal, MagnifyingGlass, X, Star,
+} from '@phosphor-icons/react';
 import DashboardView from '../../features/dashboard/DashboardView';
 import MapView from '../../features/map-view/MapView';
 import WayPointEditor from '../../features/waypoint-editor/WayPointEditor';
@@ -18,17 +22,18 @@ interface EditorTabsProps {
   onStructureChange?: () => void;
 }
 
-const tabTypeIcon = (type: Tab['type']): string => {
+const TAB_ICON = 12;
+const tabTypeIcon = (type: Tab['type']): React.ReactNode => {
   switch (type) {
-    case 'map': return '📁';
-    case 'waypoint': return '◆';
-    case 'dashboard': return '⊞';
-    case 'todo': return '☑';
-    case 'history': return '↻';
-    case 'git': return '⑂';
-    case 'log': return '☰';
-    case 'cli': return '▸';
-    case 'search': return '🔍';
+    case 'map': return <Folder size={TAB_ICON} />;
+    case 'waypoint': return <Diamond size={TAB_ICON} />;
+    case 'dashboard': return <SquaresFour size={TAB_ICON} />;
+    case 'todo': return <CheckSquare size={TAB_ICON} />;
+    case 'history': return <ClockCounterClockwise size={TAB_ICON} />;
+    case 'git': return <GitBranch size={TAB_ICON} />;
+    case 'log': return <Scroll size={TAB_ICON} />;
+    case 'cli': return <Terminal size={TAB_ICON} />;
+    case 'search': return <MagnifyingGlass size={TAB_ICON} />;
   }
 };
 
@@ -65,7 +70,7 @@ const EditorTabs = ({ projectRoot, tabs, activeTabId, onSelectTab, onCloseTab, o
                 className="editor-tab-close"
                 onClick={(e) => { e.stopPropagation(); onCloseTab(tab.id); }}
               >
-                ×
+                <X size={12} />
               </span>
             </div>
           ))}
@@ -74,7 +79,7 @@ const EditorTabs = ({ projectRoot, tabs, activeTabId, onSelectTab, onCloseTab, o
       <div className="editor-content">
         {tabs.length === 0 && (
           <div className="editor-empty">
-            <div className="editor-empty-icon">☆</div>
+            <div className="editor-empty-icon"><Star size={32} /></div>
             <div>탭을 열려면 트리에서 요소를 더블클릭하거나 툴바 버튼을 클릭하세요.</div>
             <div className="editor-empty-hint">
               <kbd>Ctrl+K</kbd> 로 빠른 검색

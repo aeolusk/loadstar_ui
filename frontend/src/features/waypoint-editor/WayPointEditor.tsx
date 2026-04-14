@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { fetchWayPoint, updateWayPoint, fetchGitHistory, fetchGitVersion, browseDirectory, type WayPointDetail, type GitCommitEntry, type DirEntry } from '../../api/client';
 import { statusOptions, getStatusLabel, getStatusColor } from '../../data/status-labels';
 import type { Tab } from '../../App';
+import { Diamond, FolderOpen, Folder, Check, Circle, CaretDown, CaretRight } from '@phosphor-icons/react';
 
 interface WayPointEditorProps {
   projectRoot: string;
@@ -384,7 +385,7 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
     <div style={{ fontSize: 13 }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-        <span style={{ fontSize: 16, color: '#3a7ca5' }}>◆</span>
+        <Diamond size={16} color="#3a7ca5" />
         <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>{address.split('/').pop()}</span>
         <span style={s.badge(color)}>{getStatusLabel(data.status)}</span>
       </div>
@@ -419,7 +420,7 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
             onClick={() => setGitExpanded(!gitExpanded)}
           >
             <span style={s.sectionTitle}>
-              <span style={{ marginRight: 6, fontSize: 10 }}>{gitExpanded ? '▼' : '▶'}</span>
+              <span style={{ marginRight: 6, fontSize: 10 }}>{gitExpanded ? <CaretDown size={10} /> : <CaretRight size={10} />}</span>
               GIT HISTORY ({gitHistory.length})
             </span>
             {gitLoading && <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>loading...</span>}
@@ -607,7 +608,7 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
                           onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-tertiary)')}
                           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                         >
-                          <span>📂</span><span style={{ color: 'var(--text-muted)' }}>..</span>
+                          <FolderOpen size={14} /><span style={{ color: 'var(--text-muted)' }}>..</span>
                         </div>
                       )}
                       {dirBrowserEntries.map(entry => (
@@ -632,7 +633,7 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
                           onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-tertiary)')}
                           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                         >
-                          <span>{entry.hasChildren ? '📂' : '📁'}</span>
+                          {entry.hasChildren ? <FolderOpen size={14} /> : <Folder size={14} />}
                           <span style={{ fontFamily: 'monospace', color: 'var(--text-primary)' }}>{entry.name}</span>
                         </div>
                       ))}
@@ -770,7 +771,7 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
               width: 16, height: 16, marginTop: 2, flexShrink: 0,
               color: item.done ? '#5a8a5e' : 'var(--text-muted)', fontSize: 13,
             }}>
-              {item.done ? '✓' : '○'}
+              {item.done ? <Check size={13} /> : <Circle size={13} />}
             </span>
             {editingTechSpec === i ? (
               <div style={{ display: 'flex', gap: 4, flex: 1 }}>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { Tab } from '../../App';
 import type { TreeNode, ElementType } from '../../types/loadstar';
 import { fetchTree, createSubMap, deleteMap } from '../../api/client';
+import { Folder, Diamond, Plus, Minus } from '@phosphor-icons/react';
 
 interface ElementTreeProps {
   projectRoot: string;
@@ -16,10 +17,10 @@ const typeToTabType = (type: ElementType): Tab['type'] => {
   }
 };
 
-const typeIcon = (type: ElementType): { icon: string; cls: string } => {
+const typeIcon = (type: ElementType): { icon: React.ReactNode; cls: string } => {
   switch (type) {
-    case 'MAP': return { icon: '📁', cls: 'map' };
-    case 'WAYPOINT': return { icon: '◆', cls: 'waypoint' };
+    case 'MAP': return { icon: <Folder size={13} />, cls: 'map' };
+    case 'WAYPOINT': return { icon: <Diamond size={13} />, cls: 'waypoint' };
   }
 };
 
@@ -75,7 +76,7 @@ const TreeNodeItem = ({
         <span className="tree-node-label">
           {hasChildren ? (
             <span className="tree-toggle-btn" onClick={handleToggle}>
-              {expanded ? '−' : '+'}
+              {expanded ? <Minus size={10} /> : <Plus size={10} />}
             </span>
           ) : (
             <span className="tree-toggle-spacer" />
@@ -208,7 +209,7 @@ const ElementTree = ({ projectRoot, onOpenTab, treeVersion }: ElementTreeProps) 
         <span>Explorer</span>
         <div style={{ display: 'flex', gap: 2 }}>
           <button onClick={() => { setShowCreateMap(!showCreateMap); }} style={btnStyle} title="새 Map 생성">
-            +
+            <Plus size={13} />
           </button>
           <button
             onClick={handleDeleteMap}
@@ -216,7 +217,7 @@ const ElementTree = ({ projectRoot, onOpenTab, treeVersion }: ElementTreeProps) 
             disabled={!selectedIsMap || selectedAddress === 'M://root'}
             title="선택된 Map 삭제"
           >
-            −
+            <Minus size={13} />
           </button>
         </div>
       </div>

@@ -2,15 +2,16 @@ import { useState, useRef, useEffect } from 'react';
 import type { CSSProperties } from 'react';
 import { searchElements, type SearchResultItem } from '../../api/client';
 import type { Tab } from '../../App';
+import { MapTrifold, Diamond } from '@phosphor-icons/react';
 
 interface SearchPanelProps {
   projectRoot: string;
   onOpenTab: (tab: Tab) => void;
 }
 
-const typeIcons: Record<string, string> = {
-  MAP: '\u{1F5FA}',
-  WAYPOINT: '\u{1F4CD}',
+const typeIcons: Record<string, React.ReactNode> = {
+  MAP: <MapTrifold size={14} />,
+  WAYPOINT: <Diamond size={14} />,
 };
 
 const statusColors: Record<string, string> = {

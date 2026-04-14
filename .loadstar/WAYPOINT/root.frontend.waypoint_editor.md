@@ -9,7 +9,7 @@
 
 ### CONNECTIONS
 - PARENT: M://root/frontend
-- CHILDREN: [W://root/frontend/waypoint_editor/child1, W://root/frontend/waypoint_editor/child2]
+- CHILDREN: []
 - REFERENCE: [W://root/test/test_waypoint_editor, W://root/backend/element_service]
 
 ### CODE_MAP

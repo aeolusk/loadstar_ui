@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Group, Panel, Separator } from 'react-resizable-panels';
-import MenuBar from './components/layout/MenuBar';
 import Toolbar from './components/layout/Toolbar';
+import AboutDialog from './components/layout/AboutDialog';
 import ProjectSelector from './components/layout/ProjectSelector';
 import ProjectOpenDialog from './components/layout/ProjectOpenDialog';
 import ElementTree from './components/layout/ElementTree';
@@ -22,6 +22,7 @@ function App() {
   const [tabs, setTabs] = useState<Tab[]>([]);
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
   const [treeVersion, setTreeVersion] = useState(0);
+  const [showAbout, setShowAbout] = useState(false);
 
   const handleStructureChange = () => setTreeVersion(v => v + 1);
 
@@ -75,8 +76,7 @@ function App() {
         <ProjectOpenDialog onProjectSelected={handleProjectChange} />
       )}
 
-      <MenuBar />
-      <Toolbar onOpenTab={openTab} />
+      <Toolbar onOpenTab={openTab} onAbout={() => setShowAbout(true)} />
       <div className="app-body">
         <Group orientation="horizontal">
           <Panel defaultSize="22%" minSize="18%" maxSize="45%" id="tree-panel">
@@ -106,6 +106,7 @@ function App() {
         </Group>
       </div>
       <StatusBar projectRoot={projectRoot} />
+      <AboutDialog open={showAbout} onClose={() => setShowAbout(false)} />
     </div>
   );
 }

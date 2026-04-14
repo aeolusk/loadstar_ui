@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { fetchLog, type LogEntry } from '../../api/client';
+import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 
 type TimeRange = 'none' | '1h' | '6h' | '1d' | '3d' | '7d';
 type KindFilter = '' | 'NOTE' | 'DECISION' | 'ISSUE' | 'RESOLVED' | 'PROGRESS' | 'MODIFIED';
@@ -158,11 +159,11 @@ export default function LogView({ projectRoot }: LogViewProps) {
           {/* Paging */}
           <div style={s.paging}>
             <button style={s.pageBtn} onClick={() => handleSearch(page - 1)} disabled={page === 0 || loading}>
-              ◀ 이전
+              <CaretLeft size={12} style={{verticalAlign:'middle'}} /> 이전
             </button>
             <span style={s.pageInfo}>페이지 {page + 1}</span>
             <button style={s.pageBtn} onClick={() => handleSearch(page + 1)} disabled={!hasMore || loading}>
-              다음 ▶
+              다음 <CaretRight size={12} style={{verticalAlign:'middle'}} />
             </button>
             <span style={s.resultCount}>{entries.length}건 표시</span>
           </div>

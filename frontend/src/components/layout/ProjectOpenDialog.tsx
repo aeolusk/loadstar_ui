@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { browseDirectory, validateProject, type DirEntry } from '../../api/client';
+import { Folder, FolderOpen, Star } from '@phosphor-icons/react';
 
 interface ProjectOpenDialogProps {
   onProjectSelected: (root: string) => void;
@@ -85,7 +86,7 @@ export default function ProjectOpenDialog({ onProjectSelected }: ProjectOpenDial
     <div style={styles.overlay}>
       <div style={styles.dialog}>
         <div style={styles.header}>
-          <span style={{ fontSize: 18 }}>&#128193;</span>
+          <Folder size={18} />
           <span style={styles.title}>LOADSTAR 프로젝트 열기</span>
         </div>
 
@@ -117,7 +118,7 @@ export default function ProjectOpenDialog({ onProjectSelected }: ProjectOpenDial
             <span style={styles.pathLabel}>현재 경로:</span>
             <span style={styles.pathValue}>{currentPath}</span>
             {hasLoadstar && (
-              <span style={styles.loadstarBadge}>&#9733; .loadstar</span>
+              <span style={styles.loadstarBadge}><Star size={10} weight="fill" style={{verticalAlign:'middle'}} /> .loadstar</span>
             )}
             {hasLoadstar && (
               <button
@@ -135,7 +136,7 @@ export default function ProjectOpenDialog({ onProjectSelected }: ProjectOpenDial
         <div style={styles.browserHeader}>
           {parentPath !== null && (
             <div style={styles.dirEntry} onClick={() => loadDir(parentPath)}>
-              <span style={styles.dirIcon}>&#128194;</span>
+              <span style={styles.dirIcon}><FolderOpen size={14} /></span>
               <span style={styles.dirName}>..</span>
             </div>
           )}
@@ -154,7 +155,7 @@ export default function ProjectOpenDialog({ onProjectSelected }: ProjectOpenDial
                 onDoubleClick={() => { if (entry.loadstarProject) handleSelect(entry.path); }}
               >
                 <span style={styles.dirIcon}>
-                  {entry.loadstarProject ? '\u2605' : entry.hasChildren ? '\uD83D\uDCC2' : '\uD83D\uDCC1'}
+                  {entry.loadstarProject ? <Star size={14} weight="fill" /> : entry.hasChildren ? <FolderOpen size={14} /> : <Folder size={14} />}
                 </span>
                 <span style={styles.dirName}>{entry.name}</span>
                 {entry.loadstarProject && (
@@ -175,7 +176,7 @@ export default function ProjectOpenDialog({ onProjectSelected }: ProjectOpenDial
                 style={styles.recentItem}
                 onClick={() => handleSelect(p)}
               >
-                <span style={{ marginRight: 6 }}>&#9733;</span>
+                <Star size={12} weight="fill" style={{ marginRight: 6, verticalAlign: 'middle' }} />
                 {p}
               </div>
             ))}

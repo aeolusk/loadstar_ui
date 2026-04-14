@@ -1,18 +1,22 @@
 import type { Tab } from '../../App';
+import { SquaresFour, CheckSquare, GitBranch, Scroll, Terminal, Info } from '@phosphor-icons/react';
 
 interface ToolbarProps {
   onOpenTab: (tab: Tab) => void;
+  onAbout: () => void;
 }
 
-const toolbarItems: { label: string; type: Tab['type']; icon: string }[] = [
-  { label: '대시보드', type: 'dashboard', icon: '⊞' },
-  { label: 'TODO', type: 'todo', icon: '☑' },
-  { label: 'GIT', type: 'git', icon: '⑂' },
-  { label: '로그', type: 'log', icon: '☰' },
-  { label: 'CLI', type: 'cli', icon: '▸' },
+const ICON_SIZE = 14;
+
+const toolbarItems: { label: string; type: Tab['type']; icon: React.ReactNode }[] = [
+  { label: '대시보드', type: 'dashboard', icon: <SquaresFour size={ICON_SIZE} /> },
+  { label: 'TODO', type: 'todo', icon: <CheckSquare size={ICON_SIZE} /> },
+  { label: 'GIT', type: 'git', icon: <GitBranch size={ICON_SIZE} /> },
+  { label: '로그', type: 'log', icon: <Scroll size={ICON_SIZE} /> },
+  { label: 'CLI', type: 'cli', icon: <Terminal size={ICON_SIZE} /> },
 ];
 
-const Toolbar = ({ onOpenTab }: ToolbarProps) => {
+const Toolbar = ({ onOpenTab, onAbout }: ToolbarProps) => {
   const handleClick = (item: typeof toolbarItems[0]) => {
     onOpenTab({
       id: `tool-${item.type}`,
@@ -41,6 +45,9 @@ const Toolbar = ({ onOpenTab }: ToolbarProps) => {
       <div className="toolbar-badge">
         <span className="toolbar-badge-count">0</span>
       </div>
+      <button className="toolbar-btn" onClick={onAbout} title="About">
+        <Info size={ICON_SIZE} />
+      </button>
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback, type CSSProperties, type MouseEvent as RMouseEvent } from 'react';
+import { X as XIcon } from '@phosphor-icons/react';
 import {
   fetchDashboardSummary, fetchNotices, createNotice, updateNotice, deleteNotice,
   fetchInitFile, updateInitFile,
@@ -264,7 +265,7 @@ export default function DashboardView({ projectRoot }: Props) {
           }} onClick={e => e.stopPropagation()}>
             <div style={st.dragHandle} onMouseDown={onDragStart}>
               <span>{editingNotice ? '수정' : '추가'}</span>
-              <button style={st.closeBtn} onClick={() => setShowModal(false)}>×</button>
+              <button style={st.closeBtn} onClick={() => setShowModal(false)}><XIcon size={14} /></button>
             </div>
             <label style={st.fieldLabel}>제목</label>
             <input style={st.input} value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />

@@ -1,5 +1,9 @@
 import { useMemo, useCallback, useState, useEffect, useRef, memo } from 'react';
 import {
+  Diamond, Folder, ArrowBendDownRight, ArrowRight, ArrowUp, ArrowDown,
+  CaretDown, X, Package, Minus,
+} from '@phosphor-icons/react';
+import {
   ReactFlow,
   useReactFlow,
   ReactFlowProvider,
@@ -62,7 +66,7 @@ function WayPointNode({ data }: { data: {
       <Handle type="source" position={Position.Bottom} id="bottom" style={{ background: '#9b8e7e', width: 6, height: 6 }} />
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-        <span style={{ fontSize: 14, color: '#3a7ca5' }}>◆</span>
+        <Diamond size={14} color="#3a7ca5" />
         <span style={{ fontSize: 13, fontWeight: 600, color: '#2c2417' }}>{data.label}</span>
       </div>
 
@@ -85,12 +89,12 @@ function WayPointNode({ data }: { data: {
         <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
           {hasChildren && (
             <span style={{ fontSize: 9, padding: '1px 5px', background: '#e8f0fe', color: '#3a7ca5', borderRadius: 3, fontWeight: 600 }}>
-              ↳ {data.childCount}
+              <ArrowBendDownRight size={9} style={{verticalAlign:'middle'}} /> {data.childCount}
             </span>
           )}
           {hasRefs && (
             <span style={{ fontSize: 9, padding: '1px 5px', background: '#f5f0e8', color: '#9b8e7e', borderRadius: 3, fontWeight: 600 }}>
-              → {data.refCount}
+              <ArrowRight size={9} style={{verticalAlign:'middle'}} /> {data.refCount}
             </span>
           )}
         </div>
@@ -110,7 +114,7 @@ function MapNode({ data }: { data: { label: string; status: string } }) {
       <Handle type="target" position={Position.Left} style={{ background: color, width: 8, height: 8 }} />
       <Handle type="source" position={Position.Right} style={{ background: color, width: 8, height: 8 }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 15 }}>📁</span>
+        <Folder size={15} />
         <span style={{ fontSize: 13, fontWeight: 600, color: '#2c2417' }}>{data.label}</span>
       </div>
       <div style={{ fontSize: 10, color: '#9b8e7e', marginTop: 4 }}>Map (double-click)</div>
@@ -130,7 +134,7 @@ function RefWayPointNode({ data }: { data: { label: string; status: string; addr
       }}
     >
       <Handle type="target" position={Position.Top} style={{ background: color, width: 6, height: 6 }} />
-      <span style={{ marginRight: 4, color: '#3a7ca5' }}>◆</span>
+      <Diamond size={12} color="#3a7ca5" style={{ marginRight: 4, verticalAlign: 'middle' }} />
       {data.label}
       <div style={{ fontSize: 9, color: '#9b8e7e', marginTop: 2 }}>ref (external)</div>
     </div>
@@ -154,7 +158,7 @@ function ChildWayPointNode({ data }: { data: { label: string; status: string; su
     >
       <Handle type="target" position={Position.Top} style={{ background: color, width: 6, height: 6 }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
-        <span style={{ color: '#3a7ca5', fontSize: 10 }}>◆</span>
+        <Diamond size={10} color="#3a7ca5" />
         <span style={{ fontWeight: 600, color: '#2c2417' }}>{data.label}</span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
@@ -542,7 +546,7 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
         padding: '8px 16px', borderBottom: '1px solid #e5ddd0', background: '#faf8f5',
         display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0,
       }}>
-        <span style={{ fontSize: 15 }}>📁</span>
+        <Folder size={15} />
         <span style={{ fontSize: 14, fontWeight: 600, color: '#2c2417' }}>{mapLabel}</span>
         <span style={{ fontSize: 12, color: '#9b8e7e' }}>{address}</span>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -558,7 +562,7 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
                 setDialogMode(dialogMode === 'wpDropdown' ? 'none' : 'wpDropdown');
               }
             }} disabled={saving || isChildSelected}>
-              + WayPoint {selectedNode && !isChildSelected ? '▾' : ''}
+              + WayPoint {selectedNode && !isChildSelected ? <CaretDown size={10} style={{verticalAlign:'middle'}} /> : ''}
             </button>
             {dialogMode === 'wpDropdown' && selectedNode && (
               <div style={{
@@ -577,7 +581,7 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
                     onMouseEnter={e => (e.currentTarget.style.background = '#f5f0e8')}
                     onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
                   >
-                    {mode === 'before' ? '↑ 앞에 추가' : mode === 'after' ? '↓ 뒤에 추가' : '↳ 하위(child) 추가'}
+                    {mode === 'before' ? <><ArrowUp size={11} style={{verticalAlign:'middle'}} /> 앞에 추가</> : mode === 'after' ? <><ArrowDown size={11} style={{verticalAlign:'middle'}} /> 뒤에 추가</> : <><ArrowBendDownRight size={11} style={{verticalAlign:'middle'}} /> 하위(child) 추가</>}
                   </div>
                 ))}
               </div>
@@ -585,11 +589,11 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
           </div>
           {isChildSelected ? (
             <button style={btnDangerStyle} onClick={handleRemoveChild} disabled={saving}>
-              − child 제거
+              <Minus size={11} style={{verticalAlign:'middle'}} /> child 제거
             </button>
           ) : (
             <button style={btnDangerStyle} onClick={handleRemoveSelected} disabled={!selectedNode || saving}>
-              − 제거
+              <Minus size={11} style={{verticalAlign:'middle'}} /> 제거
             </button>
           )}
           <span style={{ fontSize: 11, color: '#6b5d4d', marginLeft: 8 }}>
@@ -611,7 +615,7 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
                 background: addMode === 'child' ? '#e8f0fe' : '#f5f0e8',
                 color: addMode === 'child' ? '#3a7ca5' : '#6b5d4d',
               }}>
-                {addMode === 'before' ? '↑ 앞' : addMode === 'after' ? '↓ 뒤' : '↳ child'}
+                {addMode === 'before' ? <><ArrowUp size={10} style={{verticalAlign:'middle'}} /> 앞</> : addMode === 'after' ? <><ArrowDown size={10} style={{verticalAlign:'middle'}} /> 뒤</> : <><ArrowBendDownRight size={10} style={{verticalAlign:'middle'}} /> child</>}
               </span>
               <span style={{ fontSize: 12, fontWeight: 600, color: '#2c2417' }}>ID:</span>
               <input
@@ -676,12 +680,12 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
                   background: 'var(--bg-secondary)', flexShrink: 0,
                 }}>
                   <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>
-                    {detail.type === 'waypoint' ? '◆' : '📦'} {detail.address}
+                    {detail.type === 'waypoint' ? <Diamond size={12} style={{verticalAlign:'middle'}} /> : <Package size={12} style={{verticalAlign:'middle'}} />} {detail.address}
                   </span>
                   <button
                     onClick={() => setDetail(null)}
                     style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--text-muted)' }}
-                  >×</button>
+                  ><X size={14} /></button>
                 </div>
                 <div style={{ flex: 1, overflow: 'auto', padding: '12px 16px' }}>
                   <WayPointEditor projectRoot={projectRoot} address={detail.address} onOpenTab={onOpenTab} />
