@@ -7,7 +7,6 @@ interface ToolbarProps {
 const toolbarItems: { label: string; type: Tab['type']; icon: string }[] = [
   { label: '대시보드', type: 'dashboard', icon: '⊞' },
   { label: 'TODO', type: 'todo', icon: '☑' },
-  { label: 'History', type: 'history', icon: '↻' },
   { label: 'GIT', type: 'git', icon: '⑂' },
   { label: '로그', type: 'log', icon: '☰' },
   { label: 'CLI', type: 'cli', icon: '▸' },
@@ -35,7 +34,7 @@ const Toolbar = ({ onOpenTab }: ToolbarProps) => {
       ))}
       <div className="toolbar-separator" />
       <div className="toolbar-spacer" />
-      <div className="toolbar-search">
+      <div className="toolbar-search" style={{ cursor: 'pointer' }} onClick={() => onOpenTab({ id: 'tool-search', title: 'Search', type: 'search' })}>
         <span>Search</span>
         <kbd>Ctrl+K</kbd>
       </div>

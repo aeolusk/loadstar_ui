@@ -1,6 +1,6 @@
 <WAYPOINT>
 ## [ADDRESS] W://root/frontend/dashboard/waypoint 상황 표시
-## [STATUS] S_PRG
+## [STATUS] S_STB
 
 ### IDENTITY
 - SUMMARY: WayPoint 상태 요약 표시 — STATUS별 분포(S_IDL/S_PRG/S_STB), 최근 변경 WP, BLOCKED 항목을 대시보드에 표시

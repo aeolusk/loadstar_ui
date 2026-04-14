@@ -20,8 +20,8 @@
     "status": "S_STB"
   },
   "W://root/backend/project_config": {
-    "modTime": "2026-04-08T15:36:20+09:00",
-    "size": 403,
+    "modTime": "2026-04-14T11:33:47+09:00",
+    "size": 499,
     "status": "S_STB"
   },
   "W://root/backend/todo_service": {
@@ -30,8 +30,8 @@
     "status": "S_STB"
   },
   "W://root/frontend/app_shell": {
-    "modTime": "2026-04-08T16:12:29+09:00",
-    "size": 1014,
+    "modTime": "2026-04-10T15:31:30+09:00",
+    "size": 1088,
     "status": "S_STB"
   },
   "W://root/frontend/blackbox_editor": {
@@ -45,9 +45,9 @@
     "status": "S_STB"
   },
   "W://root/frontend/dashboard": {
-    "modTime": "2026-04-08T15:36:21+09:00",
-    "size": 567,
-    "status": "S_PRG"
+    "modTime": "2026-04-14T11:46:24+09:00",
+    "size": 1475,
+    "status": "S_STB"
   },
   "W://root/frontend/git_view": {
     "modTime": "2026-04-08T15:36:21+09:00",
@@ -65,9 +65,9 @@
     "status": "S_STB"
   },
   "W://root/frontend/search": {
-    "modTime": "2026-04-08T15:36:21+09:00",
-    "size": 618,
-    "status": "S_PRG"
+    "modTime": "2026-04-14T11:25:31+09:00",
+    "size": 664,
+    "status": "S_STB"
   },
   "W://root/frontend/todo_view": {
     "modTime": "2026-04-08T16:27:42+09:00",
@@ -75,13 +75,13 @@
     "status": "S_STB"
   },
   "W://root/frontend/waypoint_editor": {
-    "modTime": "2026-04-08T16:12:53+09:00",
-    "size": 1131,
+    "modTime": "2026-04-10T15:35:01+09:00",
+    "size": 1080,
     "status": "S_STB"
   },
   "W://root/test/test_app_shell": {
-    "modTime": "2026-04-08T15:36:21+09:00",
-    "size": 421,
+    "modTime": "2026-04-09T09:43:52+09:00",
+    "size": 608,
     "status": "S_IDL"
   },
   "W://root/test/test_blackbox_editor": {
@@ -90,43 +90,43 @@
     "status": "S_IDL"
   },
   "W://root/test/test_cli_console": {
-    "modTime": "2026-04-08T15:36:22+09:00",
-    "size": 384,
+    "modTime": "2026-04-09T09:44:04+09:00",
+    "size": 518,
     "status": "S_IDL"
   },
   "W://root/test/test_dashboard": {
-    "modTime": "2026-04-08T15:36:22+09:00",
-    "size": 378,
+    "modTime": "2026-04-09T09:44:02+09:00",
+    "size": 489,
     "status": "S_IDL"
   },
   "W://root/test/test_git_view": {
-    "modTime": "2026-04-08T15:36:22+09:00",
-    "size": 379,
+    "modTime": "2026-04-09T09:44:06+09:00",
+    "size": 479,
     "status": "S_IDL"
   },
   "W://root/test/test_log_view": {
-    "modTime": "2026-04-08T15:36:22+09:00",
-    "size": 378,
+    "modTime": "2026-04-09T09:44:10+09:00",
+    "size": 481,
     "status": "S_IDL"
   },
   "W://root/test/test_map_view": {
-    "modTime": "2026-04-08T15:36:22+09:00",
-    "size": 418,
+    "modTime": "2026-04-09T09:43:55+09:00",
+    "size": 629,
     "status": "S_IDL"
   },
   "W://root/test/test_search": {
-    "modTime": "2026-04-08T15:36:22+09:00",
-    "size": 385,
-    "status": "S_IDL"
+    "modTime": "2026-04-14T11:33:40+09:00",
+    "size": 718,
+    "status": "S_STB"
   },
   "W://root/test/test_todo_view": {
-    "modTime": "2026-04-08T15:36:22+09:00",
-    "size": 392,
+    "modTime": "2026-04-09T09:44:01+09:00",
+    "size": 590,
     "status": "S_IDL"
   },
   "W://root/test/test_waypoint_editor": {
-    "modTime": "2026-04-08T15:36:22+09:00",
-    "size": 428,
+    "modTime": "2026-04-09T09:43:58+09:00",
+    "size": 670,
     "status": "S_IDL"
   }
 }

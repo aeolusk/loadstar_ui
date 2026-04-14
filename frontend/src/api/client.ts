@@ -290,6 +290,18 @@ export interface NoticeItem {
   filePath: string;
 }
 
+export async function fetchInitFile(root: string): Promise<string> {
+  const res = await apiClient.get<string>('/dashboard/init', { params: { root } });
+  return res.data;
+}
+
+export async function updateInitFile(root: string, content: string): Promise<void> {
+  await apiClient.put('/dashboard/init', content, {
+    params: { root },
+    headers: { 'Content-Type': 'text/plain' },
+  });
+}
+
 export async function fetchDashboardSummary(root: string): Promise<DashboardSummary> {
   const res = await apiClient.get<DashboardSummary>('/dashboard/summary', { params: { root } });
   return res.data;
@@ -314,6 +326,24 @@ export async function updateNotice(root: string, id: string, notice: Omit<Notice
 
 export async function deleteNotice(root: string, id: string): Promise<void> {
   await apiClient.delete(`/dashboard/notices/${id}`, { params: { root } });
+}
+
+// --- Search API ---
+
+export interface SearchResultItem {
+  address: string;
+  type: 'MAP' | 'WAYPOINT';
+  status: string;
+  summary: string;
+  snippet: string;
+  matchCount: number;
+}
+
+export async function searchElements(root: string, query: string): Promise<SearchResultItem[]> {
+  const res = await apiClient.get<SearchResultItem[]>('/elements/search', {
+    params: { root, query },
+  });
+  return res.data;
 }
 
 // --- Log API ---

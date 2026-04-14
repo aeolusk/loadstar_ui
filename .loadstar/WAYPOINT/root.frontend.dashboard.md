@@ -1,6 +1,6 @@
 <WAYPOINT>
 ## [ADDRESS] W://root/frontend/dashboard
-## [STATUS] S_PRG
+## [STATUS] S_STB
 
 ### IDENTITY
 - SUMMARY: 프로젝트 대시보드 화면 구현

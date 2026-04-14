@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import MenuBar from './components/layout/MenuBar';
 import Toolbar from './components/layout/Toolbar';
@@ -12,7 +12,7 @@ import './App.css';
 export interface Tab {
   id: string;
   title: string;
-  type: 'map' | 'waypoint' | 'dashboard' | 'todo' | 'history' | 'git' | 'log' | 'cli';
+  type: 'map' | 'waypoint' | 'dashboard' | 'todo' | 'history' | 'git' | 'log' | 'cli' | 'search';
   address?: string;
 }
 
@@ -24,6 +24,21 @@ function App() {
   const [treeVersion, setTreeVersion] = useState(0);
 
   const handleStructureChange = () => setTreeVersion(v => v + 1);
+
+  const openSearchTab = useCallback(() => {
+    openTab({ id: 'tool-search', title: 'Search', type: 'search' });
+  }, [tabs]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        openSearchTab();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [openSearchTab]);
 
   const openTab = (tab: Tab) => {
     const existing = tabs.find(t => t.id === tab.id);

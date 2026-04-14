@@ -25,6 +25,25 @@ public class DashboardController {
         }
     }
 
+    @GetMapping("/init")
+    public ResponseEntity<String> readInit(@RequestParam String root) {
+        try {
+            return ResponseEntity.ok(dashboardService.readInitFile(root));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @PutMapping("/init")
+    public ResponseEntity<Void> writeInit(@RequestParam String root, @RequestBody String content) {
+        try {
+            dashboardService.writeInitFile(root, content);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     @GetMapping("/notices")
     public ResponseEntity<List<NoticeItem>> listNotices(
             @RequestParam String root,

@@ -17,38 +17,41 @@ public class LogService {
 
     private final CliExecutor cli;
 
+    // Single-line format: [timestamp]  [KIND]  content  → address
     private static final Pattern LOG_LINE = Pattern.compile(
-            "\\[(.+?)\\]\\s+\\[(.+?)\\]\\s+(.*)"
-    );
-    private static final Pattern ADDR_LINE = Pattern.compile(
-            "\\s*→\\s*(\\S+)"
+            "^\\[(.+?)]\\s+\\[(.+?)]\\s+(.+?)\\s+→\\s+(\\S+)$"
     );
 
     public LogResult findLog(String projectRoot, int offset, int limit, String address, String kind) {
+        // Build CLI args: log [TIME_RANGE] [FILTER]
         List<String> args = new ArrayList<>();
-        args.add("findlog");
-        args.add(String.valueOf(offset));
-        args.add(String.valueOf(limit));
+        args.add("log");
+
+        // Use address or kind as keyword filter
+        String filter = null;
         if (address != null && !address.isEmpty()) {
-            args.add("--address");
-            args.add(address);
+            filter = address;
+        } else if (kind != null && !kind.isEmpty()) {
+            filter = kind;
         }
-        if (kind != null && !kind.isEmpty()) {
-            args.add("--kind");
-            args.add(kind);
+        if (filter != null) {
+            args.add(filter);
         }
 
         String output = cli.execute(projectRoot, args.toArray(new String[0]));
-        List<LogEntry> entries = parseOutput(output);
+        List<LogEntry> allEntries = parseOutput(output);
 
-        // Check if there are more entries
-        boolean hasMore = entries.size() >= limit;
+        // Manual offset/limit pagination
+        int total = allEntries.size();
+        int start = Math.min(offset, total);
+        int end = Math.min(start + limit, total);
+        List<LogEntry> page = allEntries.subList(start, end);
 
         LogResult result = new LogResult();
-        result.setEntries(entries);
+        result.setEntries(new ArrayList<>(page));
         result.setOffset(offset);
         result.setLimit(limit);
-        result.setHasMore(hasMore);
+        result.setHasMore(end < total);
         return result;
     }
 
@@ -56,23 +59,18 @@ public class LogService {
         List<LogEntry> entries = new ArrayList<>();
         if (output == null || output.isEmpty()) return entries;
 
-        String[] lines = output.split("\n");
-        LogEntry current = null;
+        for (String line : output.split("\n")) {
+            String trimmed = line.trim();
+            if (trimmed.isEmpty()) continue;
 
-        for (String line : lines) {
-            Matcher logMatch = LOG_LINE.matcher(line.trim());
-            if (logMatch.matches()) {
-                current = new LogEntry();
-                current.setTimestamp(logMatch.group(1).trim());
-                current.setKind(logMatch.group(2).trim());
-                current.setContent(logMatch.group(3).trim());
-                entries.add(current);
-                continue;
-            }
-
-            Matcher addrMatch = ADDR_LINE.matcher(line);
-            if (addrMatch.matches() && current != null) {
-                current.setAddress(addrMatch.group(1).trim());
+            Matcher m = LOG_LINE.matcher(trimmed);
+            if (m.matches()) {
+                LogEntry entry = new LogEntry();
+                entry.setTimestamp(m.group(1).trim());
+                entry.setKind(m.group(2).trim());
+                entry.setContent(m.group(3).trim());
+                entry.setAddress(m.group(4).trim());
+                entries.add(entry);
             }
         }
 

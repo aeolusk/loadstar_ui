@@ -8,6 +8,10 @@ server:
 
 loadstar:
   # project root is now passed as API parameter (?root=...)
+  search:
+    max-results: 50
+    snippet-lines: 3
+    min-query-length: 2
 
 spring:
   devtools:

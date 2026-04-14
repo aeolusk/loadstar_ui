@@ -6,6 +6,7 @@ import TodoView from '../../features/todo-view/TodoView';
 import GitView from '../../features/git-view/GitView';
 import LogView from '../../features/log-view/LogView';
 import CliConsole from '../../features/cli-console/CliConsole';
+import SearchPanel from '../../features/search/SearchPanel';
 
 interface EditorTabsProps {
   projectRoot: string;
@@ -27,6 +28,7 @@ const tabTypeIcon = (type: Tab['type']): string => {
     case 'git': return '⑂';
     case 'log': return '☰';
     case 'cli': return '▸';
+    case 'search': return '🔍';
   }
 };
 
@@ -40,6 +42,7 @@ const TabContent = ({ tab, projectRoot, onOpenTab, onStructureChange }: { tab: T
     case 'git': return <GitView projectRoot={projectRoot} />;
     case 'log': return <LogView projectRoot={projectRoot} />;
     case 'cli': return <CliConsole projectRoot={projectRoot} />;
+    case 'search': return <SearchPanel projectRoot={projectRoot} onOpenTab={onOpenTab} />;
     default: return <div>Unknown tab type</div>;
   }
 };

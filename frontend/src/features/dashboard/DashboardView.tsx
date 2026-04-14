@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback, type CSSProperties, type MouseEvent as RMouseEvent } from 'react';
 import {
   fetchDashboardSummary, fetchNotices, createNotice, updateNotice, deleteNotice,
+  fetchInitFile, updateInitFile,
   type DashboardSummary, type NoticeItem, type BlockedItem,
 } from '../../api/client';
 import {
@@ -33,6 +34,12 @@ export default function DashboardView({ projectRoot }: Props) {
   const [notices, setNotices] = useState<NoticeItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeMapTab, setActiveMapTab] = useState<string>('all');
+
+  // INIT 파일
+  const [initContent, setInitContent] = useState('');
+  const [initEditing, setInitEditing] = useState(false);
+  const [initDraft, setInitDraft] = useState('');
+  const [initSaving, setInitSaving] = useState(false);
 
   // 모달
   const [showModal, setShowModal] = useState(false);
@@ -89,10 +96,20 @@ export default function DashboardView({ projectRoot }: Props) {
   async function loadData() {
     setLoading(true);
     try {
-      const [s, n] = await Promise.all([fetchDashboardSummary(projectRoot), fetchNotices(projectRoot)]);
-      setSummary(s); setNotices(n);
+      const [s, n, init] = await Promise.all([fetchDashboardSummary(projectRoot), fetchNotices(projectRoot), fetchInitFile(projectRoot)]);
+      setSummary(s); setNotices(n); setInitContent(init);
     } catch (e) { console.error('Dashboard load failed', e); }
     finally { setLoading(false); }
+  }
+
+  async function handleInitSave() {
+    setInitSaving(true);
+    try {
+      await updateInitFile(projectRoot, initDraft);
+      setInitContent(initDraft);
+      setInitEditing(false);
+    } catch (e) { console.error('INIT save failed', e); }
+    finally { setInitSaving(false); }
   }
 
   if (!projectRoot) return <div style={st.empty}>프로젝트를 선택해주세요</div>;
@@ -176,7 +193,34 @@ export default function DashboardView({ projectRoot }: Props) {
         )}
       </div>
 
-      {/* ② 공지/메모/이슈/결정사항 — 카테고리별 세로 배치 */}
+      {/* ② AI 참고사항 (LOADSTAR_INIT.md) */}
+      <div style={st.section}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <div style={st.sectionTitle}>AI 참고사항 (LOADSTAR_INIT.md)</div>
+          {!initEditing && (
+            <button style={st.btnAdd} onClick={() => { setInitDraft(initContent); setInitEditing(true); }}>편집</button>
+          )}
+        </div>
+        {initEditing ? (
+          <>
+            <textarea
+              style={{ ...st.input, fontFamily: 'monospace', fontSize: 'var(--font-xs)', lineHeight: 1.6, minHeight: 200, resize: 'vertical', whiteSpace: 'pre' as const }}
+              value={initDraft}
+              onChange={e => setInitDraft(e.target.value)}
+            />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
+              <button style={st.btnSecondary} onClick={() => setInitEditing(false)}>취소</button>
+              <button style={st.btnPrimary} onClick={handleInitSave} disabled={initSaving}>
+                {initSaving ? '저장 중...' : '저장'}
+              </button>
+            </div>
+          </>
+        ) : (
+          <pre style={st.initContent}>{initContent || '(내용 없음)'}</pre>
+        )}
+      </div>
+
+      {/* ③ 공지/메모/이슈/결정사항 — 카테고리별 세로 배치 */}
       {CATEGORY_SECTIONS.map(sec => {
         const items = notices.filter(n => sec.categories.includes(n.category) && n.status === 'OPEN');
         const sectionLabel = sec.categories.map(c => getCategoryLabel(c)).join(' / ');
@@ -291,6 +335,11 @@ const st: Record<string, CSSProperties> = {
   priorityDot: { display: 'inline-block', width: 8, height: 8, borderRadius: '50%', flexShrink: 0 },
   categoryBadge: { fontSize: 'var(--font-xs)', padding: '1px 6px', borderRadius: 8, background: 'var(--bg-tertiary)', color: 'var(--text-muted)', fontWeight: 500 },
 
+  initContent: {
+    margin: 0, padding: 12, background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)',
+    fontSize: 'var(--font-xs)', fontFamily: 'monospace', lineHeight: 1.6,
+    color: 'var(--text-secondary)', whiteSpace: 'pre-wrap', overflow: 'auto', maxHeight: 300,
+  },
   btnAdd: {
     padding: '4px 12px', border: '1px solid var(--border-medium)', borderRadius: 'var(--radius-md)',
     background: 'var(--bg-surface)', color: 'var(--accent-primary)', cursor: 'pointer', fontSize: 'var(--font-xs)', fontWeight: 600,

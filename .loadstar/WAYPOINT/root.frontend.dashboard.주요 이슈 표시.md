@@ -1,6 +1,6 @@
 <WAYPOINT>
 ## [ADDRESS] W://root/frontend/dashboard/주요 이슈 표시
-## [STATUS] S_PRG
+## [STATUS] S_STB
 
 ### IDENTITY
 - SUMMARY: 프로젝트 통합 이슈 및 리스크 표시 — 크로스커팅 이슈, 기술 부채, 리스크를 대시보드에 표시하여 추적

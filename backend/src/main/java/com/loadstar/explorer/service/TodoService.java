@@ -21,12 +21,14 @@ public class TodoService {
     // History cache: projectRoot → cached history items
     private final ConcurrentHashMap<String, List<TodoHistoryItem>> historyCache = new ConcurrentHashMap<>();
 
+    // tabwriter 공백 구분 형식: ADDRESS  STATUS  SUMMARY (2+ spaces between columns)
     private static final Pattern LIST_ROW = Pattern.compile(
-            "\\|\\s*(.+?)\\s*\\|\\s*(.+?)\\s*\\|\\s*(.+?)\\s*\\|"
+            "^(\\S+)\\s{2,}(\\S+)\\s{2,}(.+)$"
     );
 
+    // tabwriter 공백 구분 형식: ADDRESS  DATE  ITEM
     private static final Pattern HISTORY_ROW = Pattern.compile(
-            "\\|\\s*(.+?)\\s*\\|\\s*(.+?)\\s*\\|\\s*(.+?)\\s*\\|"
+            "^(\\S+)\\s{2,}(\\S+)\\s{2,}(.+)$"
     );
 
     public List<TodoItem> list(String projectRoot) {
@@ -80,10 +82,8 @@ public class TodoService {
 
             Matcher m = LIST_ROW.matcher(trimmed);
             if (m.matches()) {
-                String addr = m.group(1).trim();
-                if (addr.equals("주소 (Address)") || addr.contains(":---")) continue;
                 TodoItem item = new TodoItem();
-                item.setAddress(addr);
+                item.setAddress(m.group(1).trim());
                 item.setStatus(m.group(2).trim().replaceAll("[\\[\\]]", ""));
                 item.setSummary(m.group(3).trim());
                 items.add(item);
@@ -104,10 +104,8 @@ public class TodoService {
 
             Matcher m = HISTORY_ROW.matcher(trimmed);
             if (m.matches()) {
-                String addr = m.group(1).trim();
-                if (addr.equals("주소 (Address)") || addr.contains(":---")) continue;
                 TodoHistoryItem item = new TodoHistoryItem();
-                item.setAddress(addr);
+                item.setAddress(m.group(1).trim());
                 item.setDate(m.group(2).trim());
                 item.setItem(m.group(3).trim());
                 items.add(item);

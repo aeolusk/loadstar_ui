@@ -129,6 +129,24 @@ public class DashboardService {
         return items;
     }
 
+    // ── INIT file ──────────────────────────────────────
+
+    public String readInitFile(String projectRoot) throws IOException {
+        Path file = Paths.get(projectRoot, ".loadstar", "LOADSTAR_INIT.md");
+        if (!Files.exists(file)) return "";
+        return Files.readString(file);
+    }
+
+    public void writeInitFile(String projectRoot, String content) throws IOException {
+        Path file = Paths.get(projectRoot, ".loadstar", "LOADSTAR_INIT.md");
+        Files.writeString(file, content);
+        try {
+            cli.execute(projectRoot, "log", "add", "W://root/frontend/dashboard", "MODIFIED", "LOADSTAR_INIT.md 수정");
+        } catch (Exception e) {
+            log.warn("Failed to log INIT file update: {}", e.getMessage());
+        }
+    }
+
     // ── Notices CRUD ───────────────────────────────────
 
     private static final Pattern FIELD_PATTERN = Pattern.compile("^## \\[(.+?)]\\s+(.*)$");
