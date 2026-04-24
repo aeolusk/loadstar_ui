@@ -79,6 +79,11 @@
     "size": 1080,
     "status": "S_STB"
   },
+  "W://root/maintenance/connections_edit": {
+    "modTime": "2026-04-24T17:44:05+09:00",
+    "size": 2902,
+    "status": "S_IDL"
+  },
   "W://root/maintenance/decisions_ui": {
     "modTime": "2026-04-24T17:30:29+09:00",
     "size": 2752,
