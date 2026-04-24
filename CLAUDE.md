@@ -4,7 +4,6 @@
 
 1. 이 파일을 읽는다.
 2. `.loadstar/LOADSTAR_INIT.md` 를 읽어 현재 프로젝트 상태를 파악한다.
-3. `loadstar check` 를 실행하여 WP 동기화 상태를 확인한다.
 
 ---
 
