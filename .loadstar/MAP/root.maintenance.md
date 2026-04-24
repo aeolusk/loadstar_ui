@@ -8,6 +8,7 @@
 
 ### WAYPOINTS
 - W://root/maintenance/orphan_delete
+- W://root/maintenance/decisions_ui
 
 ### COMMENT
 (없음)
