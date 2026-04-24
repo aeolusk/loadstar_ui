@@ -9,6 +9,7 @@
 - M://root/backend
 - M://root/frontend
 - M://root/test
+- M://root/maintenance
 
 ### COMMENT
 (없음)

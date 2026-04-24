@@ -30,8 +30,8 @@
     "status": "S_STB"
   },
   "W://root/frontend/app_shell": {
-    "modTime": "2026-04-10T15:31:30+09:00",
-    "size": 1088,
+    "modTime": "2026-04-14T12:42:54+09:00",
+    "size": 1319,
     "status": "S_STB"
   },
   "W://root/frontend/blackbox_editor": {
@@ -78,6 +78,11 @@
     "modTime": "2026-04-10T15:35:01+09:00",
     "size": 1080,
     "status": "S_STB"
+  },
+  "W://root/maintenance/orphan_delete": {
+    "modTime": "2026-04-24T15:58:58+09:00",
+    "size": 1808,
+    "status": "S_IDL"
   },
   "W://root/test/test_app_shell": {
     "modTime": "2026-04-09T09:43:52+09:00",
