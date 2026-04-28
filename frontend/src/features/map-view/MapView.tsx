@@ -17,7 +17,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import type { Tab } from '../../App';
-import { fetchMapView, addToMap, addChildToWayPoint, removeFromMap, removeChildFromWayPoint, createSubMap, type MapViewResponse, type MapViewItem } from '../../api/client';
+import { fetchMapView, addToMap, addChildToWayPoint, removeFromMap, removeChildFromWayPoint, createSubMap, deleteMap, type MapViewResponse, type MapViewItem } from '../../api/client';
 import WayPointEditor from '../waypoint-editor/WayPointEditor';
 
 
@@ -103,19 +103,26 @@ function WayPointNode({ data }: { data: {
   );
 }
 
-function MapNode({ data }: { data: { label: string; status: string } }) {
+function MapNode({ data }: { data: { label: string; status: string; address: string; selected?: boolean; onNodeSelect: (type: 'map', addr: string) => void } }) {
   const color = getStatusColor(data.status);
+  const isSelected = data.selected === true;
   return (
-    <div style={{
-      background: '#faf8f5', border: `2px solid ${color}`, borderRadius: 8,
-      padding: '12px 18px', minWidth: 160,
-      boxShadow: '0 2px 8px rgba(44, 36, 23, 0.06)', cursor: 'pointer',
-    }}>
+    <div
+      onClick={() => data.onNodeSelect('map', data.address)}
+      style={{
+        background: isSelected ? 'rgba(230, 133, 26, 0.12)' : '#faf8f5',
+        border: isSelected ? '2px solid #e6851a' : `2px solid ${color}`,
+        borderRadius: 8,
+        padding: '12px 18px', minWidth: 160,
+        boxShadow: isSelected ? '0 0 0 3px rgba(230, 133, 26, 0.2), 0 2px 8px rgba(44, 36, 23, 0.08)' : '0 2px 8px rgba(44, 36, 23, 0.06)',
+        cursor: 'pointer',
+      }}
+    >
       <Handle type="target" position={Position.Left} style={{ background: color, width: 8, height: 8 }} />
       <Handle type="source" position={Position.Right} style={{ background: color, width: 8, height: 8 }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <Folder size={15} />
-        <span style={{ fontSize: 13, fontWeight: 600, color: '#2c2417' }}>{data.label}</span>
+        <Folder size={15} color={isSelected ? '#e6851a' : undefined} />
+        <span style={{ fontSize: 13, fontWeight: 600, color: isSelected ? '#e6851a' : '#2c2417' }}>{data.label}</span>
       </div>
       <div style={{ fontSize: 10, color: '#9b8e7e', marginTop: 4 }}>Map (double-click)</div>
     </div>
@@ -180,7 +187,7 @@ const nodeTypes = { waypoint: WayPointNode, mapNode: MapNode, refWaypoint: RefWa
 
 function buildGraph(
   items: MapViewItem[],
-  onNodeSelect: (type: 'waypoint', addr: string) => void,
+  onNodeSelect: (type: 'waypoint' | 'map', addr: string) => void,
   selectedNode?: string | null,
   selectedDetail?: string | null,
   childDetails?: Record<string, { status: string; summary: string }>,
@@ -209,7 +216,7 @@ function buildGraph(
     ns.push({
       id, type: 'mapNode',
       position: { x: xPos, y: Y_MAP_ROW },
-      data: { label: id.split('/').pop() || id, status: item.status, address: item.address },
+      data: { label: id.split('/').pop() || id, status: item.status, address: item.address, selected: selectedNode === id, onNodeSelect },
     });
     if (i > 0) {
       es.push({
@@ -392,9 +399,10 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
       .finally(() => setLoading(false));
   }, [address]);
 
-  const handleNodeSelect = useCallback((type: 'waypoint', addr: string) => {
-    setDetail({ type, address: addr });
-    // Only change selectedNode (which controls child/ref expansion) if it's a main-row item
+  const handleNodeSelect = useCallback((type: 'waypoint' | 'map', addr: string) => {
+    if (type === 'waypoint') {
+      setDetail({ type, address: addr });
+    }
     const isMainItem = mapData?.items.some(it => it.address === addr);
     if (isMainItem) {
       setSelectedNode(addr);
@@ -482,6 +490,49 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
       onStructureChange?.();
     } catch (e) {
       showToast('제거 실패: ' + (e instanceof Error ? e.message : 'Unknown error'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteMap = async () => {
+    const targetMap = selectedNode && mapData?.items.find(it => it.address === selectedNode && it.type === 'MAP');
+    const targetAddr = targetMap ? selectedNode! : address;
+
+    // WP 존재 여부 먼저 확인
+    let wpCount: number;
+    if (targetAddr === address) {
+      wpCount = mapData?.map.waypoints?.length ?? 0;
+    } else {
+      try {
+        const targetData = await fetchMapView(projectRoot, targetAddr);
+        wpCount = targetData.map.waypoints?.length ?? 0;
+      } catch {
+        wpCount = 0;
+      }
+    }
+    if (wpCount > 0) {
+      showToast(`삭제 불가: WayPoint ${wpCount}개가 존재합니다. 먼저 제거하세요.`);
+      return;
+    }
+
+    if (!confirm(`"${targetAddr}" MAP을 삭제하시겠습니까?`)) return;
+    setSaving(true);
+    try {
+      const result = await deleteMap(projectRoot, targetAddr);
+      if (result.success) {
+        onStructureChange?.();
+        if (targetAddr === address) {
+          window.location.reload();
+        } else {
+          reloadMap();
+          setSelectedNode(null);
+        }
+      } else {
+        showToast(result.error || '삭제 실패');
+      }
+    } catch (e) {
+      showToast('삭제 실패: ' + (e instanceof Error ? e.message : String(e)));
     } finally {
       setSaving(false);
     }
@@ -596,6 +647,9 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
               <Minus size={11} style={{verticalAlign:'middle'}} /> 제거
             </button>
           )}
+          <button style={{ ...btnDangerStyle, opacity: 0.85 }} onClick={handleDeleteMap} disabled={saving} title="MAP 물리 삭제">
+            MAP 삭제
+          </button>
           <span style={{ fontSize: 11, color: '#6b5d4d', marginLeft: 8 }}>
             {wpCount} WP, {mapCount} Maps
           </span>
@@ -702,6 +756,7 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
           </Panel>
         </Group>
       </div>
+
     </div>
   );
 }

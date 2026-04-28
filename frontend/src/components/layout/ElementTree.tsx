@@ -61,15 +61,15 @@ const TreeNodeItem = ({
 
   const id = node.address.split('/').pop() || node.address;
 
+  const isMap = node.type === 'MAP';
+  const selBg     = isSelected ? (isMap ? 'rgba(230, 133, 26, 0.15)' : 'rgba(58, 124, 165, 0.12)') : undefined;
+  const selBorder = isSelected ? (isMap ? '2px solid #e6851a'        : '2px solid #3a7ca5')         : '2px solid transparent';
+
   return (
     <div>
       <div
         className="tree-node"
-        style={{
-          paddingLeft: depth * 16 + 8,
-          background: isSelected ? 'rgba(58, 124, 165, 0.12)' : undefined,
-          borderLeft: isSelected ? '2px solid #3a7ca5' : '2px solid transparent',
-        }}
+        style={{ paddingLeft: depth * 16 + 8, background: selBg, borderLeft: selBorder }}
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
       >
@@ -81,11 +81,15 @@ const TreeNodeItem = ({
           ) : (
             <span className="tree-toggle-spacer" />
           )}
-          <span className={`tree-node-icon ${typeIcon(node.type).cls}`}>
+          <span className={`tree-node-icon ${typeIcon(node.type).cls}`}
+            style={isSelected && isMap ? { color: '#e6851a' } : undefined}>
             {typeIcon(node.type).icon}
           </span>
           <span className={`status-dot ${node.status}`} />
-          <span className="tree-node-name" style={{ fontWeight: isSelected ? 600 : undefined }}>{id}</span>
+          <span className="tree-node-name"
+            style={{ fontWeight: isSelected ? 600 : undefined, color: isSelected && isMap ? '#e6851a' : undefined }}>
+            {id}
+          </span>
         </span>
       </div>
       {expanded && node.children.map(child => (
