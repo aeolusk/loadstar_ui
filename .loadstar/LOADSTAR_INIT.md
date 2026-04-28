@@ -12,5 +12,5 @@
 ## AI 참고사항
 
 - 기능 구현이 모두 완료된 상태입니다 (2026-04-14 기준)
-- 남은 TODO는 테스트 WP 8건(PENDING)뿐이며, 기능 관련 BLOCKED 항목은 없습니다
+- 2026-04-28: 테스트 WP 8건을 functional test로 대체 후 S_STB로 종결 → 현재 모든 30개 WP가 S_STB, 활성 TODO 0건
 - LOADSTAR_INIT.md 포맷이 SPEC(05.ELEMENT_FORMAT.md)에 정의되었습니다
