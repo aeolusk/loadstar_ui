@@ -253,13 +253,25 @@ public class ElementParser {
                     continue;
                 }
                 if (inOpenQuestions && trimmed.startsWith("- [")) {
-                    // Parse [Q1] or [Q1 RESOLVED]
+                    // Parse [Q1], [Q1 DEFERRED], [Q1 RESOLVED ref], [Q1 DONE ref]
                     WayPointDetailResponse.OpenQuestion oq = new WayPointDetailResponse.OpenQuestion();
                     int closeBracket = trimmed.indexOf(']');
                     if (closeBracket > 0) {
-                        String tag = trimmed.substring(2, closeBracket);
-                        oq.setResolved(tag.contains("RESOLVED"));
-                        oq.setId(tag.replaceAll("\\s*RESOLVED\\s*", "").trim());
+                        String tag = trimmed.substring(3, closeBracket).trim(); // skip "- ["
+                        String[] parts = tag.split("\\s+", 3);
+                        oq.setId(parts[0]); // "Q1"
+                        String state = "OPEN";
+                        String ref = null;
+                        if (parts.length >= 2) {
+                            switch (parts[1]) {
+                                case "DEFERRED" -> state = "DEFERRED";
+                                case "RESOLVED" -> { state = "RESOLVED"; if (parts.length >= 3) ref = parts[2]; }
+                                case "DONE"     -> { state = "DONE";     if (parts.length >= 3) ref = parts[2]; }
+                            }
+                        }
+                        oq.setState(state);
+                        oq.setResolvedRef(ref);
+                        oq.setResolved("RESOLVED".equals(state) || "DONE".equals(state));
                         oq.setText(trimmed.substring(closeBracket + 1).trim());
                         wp.getOpenQuestions().add(oq);
                     }

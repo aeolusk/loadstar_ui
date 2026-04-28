@@ -127,6 +127,90 @@ public class ElementController {
         }
     }
 
+    @GetMapping("/references")
+    public ResponseEntity<List<ElementService.ReferenceInfo>> getReferences(
+            @RequestParam String root,
+            @RequestParam String address) {
+        try {
+            return ResponseEntity.ok(elementService.findExternalReferences(root, address));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @DeleteMapping("/waypoint")
+    public ResponseEntity<Map<String, Object>> deleteWayPoint(
+            @RequestParam String root,
+            @RequestParam String address) {
+        try {
+            elementService.deleteWayPoint(root, address);
+            return ResponseEntity.ok(Map.of("success", true));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/map/cascade")
+    public ResponseEntity<Map<String, Object>> deleteMapCascade(
+            @RequestParam String root,
+            @RequestParam String mapAddress,
+            @RequestBody List<String> selectedChildren) {
+        try {
+            elementService.deleteMapWithCascade(root, mapAddress, selectedChildren);
+            return ResponseEntity.ok(Map.of("success", true));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/addresses")
+    public ResponseEntity<List<String>> getAllAddresses(@RequestParam String root) {
+        try {
+            return ResponseEntity.ok(elementService.getAllAddresses(root));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @PatchMapping("/waypoint/parent")
+    public ResponseEntity<Map<String, Object>> changeParent(
+            @RequestParam String root,
+            @RequestParam String address,
+            @RequestParam(required = false) String newParent) {
+        try {
+            elementService.changeParent(root, address, newParent);
+            return ResponseEntity.ok(Map.of("success", true));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/waypoint/children")
+    public ResponseEntity<Map<String, Object>> addChild(
+            @RequestParam String root,
+            @RequestParam String parentAddr,
+            @RequestParam String childAddr) {
+        try {
+            elementService.addChild(root, parentAddr, childAddr);
+            return ResponseEntity.ok(Map.of("success", true));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/waypoint/children")
+    public ResponseEntity<Map<String, Object>> removeChild(
+            @RequestParam String root,
+            @RequestParam String parentAddr,
+            @RequestParam String childAddr) {
+        try {
+            elementService.removeChild(root, parentAddr, childAddr);
+            return ResponseEntity.ok(Map.of("success", true));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
     @PutMapping("/waypoint")
     public ResponseEntity<WayPointDetailResponse> updateWayPoint(
             @RequestParam String root,

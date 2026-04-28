@@ -12,7 +12,7 @@ import './App.css';
 export interface Tab {
   id: string;
   title: string;
-  type: 'map' | 'waypoint' | 'dashboard' | 'todo' | 'history' | 'git' | 'log' | 'cli' | 'search';
+  type: 'map' | 'waypoint' | 'dashboard' | 'todo' | 'history' | 'git' | 'log' | 'cli' | 'search' | 'questions';
   address?: string;
 }
 

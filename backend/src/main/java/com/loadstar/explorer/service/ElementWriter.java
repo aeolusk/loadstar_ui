@@ -82,8 +82,15 @@ public class ElementWriter {
         if (wp.getOpenQuestions() != null && !wp.getOpenQuestions().isEmpty()) {
             lines.add("- OPEN_QUESTIONS:");
             for (WayPointDetailResponse.OpenQuestion oq : wp.getOpenQuestions()) {
-                String tag = oq.isResolved() ? oq.getId() + " RESOLVED" : oq.getId();
-                lines.add("  - [" + tag + "] " + oq.getText());
+                String state = oq.getState() != null ? oq.getState()
+                        : (oq.isResolved() ? "RESOLVED" : "OPEN");
+                String tag = oq.getId();
+                switch (state) {
+                    case "DEFERRED" -> tag += " DEFERRED";
+                    case "RESOLVED" -> tag += " RESOLVED" + (oq.getResolvedRef() != null ? " " + oq.getResolvedRef() : "");
+                    case "DONE"     -> tag += " DONE"     + (oq.getResolvedRef() != null ? " " + oq.getResolvedRef() : "");
+                }
+                lines.add("  - [" + tag + "] " + (oq.getText() != null ? oq.getText() : ""));
             }
             hasIssueContent = true;
         }

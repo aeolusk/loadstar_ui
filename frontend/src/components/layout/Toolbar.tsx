@@ -1,5 +1,5 @@
 import type { Tab } from '../../App';
-import { SquaresFour, CheckSquare, GitBranch, Scroll, Terminal, Info } from '@phosphor-icons/react';
+import { SquaresFour, CheckSquare, GitBranch, Scroll, Terminal, Info, Question } from '@phosphor-icons/react';
 
 interface ToolbarProps {
   onOpenTab: (tab: Tab) => void;
@@ -11,6 +11,7 @@ const ICON_SIZE = 14;
 const toolbarItems: { label: string; type: Tab['type']; icon: React.ReactNode }[] = [
   { label: '대시보드', type: 'dashboard', icon: <SquaresFour size={ICON_SIZE} /> },
   { label: 'TODO', type: 'todo', icon: <CheckSquare size={ICON_SIZE} /> },
+  { label: 'Questions', type: 'questions', icon: <Question size={ICON_SIZE} /> },
   { label: 'GIT', type: 'git', icon: <GitBranch size={ICON_SIZE} /> },
   { label: '로그', type: 'log', icon: <Scroll size={ICON_SIZE} /> },
   { label: 'CLI', type: 'cli', icon: <Terminal size={ICON_SIZE} /> },

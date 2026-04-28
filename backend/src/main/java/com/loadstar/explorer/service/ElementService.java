@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -432,6 +433,110 @@ public class ElementService {
         return node;
     }
 
+    // ===== Orphan / Delete =====
+
+    @lombok.Data
+    @lombok.AllArgsConstructor
+    public static class ReferenceInfo {
+        private String address;
+        private String type;
+        private String summary;
+    }
+
+    /**
+     * Find WayPoints that have {@code address} in their REFERENCE field.
+     * Does not include PARENT/CHILDREN relations — those are tree structure, not external deps.
+     */
+    public List<ReferenceInfo> findExternalReferences(String projectRoot, String address) throws IOException {
+        List<ReferenceInfo> result = new ArrayList<>();
+        Path wpDir = getLoadstarRoot(projectRoot).resolve("WAYPOINT");
+        if (!Files.isDirectory(wpDir)) return result;
+
+        for (Path f : Files.list(wpDir).toList()) {
+            try {
+                WayPointData wp = parser.parseWayPoint(f);
+                if (wp.getReferences() != null && wp.getReferences().contains(address)
+                        && !address.equals(wp.getAddress())) {
+                    result.add(new ReferenceInfo(wp.getAddress(), "WAYPOINT", wp.getSummary()));
+                }
+            } catch (Exception ignored) {}
+        }
+        return result;
+    }
+
+    /**
+     * Delete a WayPoint. Blocks if any other WP has this address in its REFERENCE field.
+     * Automatically removes from parent MAP's WAYPOINTS or parent WP's CHILDREN.
+     */
+    public void deleteWayPoint(String projectRoot, String address) throws IOException {
+        Path file = addressToPath(projectRoot, address);
+        if (!Files.exists(file)) throw new IOException("WayPoint not found: " + address);
+
+        List<ReferenceInfo> refs = findExternalReferences(projectRoot, address);
+        if (!refs.isEmpty()) {
+            String refList = refs.stream().map(ReferenceInfo::getAddress).collect(Collectors.joining(", "));
+            throw new IOException(refs.size() + "개 요소가 이 WP를 참조 중입니다: " + refList);
+        }
+
+        WayPointData wp = parser.parseWayPoint(file);
+        String parentAddr = wp.getParent();
+
+        if (parentAddr != null && !parentAddr.isEmpty()) {
+            Path parentFile = addressToPath(projectRoot, parentAddr);
+            if (Files.exists(parentFile)) {
+                if (parentAddr.startsWith("M://")) {
+                    MapData parentMap = parser.parseMap(parentFile);
+                    if (parentMap.getWaypoints().remove(address)) {
+                        writer.writeMap(parentFile, parentMap);
+                        cli.logModified(projectRoot, parentAddr, "WAYPOINTS에서 " + address + " 제거 (삭제)");
+                    }
+                } else if (parentAddr.startsWith("W://")) {
+                    WayPointDetailResponse parentWp = parser.parseWayPointDetail(parentFile);
+                    List<String> children = new ArrayList<>(parentWp.getChildren() != null ? parentWp.getChildren() : List.of());
+                    if (children.remove(address)) {
+                        parentWp.setChildren(children);
+                        writer.writeWayPoint(parentFile, parentWp);
+                        cli.logModified(projectRoot, parentAddr, "CHILDREN에서 " + address + " 제거 (삭제)");
+                    }
+                }
+            }
+        }
+
+        Files.delete(file);
+        cli.logModified(projectRoot, address, "WayPoint 삭제");
+    }
+
+    /**
+     * Delete a MAP with user-selected cascade children.
+     * - {@code selectedChildren}: addresses the user chose to delete alongside the map.
+     * - Remaining children (not selected) block deletion.
+     */
+    public void deleteMapWithCascade(String projectRoot, String mapAddress, List<String> selectedChildren) throws IOException {
+        Path mapFile = addressToPath(projectRoot, mapAddress);
+        if (!Files.exists(mapFile)) throw new IOException("Map not found: " + mapAddress);
+
+        MapData map = parser.parseMap(mapFile);
+        List<String> remaining = new ArrayList<>(map.getWaypoints() != null ? map.getWaypoints() : List.of());
+
+        for (String childAddr : selectedChildren) {
+            Path childFile = addressToPath(projectRoot, childAddr);
+            if (Files.exists(childFile)) {
+                Files.delete(childFile);
+                cli.logModified(projectRoot, childAddr, "삭제 (MAP " + mapAddress + " cascade)");
+            }
+            remaining.remove(childAddr);
+        }
+
+        if (!remaining.isEmpty()) {
+            throw new IOException("선택되지 않은 하위 항목이 남아있습니다: " + String.join(", ", remaining));
+        }
+
+        // Delegate to existing deleteMap (now safe — WAYPOINTS is empty after cascade)
+        map.setWaypoints(new ArrayList<>());
+        writer.writeMap(mapFile, map);
+        deleteMap(projectRoot, mapAddress);
+    }
+
     @lombok.Data
     public static class TreeNodeDto {
         private String address;
@@ -440,5 +545,148 @@ public class ElementService {
         private String summary;
         private List<String> references;
         private List<TreeNodeDto> children;
+    }
+
+    // ===== Connections editing =====
+
+    /**
+     * Returns a flat list of all MAP and WayPoint addresses in the project.
+     * Used as the data source for address comboboxes in the UI.
+     */
+    public List<String> getAllAddresses(String projectRoot) throws IOException {
+        List<String> result = new ArrayList<>();
+        Path loadstarRoot = getLoadstarRoot(projectRoot);
+
+        Path mapDir = loadstarRoot.resolve("MAP");
+        if (Files.isDirectory(mapDir)) {
+            for (Path f : Files.list(mapDir).sorted().toList()) {
+                String name = f.getFileName().toString();
+                if (!name.endsWith(".md")) continue;
+                String pathPart = name.substring(0, name.length() - 3).replace(".", "/");
+                result.add("M://" + pathPart);
+            }
+        }
+
+        Path wpDir = loadstarRoot.resolve("WAYPOINT");
+        if (Files.isDirectory(wpDir)) {
+            for (Path f : Files.list(wpDir).sorted().toList()) {
+                String name = f.getFileName().toString();
+                if (!name.endsWith(".md")) continue;
+                String pathPart = name.substring(0, name.length() - 3).replace(".", "/");
+                result.add("W://" + pathPart);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Change the PARENT field of a WayPoint.
+     * - Removes the WP from the old parent's CHILDREN (if old parent is a WP) or WAYPOINTS (if MAP).
+     * - Adds the WP to the new parent's CHILDREN (if WP) or WAYPOINTS (if MAP).
+     * - Setting newParent to null or empty string clears PARENT.
+     */
+    public void changeParent(String projectRoot, String address, String newParent) throws IOException {
+        Path file = addressToPath(projectRoot, address);
+        if (!Files.exists(file)) throw new IOException("WayPoint not found: " + address);
+
+        WayPointDetailResponse wp = parser.parseWayPointDetail(file);
+        String oldParent = wp.getParent();
+
+        // Remove from old parent
+        if (oldParent != null && !oldParent.isEmpty()) {
+            Path oldParentFile = addressToPath(projectRoot, oldParent);
+            if (Files.exists(oldParentFile)) {
+                if (oldParent.startsWith("M://")) {
+                    MapData parentMap = parser.parseMap(oldParentFile);
+                    if (parentMap.getWaypoints().remove(address)) {
+                        writer.writeMap(oldParentFile, parentMap);
+                        cli.logModified(projectRoot, oldParent, "WAYPOINTS에서 " + address + " 제거 (PARENT 변경)");
+                    }
+                } else if (oldParent.startsWith("W://")) {
+                    WayPointDetailResponse parentWp = parser.parseWayPointDetail(oldParentFile);
+                    List<String> children = new ArrayList<>(parentWp.getChildren() != null ? parentWp.getChildren() : List.of());
+                    if (children.remove(address)) {
+                        parentWp.setChildren(children);
+                        writer.writeWayPoint(oldParentFile, parentWp);
+                        cli.logModified(projectRoot, oldParent, "CHILDREN에서 " + address + " 제거 (PARENT 변경)");
+                    }
+                }
+            }
+        }
+
+        // Add to new parent
+        if (newParent != null && !newParent.isEmpty()) {
+            Path newParentFile = addressToPath(projectRoot, newParent);
+            if (Files.exists(newParentFile)) {
+                if (newParent.startsWith("M://")) {
+                    MapData parentMap = parser.parseMap(newParentFile);
+                    if (!parentMap.getWaypoints().contains(address)) {
+                        parentMap.getWaypoints().add(address);
+                        writer.writeMap(newParentFile, parentMap);
+                        cli.logModified(projectRoot, newParent, "WAYPOINTS에 " + address + " 추가 (PARENT 변경)");
+                    }
+                } else if (newParent.startsWith("W://")) {
+                    WayPointDetailResponse parentWp = parser.parseWayPointDetail(newParentFile);
+                    List<String> children = new ArrayList<>(parentWp.getChildren() != null ? parentWp.getChildren() : new ArrayList<>());
+                    if (!children.contains(address)) {
+                        children.add(address);
+                        parentWp.setChildren(children);
+                        writer.writeWayPoint(newParentFile, parentWp);
+                        cli.logModified(projectRoot, newParent, "CHILDREN에 " + address + " 추가 (PARENT 변경)");
+                    }
+                }
+            }
+        }
+
+        // Update the WP's own PARENT field
+        wp.setParent(newParent != null && !newParent.isEmpty() ? newParent : null);
+        writer.writeWayPoint(file, wp);
+        cli.logModified(projectRoot, address, "PARENT 변경: " + oldParent + " → " + newParent);
+    }
+
+    /**
+     * Add childAddr to the CHILDREN list of parentAddr.
+     */
+    public void addChild(String projectRoot, String parentAddr, String childAddr) throws IOException {
+        Path parentFile = addressToPath(projectRoot, parentAddr);
+        if (!Files.exists(parentFile)) throw new IOException("WayPoint not found: " + parentAddr);
+        if (!childAddr.startsWith("W://")) throw new IllegalArgumentException("Child must be a WayPoint (W://)");
+
+        WayPointDetailResponse parent = parser.parseWayPointDetail(parentFile);
+        List<String> children = new ArrayList<>(parent.getChildren() != null ? parent.getChildren() : List.of());
+        if (children.contains(childAddr)) return;
+
+        Path childFile = addressToPath(projectRoot, childAddr);
+        if (!Files.exists(childFile)) throw new IOException("Child WayPoint not found: " + childAddr);
+
+        children.add(childAddr);
+        parent.setChildren(children);
+        writer.writeWayPoint(parentFile, parent);
+        cli.logModified(projectRoot, parentAddr, "CHILDREN에 " + childAddr + " 추가");
+
+        // Update child's PARENT if not set
+        WayPointDetailResponse child = parser.parseWayPointDetail(childFile);
+        if (child.getParent() == null || child.getParent().isEmpty()) {
+            child.setParent(parentAddr);
+            writer.writeWayPoint(childFile, child);
+            cli.logModified(projectRoot, childAddr, "PARENT 설정: " + parentAddr);
+        }
+    }
+
+    /**
+     * Remove childAddr from the CHILDREN list of parentAddr.
+     */
+    public void removeChild(String projectRoot, String parentAddr, String childAddr) throws IOException {
+        Path parentFile = addressToPath(projectRoot, parentAddr);
+        if (!Files.exists(parentFile)) throw new IOException("WayPoint not found: " + parentAddr);
+
+        WayPointDetailResponse parent = parser.parseWayPointDetail(parentFile);
+        List<String> children = new ArrayList<>(parent.getChildren() != null ? parent.getChildren() : List.of());
+        if (children.remove(childAddr)) {
+            parent.setChildren(children);
+            writer.writeWayPoint(parentFile, parent);
+            cli.logModified(projectRoot, parentAddr, "CHILDREN에서 " + childAddr + " 제거");
+        }
     }
 }

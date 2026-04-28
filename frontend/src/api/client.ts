@@ -264,6 +264,7 @@ export interface DashboardSummary {
   statusCounts: Record<string, number>;
   mapGroups: MapGroupSummary[];
   blockedItems: BlockedItem[];
+  openQuestionCount: number;
 }
 
 export interface MapGroupSummary {
@@ -328,6 +329,111 @@ export async function deleteNotice(root: string, id: string): Promise<void> {
   await apiClient.delete(`/dashboard/notices/${id}`, { params: { root } });
 }
 
+// --- Orphan Delete API ---
+
+export interface ReferenceInfo {
+  address: string;
+  type: string;
+  summary: string;
+}
+
+export async function fetchReferences(root: string, address: string): Promise<ReferenceInfo[]> {
+  const res = await apiClient.get<ReferenceInfo[]>('/elements/references', { params: { root, address } });
+  return res.data;
+}
+
+export async function deleteWayPoint(root: string, address: string): Promise<{ success: boolean; error?: string }> {
+  const res = await apiClient.delete<{ success: boolean; error?: string }>('/elements/waypoint', {
+    params: { root, address },
+  });
+  return res.data;
+}
+
+export async function deleteMapCascade(root: string, mapAddress: string, selectedChildren: string[]): Promise<{ success: boolean; error?: string }> {
+  const res = await apiClient.delete<{ success: boolean; error?: string }>('/elements/map/cascade', {
+    params: { root, mapAddress },
+    data: selectedChildren,
+  });
+  return res.data;
+}
+
+// --- Questions / Decisions API ---
+
+export interface QuestionItem {
+  wpAddress: string;
+  wpSummary: string;
+  qid: string;
+  state: 'OPEN' | 'DEFERRED';
+  text: string;
+}
+
+export interface DecisionListItem {
+  id: string;
+  status: string;
+  createdAt: string;
+  wpAddress: string;
+  questionId: string;
+  question: string | null;
+  decision: string | null;
+  note: string | null;
+  aiStatus: string;
+  aiConfirmedAt: string | null;
+  aiContent: string | null;
+  filePath: string;
+}
+
+export interface DecideRequest {
+  wpAddress: string;
+  qid: string;
+  questionText: string;
+  decision: string;
+  note: string;
+}
+
+export async function fetchQuestions(root: string): Promise<QuestionItem[]> {
+  const res = await apiClient.get<QuestionItem[]>('/questions', { params: { root } });
+  return res.data;
+}
+
+export async function fetchDecisions(root: string): Promise<DecisionListItem[]> {
+  const res = await apiClient.get<DecisionListItem[]>('/questions/decisions', { params: { root } });
+  return res.data;
+}
+
+export async function decideQuestion(root: string, req: DecideRequest): Promise<{ success: boolean; decisionId?: string; filePath?: string; error?: string }> {
+  const res = await apiClient.post<{ success: boolean; decisionId?: string; filePath?: string; error?: string }>('/questions/decide', req, { params: { root } });
+  return res.data;
+}
+
+export async function deferQuestion(root: string, wpAddress: string, qid: string): Promise<{ success: boolean; error?: string }> {
+  const res = await apiClient.post<{ success: boolean; error?: string }>('/questions/defer', null, {
+    params: { root, wpAddress, qid },
+  });
+  return res.data;
+}
+
+export async function openDecisionFile(path: string): Promise<{ success: boolean; error?: string }> {
+  const res = await apiClient.get<{ success: boolean; error?: string }>('/questions/open-file', { params: { path } });
+  return res.data;
+}
+
+export async function deleteQuestion(root: string, wpAddress: string, qid: string): Promise<{ success: boolean; error?: string }> {
+  const res = await apiClient.delete<{ success: boolean; error?: string }>('/questions', {
+    params: { root, wpAddress, qid },
+  });
+  return res.data;
+}
+
+export async function fetchDecisionContent(path: string): Promise<{ success: boolean; decision: string; note: string; error?: string }> {
+  const res = await apiClient.get<{ success: boolean; decision: string; note: string; error?: string }>('/questions/decision', { params: { path } });
+  return res.data;
+}
+
+export async function updateDecisionContent(path: string, decision: string, note: string): Promise<{ success: boolean; error?: string }> {
+  const res = await apiClient.put<{ success: boolean; error?: string }>('/questions/decision', { decision, note }, { params: { path } });
+  return res.data;
+}
+
 // --- Search API ---
 
 export interface SearchResultItem {
@@ -367,5 +473,33 @@ export async function fetchLog(root: string, offset: number, limit: number, addr
   if (address) params.address = address;
   if (kind) params.kind = kind;
   const res = await apiClient.get<LogResult>('/log/find', { params });
+  return res.data;
+}
+
+// --- Connections editing ---
+
+export async function fetchAddresses(root: string): Promise<string[]> {
+  const res = await apiClient.get<string[]>('/elements/addresses', { params: { root } });
+  return res.data;
+}
+
+export async function patchParent(root: string, address: string, newParent: string | null): Promise<{ success: boolean; error?: string }> {
+  const params: Record<string, string> = { root, address };
+  if (newParent) params.newParent = newParent;
+  const res = await apiClient.patch<{ success: boolean; error?: string }>('/elements/waypoint/parent', null, { params });
+  return res.data;
+}
+
+export async function addChild(root: string, parentAddr: string, childAddr: string): Promise<{ success: boolean; error?: string }> {
+  const res = await apiClient.post<{ success: boolean; error?: string }>('/elements/waypoint/children', null, {
+    params: { root, parentAddr, childAddr },
+  });
+  return res.data;
+}
+
+export async function removeChild(root: string, parentAddr: string, childAddr: string): Promise<{ success: boolean; error?: string }> {
+  const res = await apiClient.delete<{ success: boolean; error?: string }>('/elements/waypoint/children', {
+    params: { root, parentAddr, childAddr },
+  });
   return res.data;
 }
