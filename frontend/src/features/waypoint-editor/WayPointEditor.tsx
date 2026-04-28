@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { fetchWayPoint, updateWayPoint, fetchGitHistory, fetchGitVersion, browseDirectory, type WayPointDetail, type GitCommitEntry, type DirEntry } from '../../api/client';
+import { fetchWayPoint, updateWayPoint, fetchGitHistory, fetchGitVersion, browseDirectory, fetchReferences, deleteWayPoint, fetchAddresses, patchParent, addChild, removeChild, type WayPointDetail, type GitCommitEntry, type DirEntry, type ReferenceInfo } from '../../api/client';
 import { statusOptions, getStatusLabel, getStatusColor } from '../../data/status-labels';
 import type { Tab } from '../../App';
-import { Diamond, FolderOpen, Folder, Check, Circle, CaretDown, CaretRight } from '@phosphor-icons/react';
+import { Diamond, FolderOpen, Folder, Check, Circle, CaretDown, CaretRight, Trash } from '@phosphor-icons/react';
 
 interface WayPointEditorProps {
   projectRoot: string;
@@ -110,6 +110,20 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
   // OPEN_QUESTIONS editing
   const [openQuestions, setOpenQuestions] = useState<{ id: string; text: string; resolved: boolean }[]>([]);
   const [newOqText, setNewOqText] = useState('');
+
+  // CONNECTIONS editing
+  const [editConnections, setEditConnections] = useState(false);
+  const [connLoading, setConnLoading] = useState(false);
+  const [connError, setConnError] = useState<string | null>(null);
+  const [allAddresses, setAllAddresses] = useState<string[]>([]);
+  const [editParent, setEditParent] = useState<string>('');
+  const [editChildren, setEditChildren] = useState<string[]>([]);
+  const [addChildInput, setAddChildInput] = useState('');
+
+  // Delete WP
+  const [deleteModal, setDeleteModal] = useState<'idle' | 'checking' | 'blocked' | 'confirm'>('idle');
+  const [deleteRefs, setDeleteRefs] = useState<ReferenceInfo[]>([]);
+  const [deleting, setDeleting] = useState(false);
 
   // Git History
   const [gitHistory, setGitHistory] = useState<GitCommitEntry[]>([]);
@@ -230,6 +244,101 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
       setCodeMapScopes([...codeMapScopes, relative]);
     }
     setShowDirBrowser(false);
+  };
+
+  // --- CONNECTIONS edit handlers ---
+  const startEditConnections = async () => {
+    if (!data) return;
+    setConnLoading(true);
+    setConnError(null);
+    try {
+      const addrs = await fetchAddresses(projectRoot);
+      setAllAddresses(addrs);
+      setEditParent(data.parent || '');
+      setEditChildren([...(data.children || [])]);
+      setEditConnections(true);
+    } catch {
+      setConnError('주소 목록 로드 실패');
+    } finally {
+      setConnLoading(false);
+    }
+  };
+
+  const cancelEditConnections = () => {
+    setEditConnections(false);
+    setConnError(null);
+    setAddChildInput('');
+  };
+
+  const saveConnections = async () => {
+    if (!data) return;
+    setConnLoading(true);
+    setConnError(null);
+    try {
+      const oldParent = data.parent || '';
+      const newParent = editParent;
+
+      // PARENT change
+      if (oldParent !== newParent) {
+        const r = await patchParent(projectRoot, address, newParent || null);
+        if (!r.success) throw new Error(r.error || 'PARENT 변경 실패');
+      }
+
+      // CHILDREN: add new ones
+      const oldChildren = data.children || [];
+      for (const c of editChildren) {
+        if (!oldChildren.includes(c)) {
+          const r = await addChild(projectRoot, address, c);
+          if (!r.success) throw new Error(r.error || 'CHILDREN 추가 실패');
+        }
+      }
+      // CHILDREN: remove deleted ones
+      for (const c of oldChildren) {
+        if (!editChildren.includes(c)) {
+          const r = await removeChild(projectRoot, address, c);
+          if (!r.success) throw new Error(r.error || 'CHILDREN 제거 실패');
+        }
+      }
+
+      // Reload WP data
+      const updated = await fetchWayPoint(projectRoot, address);
+      setData(updated);
+      setTechSpecItems(updated.techSpec.map(t => ({ ...t })));
+      setIssues([...updated.issues]);
+      setOpenQuestions(updated.openQuestions.map(q => ({ ...q })));
+      setCodeMapScopes([...(updated.codeMapScopes || [])]);
+      setEditConnections(false);
+      setAddChildInput('');
+    } catch (e) {
+      setConnError(e instanceof Error ? e.message : '저장 실패');
+    } finally {
+      setConnLoading(false);
+    }
+  };
+
+  const handleDeleteClick = async () => {
+    setDeleteModal('checking');
+    try {
+      const refs = await fetchReferences(projectRoot, address);
+      setDeleteRefs(refs);
+      setDeleteModal(refs.length > 0 ? 'blocked' : 'confirm');
+    } catch {
+      setDeleteModal('idle');
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    setDeleting(true);
+    try {
+      await deleteWayPoint(projectRoot, address);
+      // Signal parent to refresh tree — reload page as fallback
+      window.location.reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '삭제 실패');
+      setDeleteModal('idle');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const navigateTo = (addr: string) => {
@@ -392,7 +501,61 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: isReadOnly ? 8 : 16, display: 'flex', alignItems: 'center', gap: 8 }}>
         <span>{address}</span>
         {saving && <span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>Saving...</span>}
+        {!isReadOnly && (
+          <button
+            onClick={handleDeleteClick}
+            style={{ ...s.btnDanger, marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}
+            title="WayPoint 물리 삭제"
+          >
+            <Trash size={11} /> 삭제
+          </button>
+        )}
       </div>
+
+      {/* Delete WP modals */}
+      {deleteModal !== 'idle' && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <div style={{
+            background: 'var(--bg-primary)', border: '1px solid var(--border-medium)',
+            borderRadius: 8, padding: 24, width: 440, boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+          }}>
+            {deleteModal === 'checking' && <div style={{ color: 'var(--text-muted)' }}>참조 확인 중...</div>}
+
+            {deleteModal === 'blocked' && (
+              <>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--status-error)', marginBottom: 12 }}>
+                  삭제 차단 — {deleteRefs.length}개 요소가 이 WP를 참조 중입니다
+                </div>
+                <ul style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 16, paddingLeft: 20 }}>
+                  {deleteRefs.map(r => <li key={r.address}>{r.address} — {r.summary}</li>)}
+                </ul>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
+                  참조를 먼저 제거한 뒤 삭제하세요.
+                </div>
+                <button style={s.btn} onClick={() => setDeleteModal('idle')}>닫기</button>
+              </>
+            )}
+
+            {deleteModal === 'confirm' && (
+              <>
+                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>WayPoint 삭제</div>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16 }}>
+                  <strong>{address}</strong> 를 물리적으로 삭제합니다. 이 작업은 되돌릴 수 없습니다.
+                </div>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                  <button style={s.btn} onClick={() => setDeleteModal('idle')}>취소</button>
+                  <button style={s.btnDanger} onClick={handleDeleteConfirm} disabled={deleting}>
+                    {deleting ? '삭제 중...' : '삭제'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Read-only banner for historical version */}
       {isReadOnly && viewingCommit && (
@@ -507,26 +670,116 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
         )}
       </div>
 
-      {/* ===== CONNECTIONS (read-only) ===== */}
+      {/* ===== CONNECTIONS ===== */}
       <div style={s.section}>
         <div style={s.sectionHeader}>
           <span style={s.sectionTitle}>CONNECTIONS</span>
+          <div style={s.headerBtns}>
+            {!isReadOnly && (editConnections ? (
+              <>
+                <button style={s.btnPrimary} onClick={saveConnections} disabled={connLoading}>
+                  {connLoading ? '저장 중...' : 'Save'}
+                </button>
+                <button style={s.btn} onClick={cancelEditConnections} disabled={connLoading}>Cancel</button>
+              </>
+            ) : (
+              <button style={s.btn} onClick={startEditConnections} disabled={connLoading}>
+                {connLoading ? '...' : 'Edit'}
+              </button>
+            ))}
+          </div>
         </div>
-        {data.parent && <div style={{ marginBottom: 4 }}><span style={s.label}>Parent: </span><span style={s.link} onDoubleClick={() => navigateTo(data.parent!)}>{data.parent}</span></div>}
-        {data.children.length > 0 && (
-          <div style={{ marginBottom: 4 }}>
-            <span style={s.label}>Children: </span>
-            {data.children.map(c => <span key={c} style={{ ...s.link, marginRight: 8 }} onDoubleClick={() => navigateTo(c)}>{c}</span>)}
+
+        {connError && <div style={{ fontSize: 11, color: 'var(--status-error)', marginBottom: 6 }}>{connError}</div>}
+
+        {editConnections ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {/* PARENT edit */}
+            <div>
+              <div style={s.label}>PARENT</div>
+              <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                <select
+                  style={{ ...s.select, flex: 1 }}
+                  value={editParent}
+                  onChange={e => setEditParent(e.target.value)}
+                >
+                  <option value="">— 없음 (clear) —</option>
+                  {allAddresses.filter(a => a !== address).map(a => (
+                    <option key={a} value={a}>{a}</option>
+                  ))}
+                </select>
+                {editParent && (
+                  <button style={s.btnDanger} onClick={() => setEditParent('')} title="PARENT 제거">×</button>
+                )}
+              </div>
+            </div>
+
+            {/* CHILDREN edit */}
+            <div>
+              <div style={s.label}>CHILDREN</div>
+              {editChildren.length === 0 && <div style={s.empty}>없음</div>}
+              {editChildren.map(c => (
+                <div key={c} style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 3 }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-primary)', flex: 1, fontFamily: 'monospace' }}>{c}</span>
+                  <button
+                    style={s.btnDanger}
+                    onClick={() => setEditChildren(editChildren.filter(x => x !== c))}
+                    title="제거"
+                  >×</button>
+                </div>
+              ))}
+              <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+                <select
+                  style={{ ...s.select, flex: 1 }}
+                  value={addChildInput}
+                  onChange={e => setAddChildInput(e.target.value)}
+                >
+                  <option value="">— WayPoint 선택 —</option>
+                  {allAddresses
+                    .filter(a => a.startsWith('W://') && a !== address && !editChildren.includes(a))
+                    .map(a => <option key={a} value={a}>{a}</option>)}
+                </select>
+                <button
+                  style={s.btnPrimary}
+                  disabled={!addChildInput}
+                  onClick={() => {
+                    if (addChildInput && !editChildren.includes(addChildInput)) {
+                      setEditChildren([...editChildren, addChildInput]);
+                      setAddChildInput('');
+                    }
+                  }}
+                >+ Add</button>
+              </div>
+            </div>
           </div>
-        )}
-        {data.references.length > 0 && (
-          <div style={{ marginBottom: 4 }}>
-            <span style={s.label}>Reference: </span>
-            {data.references.map(r => <span key={r} style={{ ...s.link, marginRight: 8 }} onDoubleClick={() => navigateTo(r)}>{r}</span>)}
-          </div>
-        )}
-        {!data.parent && data.children.length === 0 && data.references.length === 0 && (
-          <div style={s.empty}>연결 정보 없음</div>
+        ) : (
+          <>
+            {data.parent && (
+              <div style={{ marginBottom: 4 }}>
+                <span style={s.label}>Parent: </span>
+                <span style={s.link} onDoubleClick={() => navigateTo(data.parent!)}>{data.parent}</span>
+              </div>
+            )}
+            {data.children.length > 0 && (
+              <div style={{ marginBottom: 4 }}>
+                <span style={s.label}>Children: </span>
+                {data.children.map(c => (
+                  <span key={c} style={{ ...s.link, marginRight: 8 }} onDoubleClick={() => navigateTo(c)}>{c}</span>
+                ))}
+              </div>
+            )}
+            {data.references.length > 0 && (
+              <div style={{ marginBottom: 4 }}>
+                <span style={s.label}>Reference: </span>
+                {data.references.map(r => (
+                  <span key={r} style={{ ...s.link, marginRight: 8 }} onDoubleClick={() => navigateTo(r)}>{r}</span>
+                ))}
+              </div>
+            )}
+            {!data.parent && data.children.length === 0 && data.references.length === 0 && (
+              <div style={s.empty}>연결 정보 없음</div>
+            )}
+          </>
         )}
       </div>
 

@@ -174,6 +174,13 @@ export default function DashboardView({ projectRoot }: Props) {
               <span style={st.statValue}>{cur.statusCounts[k]}</span>
             </div>
           ))}
+          {activeMapTab === 'all' && (summary?.openQuestionCount ?? 0) > 0 && (
+            <div style={{ ...st.statChip, borderColor: '#e6851a', background: '#e6851a10' }}>
+              <span style={{ ...st.legendDot, background: '#e6851a' }} />
+              <span style={{ ...st.statLabel, color: '#e6851a' }}>미답변 질문</span>
+              <span style={{ ...st.statValue, color: '#e6851a' }}>{summary!.openQuestionCount}</span>
+            </div>
+          )}
         </div>
         {totalBar > 0 && (
           <div style={st.statusBar}>

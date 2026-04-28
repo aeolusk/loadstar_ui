@@ -43,8 +43,10 @@ public class WayPointDetailResponse {
 
     @Data
     public static class OpenQuestion {
-        private String id;
+        private String id;          // "Q1" — just the number part
+        private String state;       // OPEN | DEFERRED | RESOLVED | DONE
+        private String resolvedRef; // decision file id (without .md), null if none
         private String text;
-        private boolean resolved;
+        private boolean resolved;   // true if state is RESOLVED or DONE
     }
 }

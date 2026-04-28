@@ -20,7 +20,6 @@ export default function ProjectSelector({ projectRoot, onOpenDialog }: ProjectSe
             <span style={{ color: 'var(--text-muted)' }}>프로젝트를 선택하세요...</span>
           )}
         </div>
-        <button className="project-selector-btn" onClick={onOpenDialog}>Open</button>
       </div>
     </div>
   );

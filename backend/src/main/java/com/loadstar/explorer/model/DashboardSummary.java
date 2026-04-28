@@ -12,6 +12,7 @@ public class DashboardSummary {
     private Map<String, Integer> statusCounts;
     private List<MapGroupSummary> mapGroups;
     private List<BlockedItem> blockedItems;
+    private int openQuestionCount;
 
     @Data
     public static class MapGroupSummary {

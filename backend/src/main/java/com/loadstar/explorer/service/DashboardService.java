@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 public class DashboardService {
 
     private final ElementService elementService;
+    private final DecisionService decisionService;
     private final CliExecutor cli;
 
     private static final Map<String, String> CATEGORY_LABELS = Map.of(
@@ -81,9 +82,17 @@ public class DashboardService {
         summary.setTotalWaypoints(counts[1]);
         summary.setStatusCounts(totalStatus);
         summary.setMapGroups(groups);
-
-        // BLOCKED 항목 파싱
         summary.setBlockedItems(parseBlockedItems(projectRoot));
+
+        // OPEN + DEFERRED 질문 수
+        try {
+            long unanswered = decisionService.listQuestions(projectRoot).stream()
+                    .filter(q -> "OPEN".equals(q.getState()) || "DEFERRED".equals(q.getState()))
+                    .count();
+            summary.setOpenQuestionCount((int) unanswered);
+        } catch (Exception e) {
+            log.warn("Failed to count open questions: {}", e.getMessage());
+        }
 
         return summary;
     }
