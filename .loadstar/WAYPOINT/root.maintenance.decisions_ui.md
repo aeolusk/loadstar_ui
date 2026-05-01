@@ -72,7 +72,6 @@
 
 ### ISSUE
 - OPEN_QUESTIONS:
-  - [Q1 DEFERRED] slug 자동 생성 전략 — 질문 앞 3~5 단어? 사용자 필수 입력? AI 추천?
 
 ### COMMENT
 - SPEC v1.3.12에서 Decision 파일 규약 확정됨 (05.ELEMENT_FORMAT Decision 섹션)

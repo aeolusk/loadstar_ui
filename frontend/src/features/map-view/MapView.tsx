@@ -51,7 +51,7 @@ function WayPointNode({ data }: { data: {
 
   return (
     <div
-      onClick={() => data.onNodeSelect('waypoint', data.address)}
+      onMouseDownCapture={(e) => { if (e.button !== 0) return; data.onNodeSelect('waypoint', data.address); }}
       style={{
         background: isSelected ? '#eef5fb' : '#ffffff',
         border: isSelected ? '2px solid #3a7ca5' : `2px solid ${color}`,
@@ -108,7 +108,7 @@ function MapNode({ data }: { data: { label: string; status: string; address: str
   const isSelected = data.selected === true;
   return (
     <div
-      onClick={() => data.onNodeSelect('map', data.address)}
+      onMouseDownCapture={(e) => { if (e.button !== 0) return; data.onNodeSelect('map', data.address); }}
       style={{
         background: isSelected ? 'rgba(230, 133, 26, 0.12)' : '#faf8f5',
         border: isSelected ? '2px solid #e6851a' : `2px solid ${color}`,
@@ -129,61 +129,80 @@ function MapNode({ data }: { data: { label: string; status: string; address: str
   );
 }
 
-function RefWayPointNode({ data }: { data: { label: string; status: string; address: string; onNodeSelect: (type: 'waypoint', addr: string) => void } }) {
-  const color = getStatusColor(data.status);
-  return (
-    <div
-      onClick={() => data.onNodeSelect('waypoint', data.address)}
-      style={{
-        background: '#faf8f5', border: `1px dashed ${color}`, borderRadius: 6,
-        padding: '8px 14px', minWidth: 140, fontSize: 12,
-        color: '#6b5d4d', textAlign: 'center', cursor: 'pointer', opacity: 0.85,
-      }}
-    >
-      <Handle type="target" position={Position.Top} style={{ background: color, width: 6, height: 6 }} />
-      <Diamond size={12} color="#3a7ca5" style={{ marginRight: 4, verticalAlign: 'middle' }} />
-      {data.label}
-      <div style={{ fontSize: 9, color: '#9b8e7e', marginTop: 2 }}>ref (external)</div>
-    </div>
-  );
-}
+const GROUP_ITEM_W = 155;
+const GROUP_ITEM_GAP = 5;
 
-function ChildWayPointNode({ data }: { data: { label: string; status: string; summary?: string; address: string; selected?: boolean; onNodeSelect: (type: 'waypoint', addr: string) => void } }) {
-  const color = getStatusColor(data.status);
-  const isSelected = data.selected === true;
+function GroupItemWP({ addr, label, status, summary, selected, onSelect }: {
+  addr: string; label: string; status: string; summary: string; selected: boolean;
+  onSelect: (addr: string) => void;
+}) {
+  const color = getStatusColor(status);
   return (
     <div
-      onClick={() => data.onNodeSelect('waypoint', data.address)}
+      onMouseDownCapture={(e) => { if (e.button !== 0) return; onSelect(addr); }}
       style={{
-        background: isSelected ? '#eef5fb' : '#fff',
-        border: isSelected ? '1.5px solid #3a7ca5' : `1.5px solid ${color}`,
-        borderRadius: 6,
-        padding: '8px 14px', minWidth: 150, fontSize: 11,
-        boxShadow: isSelected ? '0 0 0 2px rgba(58, 124, 165, 0.2), 0 1px 4px rgba(44, 36, 23, 0.06)' : '0 1px 4px rgba(44, 36, 23, 0.06)',
-        cursor: 'pointer',
+        width: GROUP_ITEM_W, padding: '7px 10px', borderRadius: 6, cursor: 'pointer',
+        border: selected ? '1.5px solid #3a7ca5' : `1.5px solid ${color}`,
+        background: selected ? '#eef5fb' : '#fff',
+        boxShadow: selected ? '0 0 0 2px rgba(58,124,165,0.18)' : '0 1px 3px rgba(44,36,23,0.06)',
+        flexShrink: 0,
       }}
     >
-      <Handle type="target" position={Position.Top} style={{ background: color, width: 6, height: 6 }} />
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 3 }}>
         <Diamond size={10} color="#3a7ca5" />
-        <span style={{ fontWeight: 600, color: '#2c2417' }}>{data.label}</span>
+        <span style={{ fontSize: 11, fontWeight: 600, color: '#2c2417', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: GROUP_ITEM_W - 30 }}>{label}</span>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
-        <span style={{ fontSize: 9, padding: '1px 5px', background: color + '20', color, borderRadius: 3, fontWeight: 600 }}>
-          {getStatusLabel(data.status)}
-        </span>
-        <span style={{ fontSize: 9, padding: '1px 5px', background: '#f5f0e8', color: '#9b8e7e', borderRadius: 3 }}>child</span>
-      </div>
-      {data.summary && (
-        <div style={{ fontSize: 9, color: '#6b5d4d', marginTop: 2, maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {data.summary}
+      <span style={{ fontSize: 9, padding: '1px 5px', background: color + '20', color, borderRadius: 3, fontWeight: 600 }}>
+        {getStatusLabel(status)}
+      </span>
+      {summary && (
+        <div style={{ fontSize: 9, color: '#6b5d4d', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: GROUP_ITEM_W - 20 }}>
+          {summary}
         </div>
       )}
     </div>
   );
 }
 
-const nodeTypes = { waypoint: WayPointNode, mapNode: MapNode, refWaypoint: RefWayPointNode, childWaypoint: ChildWayPointNode };
+function GroupBoxNode({ data }: { data: {
+  children: Array<{ addr: string; label: string; status: string; summary: string; selected: boolean }>;
+  refs: Array<{ addr: string; label: string; status: string }>;
+  onNodeSelect: (type: 'waypoint' | 'map', addr: string) => void;
+} }) {
+  const hasChildren = data.children.length > 0;
+  const hasRefs = data.refs.length > 0;
+  return (
+    <div style={{
+      border: '1.5px solid #d5cdc0', borderRadius: 10, background: '#fdfcfb',
+      padding: 12, boxShadow: '0 2px 10px rgba(44,36,23,0.07)',
+    }}>
+      {hasChildren && (
+        <>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#9b8e7e', marginBottom: 6, letterSpacing: '0.8px', textTransform: 'uppercase' as const }}>Children</div>
+          <div style={{ display: 'flex', gap: GROUP_ITEM_GAP }}>
+            {data.children.map(c => (
+              <GroupItemWP key={c.addr} {...c} onSelect={(a) => data.onNodeSelect('waypoint', a)} />
+            ))}
+          </div>
+        </>
+      )}
+      {hasChildren && hasRefs && <div style={{ borderTop: '1px solid #e5ddd0', margin: '10px 0' }} />}
+      {hasRefs && (
+        <>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#9b8e7e', marginBottom: 6, letterSpacing: '0.8px', textTransform: 'uppercase' as const }}>References</div>
+          <div style={{ display: 'flex', gap: GROUP_ITEM_GAP }}>
+            {data.refs.map(r => (
+              <GroupItemWP key={r.addr} addr={r.addr} label={r.label} status={r.status} summary="" selected={false}
+                onSelect={(a) => data.onNodeSelect('waypoint', a)} />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+const nodeTypes = { waypoint: WayPointNode, mapNode: MapNode, groupBox: GroupBoxNode };
 
 function buildGraph(
   items: MapViewItem[],
@@ -198,10 +217,6 @@ function buildGraph(
   const X_GAP = 240;
   const Y_MAP_ROW = 20;
   const Y_WP_ROW = 140;
-  const Y_CHILD_L1 = 300;
-  const Y_REF = 300;
-  const CHILD_X_GAP = 180;
-  const REF_X_GAP = 160;
 
   const maps = items.filter(it => it.type === 'MAP');
   const waypoints = items.filter(it => it.type === 'WAYPOINT');
@@ -259,63 +274,41 @@ function buildGraph(
     }
   });
 
-  // Selected node: expand children (max 2 levels) and refs
+  // Selected node: show children + refs in a single GroupBox
   if (selectedNode) {
     const selected = itemMap.get(selectedNode);
     if (selected) {
       const parentX = addressXMap[selectedNode] ?? 0;
       const parentCenterX = parentX + 90;
 
-      // Children L1
       const children = selected.children ?? [];
-      if (children.length > 0) {
-        const startX = parentCenterX - ((children.length - 1) * CHILD_X_GAP) / 2 - 65;
-        children.forEach((childAddr, ci) => {
-          const childId = `child-${childAddr}`;
-          const childLabel = childAddr.split('/').pop() || childAddr;
-          const childX = startX + ci * CHILD_X_GAP;
-
-          ns.push({
-            id: childId, type: 'childWaypoint',
-            position: { x: childX, y: Y_CHILD_L1 },
-            data: {
-              label: childLabel,
-              status: childDetails?.[childAddr]?.status ?? 'S_IDL',
-              summary: childDetails?.[childAddr]?.summary ?? '',
-              address: childAddr,
-              selected: selectedDetail === childAddr,
-              onNodeSelect,
-            },
-          });
-          es.push({
-            id: `e-child-${selectedNode}-${childAddr}`,
-            source: selectedNode, sourceHandle: 'bottom', target: childId,
-            type: 'straight',
-            markerEnd: { type: MarkerType.ArrowClosed, color: '#3a7ca5' },
-            style: { stroke: '#3a7ca5', strokeWidth: 1.5 },
-          });
-        });
-      }
-
-      // References (only for selected, shown beside/below children)
       const refs = selected.references ?? [];
-      if (refs.length > 0) {
-        const refStartX = parentCenterX + ((children.length > 0 ? children.length : 0) * CHILD_X_GAP) / 2 + 60;
-        refs.forEach((refAddr, ri) => {
-          const refId = `ref-${refAddr}`;
-          const refLabel = refAddr.split('/').pop() || refAddr;
-          ns.push({
-            id: refId, type: 'refWaypoint',
-            position: { x: refStartX + ri * REF_X_GAP, y: Y_REF },
-            data: { label: refLabel, status: 'S_IDL', address: refAddr, onNodeSelect },
-          });
-          es.push({
-            id: `e-ref-${selectedNode}-${refAddr}`,
-            source: selectedNode, sourceHandle: 'bottom', target: refId,
-            type: 'straight',
-            markerEnd: { type: MarkerType.ArrowClosed, color: '#3a7ca5' },
-            style: { stroke: '#3a7ca5', strokeDasharray: '6 3', opacity: 0.7 },
-          });
+
+      if (children.length > 0 || refs.length > 0) {
+        const childRowW = children.length > 0 ? GROUP_ITEM_W * children.length + GROUP_ITEM_GAP * (children.length - 1) : 0;
+        const refRowW = refs.length > 0 ? GROUP_ITEM_W * refs.length + GROUP_ITEM_GAP * (refs.length - 1) : 0;
+        const boxW = Math.max(childRowW, refRowW, 180) + 24;
+
+        const childrenData = children.map(addr => ({
+          addr,
+          label: addr.split('/').pop() || addr,
+          status: childDetails?.[addr]?.status ?? 'S_IDL',
+          summary: childDetails?.[addr]?.summary ?? '',
+          selected: selectedDetail === addr,
+        }));
+
+        const refsData = refs.map(addr => ({
+          addr,
+          label: addr.split('/').pop() || addr,
+          status: 'S_IDL',
+        }));
+
+        ns.push({
+          id: `groupbox-${selectedNode}`,
+          type: 'groupBox',
+          position: { x: parentCenterX - boxW / 2, y: Y_WP_ROW + 130 },
+          data: { children: childrenData, refs: refsData, onNodeSelect },
+          draggable: false,
         });
       }
     }
@@ -356,6 +349,7 @@ const FlowChart = memo(({ nodes, edges, onNodeDoubleClick }: {
     <ReactFlow
       nodes={nodes} edges={edges} nodeTypes={nodeTypes}
       onNodeDoubleClick={onNodeDoubleClick}
+      nodeDragThreshold={5}
       proOptions={{ hideAttribution: true }}
       style={{ background: '#faf8f5' }}
       minZoom={0.3} maxZoom={2}

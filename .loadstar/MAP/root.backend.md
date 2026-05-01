@@ -1,6 +1,5 @@
 <MAP>
 ## [ADDRESS] M://root/backend
-## [STATUS] S_IDL
 
 ### IDENTITY
 - SUMMARY: Spring Boot 백엔드 — .loadstar 파일 시스템 및 CLI 브릿지

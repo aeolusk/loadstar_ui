@@ -5,7 +5,7 @@
 ### IDENTITY
 - SUMMARY: Map 화면 — React Flow 기반 흐름도. Map 상단/WP 하단 분리 배치, WP 추가(앞/뒤/child) 드롭다운, 삭제, 선택 하이라이트(WP 파란색/Map 주황색), child/ref 배지 및 펼침 표시
 - METADATA: [Ver: 2.1, Created: 2026-04-06]
-- SYNCED_AT: 2026-04-28
+- SYNCED_AT: 2026-05-01
 
 ### CONNECTIONS
 - PARENT: M://root/frontend
@@ -30,6 +30,7 @@
   - [x] 2026-04-28 Map 노드 클릭 선택 하이라이트 — 주황색 테두리/배경/아이콘 (#e6851a)
   - [x] 2026-04-28 MAP 삭제 대상 수정 — 선택된 MAP 노드 기준 삭제 (기존: 항상 현재 뷰 삭제)
   - [x] 2026-04-28 MAP 삭제 WP 사전 확인 순서 수정 — confirm 팝업 전에 대상 MAP의 WP 존재 여부 먼저 체크
+  - [x] 2026-05-01 선택 WP의 child/ref 펼침 표시를 GroupBox로 교체 — 선분 제거, 단일 박스 안에 Children/References 섹션 표시, 클릭 선택 유지
 
 ### ISSUE
 (없음)

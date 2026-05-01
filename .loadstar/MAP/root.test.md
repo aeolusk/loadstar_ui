@@ -1,6 +1,5 @@
 <MAP>
 ## [ADDRESS] M://root/test
-## [STATUS] S_IDL
 
 ### IDENTITY
 - SUMMARY: 프론트엔드 화면 테스트 — 각 기능 화면의 렌더링 및 인터랙션 검증
