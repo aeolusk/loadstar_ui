@@ -2,7 +2,7 @@
 
 LOADSTAR 방법론 기반 프로젝트 구조를 시각적으로 탐색하고 관리하는 웹 애플리케이션입니다.
 
-![LOADSTAR Explorer UI](docs/screenshot.png)
+![LOADSTAR Explorer UI — Map View & WayPoint Editor](docs/waypoint_editor.png)
 
 > 📌 LOADSTAR가 처음이라면 먼저 [openLoadstar 전체 안내](https://github.com/openLoadstar/openLoadstar) 를 참고하세요.
 
@@ -31,33 +31,57 @@ CLI만으로도 모든 기능을 쓸 수 있지만, **WayPoint가 다수**(20개
 
 ## ✨ 주요 기능
 
+### 📊 Dashboard
+
+![Dashboard](docs/dashboard.png)
+
+- WayPoint 상황 한눈에 보기 — Map / WayPoints / 작업완료 카운트
+- Map별 진행률 바 시각화 (전체·backend·frontend·test·maintenance 탭)
+- AI 참고사항 (`LOADSTAR_INIT.md`) 표시·편집 — AI 세션 진입 컨텍스트 관리
+- 공지사항 영역 — 프로젝트 레벨 메모
+
 ### 🗺️ Map View
+
 - React Flow 기반 흐름도로 Map / WayPoint 구조 시각화
 - WayPoint 추가 (앞 / 뒤 / 자식), 삭제, 선택 하이라이트
 - child / reference 배지 표시 및 펼침
 
 ### 📝 WayPoint Editor
+
 - IDENTITY · CONNECTIONS · CODE_MAP · TECH_SPEC 섹션 편집
 - TECH_SPEC 체크박스 토글, 항목 추가 / 삭제
 - 변경 시 `loadstar log` 자동 기록
 
 ### ✅ TODO
+
 - WayPoint STATUS 기반 TODO 목록 (ACTIVE / PENDING / BLOCKED)
 - Sync 버튼으로 CLI `todo sync` 실행
 - History 탭에서 TECH_SPEC 완료 이력 조회 (Map 필터)
 
+### ❓ Questions
+
+![Questions](docs/questions.png)
+
+- WayPoint의 OPEN_QUESTIONS 통합 조회 (대기 / 추후검토 / 결정완료 탭)
+- 질문 작성·답변·결정 기록 — 결정 사항은 `.loadstar/DECISIONS/` 에 ADR 형태로 저장
+- 결정 완료된 질문은 처리 상태별로 분류 (처리완료 / 처리취소 / 처리대기중)
+
 ### 🧾 Git History
+
 - `.loadstar/` 커밋 이력 조회
 - 커밋 선택 시 변경 파일 목록 표시 (Added / Modified / Deleted)
 
 ### 📜 Log Viewer
+
 - `loadstar log` 검색 (KIND / Address 필터, 시간순 정렬)
 
 ### 💻 CLI Console
+
 - loadstar CLI 명령을 웹에서 직접 실행
 - 명령 이력 탐색, 색상 구분 출력
 
 ### 🔍 Search
+
 - Command Palette (`Ctrl+K`) 기반 통합 검색
 
 ---
