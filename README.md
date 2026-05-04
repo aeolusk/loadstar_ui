@@ -1,22 +1,24 @@
+> 🌐 **English** | **[한국어](README.ko.md)**
+
 # LOADSTAR Explorer UI
 
-LOADSTAR 방법론 기반 프로젝트 구조를 시각적으로 탐색하고 관리하는 웹 애플리케이션입니다.
+A web application for visually exploring and managing project structures based on the LOADSTAR methodology.
 
 ![LOADSTAR Explorer UI — Map View & WayPoint Editor](docs/waypoint_editor.png)
 
-> 📌 LOADSTAR가 처음이라면 먼저 [openLoadstar 전체 안내](https://github.com/openLoadstar/openLoadstar) 를 참고하세요.
+> 📌 New to LOADSTAR? Start with the [openLoadstar overview](https://github.com/openLoadstar/openLoadstar).
 
 ---
 
-## 🧭 개요
+## 🧭 Overview
 
-LOADSTAR Explorer는 `.loadstar/` 메타데이터(Map·WayPoint·Decision·로그)를 Eclipse 스타일의 웹 UI로 제공합니다. 프로젝트 구조를 흐름도로 시각화하고, WayPoint 편집·TODO 관리·Git 이력 조회·CLI 실행을 한 화면에서 수행할 수 있습니다.
+LOADSTAR Explorer provides an Eclipse-style web UI for `.loadstar/` metadata (Map · WayPoint · Decision · logs). Visualize project structure as a flowchart, and handle WayPoint editing, TODO management, Git history, and CLI execution — all from a single screen.
 
-CLI만으로도 모든 기능을 쓸 수 있지만, **WayPoint가 다수**(20개 이상)이거나 **여러 사람이 협업**하는 경우 UI가 거의 필수에 가깝습니다.
+The CLI alone covers every feature, but for projects with **more than ~20 WayPoints** or **multiple collaborators**, the UI is effectively required.
 
 ---
 
-## 🧱 기술 스택
+## 🧱 Tech Stack
 
 | Layer | Stack |
 |:---|:---|
@@ -24,132 +26,132 @@ CLI만으로도 모든 기능을 쓸 수 있지만, **WayPoint가 다수**(20개
 | Frontend | React 19, TypeScript, Vite |
 | Visualization | React Flow (`@xyflow/react`) |
 | Layout | `react-resizable-panels` |
-| CLI 연동 | [openLoadstar/cli](https://github.com/openLoadstar/cli) (Go 바이너리) |
+| CLI integration | [openLoadstar/cli](https://github.com/openLoadstar/cli) (Go binary) |
 | Spec | [openLoadstar/spec](https://github.com/openLoadstar/spec) |
 
 ---
 
-## ✨ 주요 기능
+## ✨ Key Features
 
 ### 📊 Dashboard
 
 ![Dashboard](docs/dashboard.png)
 
-- WayPoint 상황 한눈에 보기 — Map / WayPoints / 작업완료 카운트
-- Map별 진행률 바 시각화 (전체·backend·frontend·test·maintenance 탭)
-- AI 참고사항 (`LOADSTAR_INIT.md`) 표시·편집 — AI 세션 진입 컨텍스트 관리
-- 공지사항 영역 — 프로젝트 레벨 메모
+- WayPoint status at a glance — Map / WayPoints / completed item counts
+- Per-Map progress bar visualization (All · backend · frontend · test · maintenance tabs)
+- AI notes (`LOADSTAR_INIT.md`) display & edit — manage AI session entry context
+- Announcement area — project-level memos
 
 ### 🗺️ Map View
 
-- React Flow 기반 흐름도로 Map / WayPoint 구조 시각화
-- WayPoint 추가 (앞 / 뒤 / 자식), 삭제, 선택 하이라이트
-- child / reference 배지 표시 및 펼침
+- React Flow-based flowchart for visualizing Map / WayPoint structure
+- Add WayPoints (before / after / as child), delete, selection highlight
+- child / reference badge display and expand
 
 ### 📝 WayPoint Editor
 
-- IDENTITY · CONNECTIONS · CODE_MAP · TECH_SPEC 섹션 편집
-- TECH_SPEC 체크박스 토글, 항목 추가 / 삭제
-- 변경 시 `loadstar log` 자동 기록
+- Edit IDENTITY · CONNECTIONS · CODE_MAP · TECH_SPEC sections
+- Toggle TECH_SPEC checkboxes, add / delete items
+- Automatically logs changes via `loadstar log`
 
 ### ✅ TODO
 
-- WayPoint STATUS 기반 TODO 목록 (ACTIVE / PENDING / BLOCKED)
-- Sync 버튼으로 CLI `todo sync` 실행
-- History 탭에서 TECH_SPEC 완료 이력 조회 (Map 필터)
+- TODO list based on WayPoint STATUS (ACTIVE / PENDING / BLOCKED)
+- Sync button runs CLI `todo sync`
+- History tab shows completed TECH_SPEC items (filterable by Map)
 
 ### ❓ Questions
 
 ![Questions](docs/questions.png)
 
-- WayPoint의 OPEN_QUESTIONS 통합 조회 (대기 / 추후검토 / 결정완료 탭)
-- 질문 작성·답변·결정 기록 — 결정 사항은 `.loadstar/DECISIONS/` 에 ADR 형태로 저장
-- 결정 완료된 질문은 처리 상태별로 분류 (처리완료 / 처리취소 / 처리대기중)
+- Aggregated OPEN_QUESTIONS view across WayPoints (Pending / Deferred / Resolved tabs)
+- Write questions, record answers and decisions — decisions saved as ADRs in `.loadstar/DECISIONS/`
+- Resolved questions categorized by outcome (Completed / Cancelled / Pending action)
 
 ### 🧾 Git History
 
-- `.loadstar/` 커밋 이력 조회
-- 커밋 선택 시 변경 파일 목록 표시 (Added / Modified / Deleted)
+- Browse `.loadstar/` commit history
+- Selecting a commit shows the list of changed files (Added / Modified / Deleted)
 
 ### 📜 Log Viewer
 
-- `loadstar log` 검색 (KIND / Address 필터, 시간순 정렬)
+- Search `loadstar log` output (KIND / Address filters, sorted chronologically)
 
 ### 💻 CLI Console
 
-- loadstar CLI 명령을 웹에서 직접 실행
-- 명령 이력 탐색, 색상 구분 출력
+- Run loadstar CLI commands directly from the browser
+- Command history navigation, color-coded output
 
 ### 🔍 Search
 
-- Command Palette (`Ctrl+K`) 기반 통합 검색
+- Unified search via Command Palette (`Ctrl+K`)
 
 ---
 
-## 🛠️ 사전 요구사항
+## 🛠️ Prerequisites
 
-- Java 17 이상
-- Node.js 18 이상
-- [openLoadstar/cli](https://github.com/openLoadstar/cli) 빌드된 바이너리
+- Java 17 or later
+- Node.js 18 or later
+- Built [openLoadstar/cli](https://github.com/openLoadstar/cli) binary
 
 ---
 
-## 🚀 빠른 시작
+## 🚀 Quick Start
 
 ```bash
-# 1. 프론트엔드 빌드
+# 1. Build the frontend
 cd frontend
 npm install
 npx vite build
 
-# 2. 백엔드 실행 (프론트엔드 dist/ 도 함께 서빙)
+# 2. Run the backend (also serves the frontend dist/)
 cd ../backend
 mvn spring-boot:run
 
-# 3. 브라우저에서 접속
+# 3. Open in a browser
 # http://localhost:8080
 ```
 
-> 백엔드가 프론트엔드 `dist/` 를 함께 서빙하므로 별도 dev 서버를 띄울 필요는 없습니다 (개발 시에는 `vite dev` 별도 사용 가능).
+> The backend serves the frontend `dist/` directory, so no separate dev server is needed (use `vite dev` separately during active frontend development).
 
 ---
 
-## 📂 프로젝트 구조
+## 📂 Project Structure
 
 ```
 loadstar_ui/
 ├── backend/                Spring Boot REST API
 │   └── src/main/java/com/loadstar/explorer/
-│       ├── controller/     REST 엔드포인트
-│       └── service/        비즈니스 로직 (Element·Todo·Git·Log·CLI)
+│       ├── controller/     REST endpoints
+│       └── service/        Business logic (Element · Todo · Git · Log · CLI)
 ├── frontend/               React SPA (Vite)
 │   └── src/
-│       ├── features/       기능별 컴포넌트 (map-view, waypoint-editor, ...)
-│       ├── components/     공통 컴포넌트 (AppShell, ElementTree, ...)
-│       └── api/            API 클라이언트
-├── .loadstar/              LOADSTAR 메타데이터
-│   ├── MAP/                Map 요소
-│   ├── WAYPOINT/           WayPoint 요소
-│   └── .clionly/           ⚠️ CLI 전용 (직접 편집 금지)
-└── docs/                   문서·스크린샷
+│       ├── features/       Feature components (map-view, waypoint-editor, ...)
+│       ├── components/     Shared components (AppShell, ElementTree, ...)
+│       └── api/            API client
+├── .loadstar/              LOADSTAR metadata
+│   ├── MAP/                Map elements
+│   ├── WAYPOINT/           WayPoint elements
+│   └── .clionly/           ⚠️ CLI-only (do not edit directly)
+└── docs/                   Documentation & screenshots
 ```
 
 ---
 
-## 🔗 관련 프로젝트
+## 🔗 Related Projects
 
-- 🌐 **[openLoadstar](https://github.com/openLoadstar/openLoadstar)** — 전체 생태계 안내
-- 📖 **[spec](https://github.com/openLoadstar/spec)** — LOADSTAR 방법론 명세
-- 🛠️ **[cli](https://github.com/openLoadstar/cli)** — Go 기반 CLI 도구
-- 🔌 **[mcp](https://github.com/openLoadstar/mcp)** — Python MCP 서버 (외부 AI 클라이언트 연동)
+- 🌐 **[openLoadstar](https://github.com/openLoadstar/openLoadstar)** — Full ecosystem overview
+- 📖 **[spec](https://github.com/openLoadstar/spec)** — LOADSTAR methodology specification
+- 🛠️ **[cli](https://github.com/openLoadstar/cli)** — Go-based CLI tool
+- 🔌 **[mcp](https://github.com/openLoadstar/mcp)** — Python MCP server (for external AI clients: Claude Desktop, Cursor, etc.)
 
 ---
 
-## 📮 기여 / 보안
+## 📮 Contributing / Security
 
-- 🤝 **기여 가이드**: [openLoadstar/CONTRIBUTING.ko.md](https://github.com/openLoadstar/openLoadstar/blob/main/CONTRIBUTING.ko.md)
-- 🔒 **보안 신고**: [openLoadstar/SECURITY.ko.md](https://github.com/openLoadstar/openLoadstar/blob/main/SECURITY.ko.md) — GitHub Security Advisories를 우선 사용해 주세요.
-- 💬 **질문·아이디어**: [GitHub Discussions](https://github.com/openLoadstar/openLoadstar/discussions)
+- 🤝 **Contributing**: [openLoadstar/CONTRIBUTING.md](https://github.com/openLoadstar/openLoadstar/blob/main/CONTRIBUTING.md)
+- 🔒 **Security**: [openLoadstar/SECURITY.md](https://github.com/openLoadstar/openLoadstar/blob/main/SECURITY.md) — Please use GitHub Security Advisories.
+- 💬 **Questions & Ideas**: [GitHub Discussions](https://github.com/openLoadstar/openLoadstar/discussions)
 
 ---
 
