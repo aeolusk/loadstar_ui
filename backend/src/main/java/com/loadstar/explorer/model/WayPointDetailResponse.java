@@ -39,6 +39,7 @@ public class WayPointDetailResponse {
     public static class TechSpecItem {
         private String text;
         private boolean done;
+        private boolean recurring;
     }
 
     @Data

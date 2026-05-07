@@ -46,7 +46,7 @@ export interface WayPointDetail {
   codeMapScopes: string[];
   todoAddress: string | null;
   todoSummary: string | null;
-  techSpec: { text: string; done: boolean }[];
+  techSpec: { text: string; done: boolean; recurring: boolean }[];
   issues: string[];
   openQuestions: { id: string; text: string; resolved: boolean }[];
   comment: string | null;
@@ -501,5 +501,49 @@ export async function removeChild(root: string, parentAddr: string, childAddr: s
   const res = await apiClient.delete<{ success: boolean; error?: string }>('/elements/waypoint/children', {
     params: { root, parentAddr, childAddr },
   });
+  return res.data;
+}
+
+// --- Schedule API ---
+
+export interface ScheduleViewData {
+  startDate: string;
+  durationDays: number;
+}
+
+export interface ScheduleItemResponse {
+  address: string;
+  summary: string;
+  start: string;
+  end: string;
+  exists: boolean;
+  completed: boolean;
+  recurringOnly: boolean;
+  mapOrder: number;
+  status: string; // "ACTIVE" | "DONE" | "RECURRING" | "MISSING"
+}
+
+export interface ScheduleResponse {
+  view: ScheduleViewData;
+  items: ScheduleItemResponse[];
+}
+
+export interface ScheduleData {
+  view: ScheduleViewData;
+  items: Record<string, { start: string; end: string; status: string }>;
+}
+
+export async function fetchSchedule(root: string): Promise<ScheduleResponse> {
+  const res = await apiClient.get<ScheduleResponse>('/schedule', { params: { root } });
+  return res.data;
+}
+
+export async function saveSchedule(root: string, data: ScheduleData): Promise<ScheduleResponse> {
+  const res = await apiClient.put<ScheduleResponse>('/schedule', data, { params: { root } });
+  return res.data;
+}
+
+export async function refreshScheduleStatus(root: string): Promise<ScheduleResponse> {
+  const res = await apiClient.post<ScheduleResponse>('/schedule/refresh', null, { params: { root } });
   return res.data;
 }

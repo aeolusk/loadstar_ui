@@ -66,10 +66,13 @@ public class ElementWriter {
         if (wp.getTechSpec() != null && !wp.getTechSpec().isEmpty()) {
             if (wp.getTodoAddress() != null) lines.add("- ADDRESS: " + wp.getTodoAddress());
             if (wp.getTodoSummary() != null) lines.add("- SUMMARY: " + wp.getTodoSummary());
-            lines.add("- TECH_SPEC:");
             for (WayPointDetailResponse.TechSpecItem item : wp.getTechSpec()) {
-                String check = item.isDone() ? "[x]" : "[ ]";
-                lines.add("  - " + check + " " + item.getText());
+                if (item.isRecurring()) {
+                    lines.add("- (R) " + item.getText());
+                } else {
+                    String check = item.isDone() ? "[x]" : "[ ]";
+                    lines.add("- " + check + " " + item.getText());
+                }
             }
         } else {
             lines.add("(없음)");

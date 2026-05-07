@@ -14,6 +14,7 @@
 - W://root/frontend/log_view
 - W://root/frontend/cli_console
 - W://root/frontend/search
+- W://root/frontend/schedule_view
 
 ### COMMENT
 (없음)

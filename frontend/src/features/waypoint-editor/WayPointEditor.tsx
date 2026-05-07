@@ -83,7 +83,7 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
   const [editTodoSummaryText, setEditTodoSummaryText] = useState('');
 
   // TECH_SPEC editing
-  const [techSpecItems, setTechSpecItems] = useState<{ text: string; done: boolean }[]>([]);
+  const [techSpecItems, setTechSpecItems] = useState<{ text: string; done: boolean; recurring?: boolean }[]>([]);
   const [selectedTechSpec, setSelectedTechSpec] = useState<Set<number>>(new Set());
   const [editingTechSpec, setEditingTechSpec] = useState<number | null>(null);
   const [editTechSpecText, setEditTechSpecText] = useState('');
@@ -352,8 +352,9 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
   if (error || !data) return <div style={{ color: 'var(--status-error)', padding: 12 }}>Error: {error}</div>;
 
   const color = getStatusColor(data.status);
-  const done = techSpecItems.filter(t => t.done).length;
-  const total = techSpecItems.length;
+  const checkableItems = techSpecItems.filter(t => !t.recurring);
+  const done = checkableItems.filter(t => t.done).length;
+  const total = checkableItems.length;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
   // --- Identity edit handlers ---
@@ -407,10 +408,12 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
     });
   };
   const doneSelectedTechSpec = () => {
-    const updated = techSpecItems.filter((_, i) => !selectedTechSpec.has(i));
+    const updated = techSpecItems.map((item, i) =>
+      selectedTechSpec.has(i) && !item.recurring ? { ...item, done: true } : item
+    );
     setTechSpecItems(updated);
     setSelectedTechSpec(new Set());
-    saveToServer({ techSpec: updated }); // skipHistory=false → history에 기록
+    saveToServer({ techSpec: updated });
   };
   const deleteSelectedTechSpec = () => {
     const updated = techSpecItems.filter((_, i) => !selectedTechSpec.has(i));
@@ -432,7 +435,16 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
   };
   const addTechSpec = () => {
     if (newTechSpec.trim()) {
-      const updated = [...techSpecItems, { text: newTechSpec.trim(), done: false }];
+      const updated = [...techSpecItems, { text: newTechSpec.trim(), done: false, recurring: false }];
+      setTechSpecItems(updated);
+      setNewTechSpec('');
+      saveToServer({ techSpec: updated });
+    }
+  };
+
+  const addRecurringTechSpec = () => {
+    if (newTechSpec.trim()) {
+      const updated = [...techSpecItems, { text: newTechSpec.trim(), done: false, recurring: true }];
       setTechSpecItems(updated);
       setNewTechSpec('');
       saveToServer({ techSpec: updated });
@@ -916,7 +928,7 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
       {/* ===== TODO / TECH_SPEC ===== */}
       <div style={s.section}>
         <div style={s.sectionHeader}>
-          <span style={s.sectionTitle}>TODO / TECH_SPEC {total > 0 && `(${done}/${total})`}</span>
+          <span style={s.sectionTitle}>TODO {total > 0 && `(${done}/${total})`}</span>
           <div style={s.headerBtns}>
             {!isReadOnly && selectedTechSpec.size > 0 && (
               <>
@@ -964,7 +976,11 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
                   if (selectedTechSpec.size === total) {
                     setSelectedTechSpec(new Set());
                   } else {
-                    setSelectedTechSpec(new Set(techSpecItems.map((_, i) => i)));
+                    const nonRecurringIndices = techSpecItems.reduce<number[]>((acc, item, i) => {
+                      if (!item.recurring) acc.push(i);
+                      return acc;
+                    }, []);
+                    setSelectedTechSpec(new Set(nonRecurringIndices));
                   }
                 }}
               />
@@ -1010,7 +1026,7 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
           </div>
         )}
 
-        {/* TECH_SPEC items */}
+        {/* TODO items */}
         {techSpecItems.map((item, i) => (
           <div key={i} style={s.checkRow}>
             <input
@@ -1019,13 +1035,23 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
               onChange={() => toggleSelectTechSpec(i)}
               style={{ marginTop: 2 }}
             />
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              width: 16, height: 16, marginTop: 2, flexShrink: 0,
-              color: item.done ? '#5a8a5e' : 'var(--text-muted)', fontSize: 13,
-            }}>
-              {item.done ? <Check size={13} /> : <Circle size={13} />}
-            </span>
+            {item.recurring ? (
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 10, fontWeight: 700, color: '#7c6f3a',
+                background: '#f0e8c0', border: '1px solid #c8b84a',
+                borderRadius: 3, padding: '1px 5px', width: 16, height: 16,
+                flexShrink: 0, marginTop: 2, letterSpacing: 0.3,
+              }}>R</span>
+            ) : (
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                width: 16, height: 16, marginTop: 2, flexShrink: 0,
+                color: item.done ? '#5a8a5e' : 'var(--text-muted)', fontSize: 13,
+              }}>
+                {item.done ? <Check size={13} /> : <Circle size={13} />}
+              </span>
+            )}
             {editingTechSpec === i ? (
               <div style={{ display: 'flex', gap: 4, flex: 1 }}>
                 <input style={{ ...s.inputSm, flex: 1 }} value={editTechSpecText} onChange={e => setEditTechSpecText(e.target.value)}
@@ -1042,9 +1068,9 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
             )}
           </div>
         ))}
-        {total === 0 && <div style={s.empty}>항목 없음</div>}
+        {techSpecItems.length === 0 && <div style={s.empty}>항목 없음</div>}
 
-        {/* Add new TECH_SPEC */}
+        {/* Add new TODO item */}
         {!isReadOnly && <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
           <input
             style={{ ...s.inputSm, flex: 1 }}
@@ -1054,6 +1080,12 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
             onKeyDown={e => { if (e.key === 'Enter') addTechSpec(); }}
           />
           <button style={s.btnPrimary} onClick={addTechSpec} disabled={!newTechSpec.trim()}>+ Add</button>
+          <button
+            style={{ ...s.btn, color: '#7c6f3a', borderColor: '#c8b84a' }}
+            onClick={addRecurringTechSpec}
+            disabled={!newTechSpec.trim()}
+            title="반복 항목으로 추가"
+          >+ (R)</button>
         </div>}
       </div>
 

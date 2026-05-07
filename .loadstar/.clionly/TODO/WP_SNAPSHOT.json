@@ -24,6 +24,11 @@
     "size": 499,
     "status": "S_STB"
   },
+  "W://root/backend/schedule_service": {
+    "modTime": "2026-05-07T17:48:08+09:00",
+    "size": 2168,
+    "status": "S_STB"
+  },
   "W://root/backend/todo_service": {
     "modTime": "2026-04-08T15:36:20+09:00",
     "size": 373,
@@ -62,6 +67,11 @@
   "W://root/frontend/map_view": {
     "modTime": "2026-05-01T18:30:06+09:00",
     "size": 2115,
+    "status": "S_STB"
+  },
+  "W://root/frontend/schedule_view": {
+    "modTime": "2026-05-07T17:48:57+09:00",
+    "size": 2774,
     "status": "S_STB"
   },
   "W://root/frontend/search": {

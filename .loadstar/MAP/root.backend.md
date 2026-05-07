@@ -12,6 +12,7 @@
 - W://root/backend/git_service
 - W://root/backend/log_service
 - W://root/backend/cli_service
+- W://root/backend/schedule_service
 
 ### COMMENT
 (없음)

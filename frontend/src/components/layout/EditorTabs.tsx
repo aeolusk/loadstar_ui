@@ -1,7 +1,7 @@
 import type { Tab } from '../../App';
 import {
   Folder, Diamond, SquaresFour, CheckSquare, ClockCounterClockwise,
-  GitBranch, Scroll, Terminal, MagnifyingGlass, X, Star, Question,
+  GitBranch, Scroll, Terminal, MagnifyingGlass, X, Star, Question, CalendarBlank,
 } from '@phosphor-icons/react';
 import DashboardView from '../../features/dashboard/DashboardView';
 import MapView from '../../features/map-view/MapView';
@@ -12,6 +12,7 @@ import LogView from '../../features/log-view/LogView';
 import CliConsole from '../../features/cli-console/CliConsole';
 import SearchPanel from '../../features/search/SearchPanel';
 import QuestionList from '../../features/questions/QuestionList';
+import ScheduleView from '../../features/schedule/ScheduleView';
 
 interface EditorTabsProps {
   projectRoot: string;
@@ -36,6 +37,7 @@ const tabTypeIcon = (type: Tab['type']): React.ReactNode => {
     case 'cli': return <Terminal size={TAB_ICON} />;
     case 'search': return <MagnifyingGlass size={TAB_ICON} />;
     case 'questions': return <Question size={TAB_ICON} />;
+    case 'schedule': return <CalendarBlank size={TAB_ICON} />;
   }
 };
 
@@ -51,6 +53,7 @@ const TabContent = ({ tab, projectRoot, onOpenTab, onStructureChange }: { tab: T
     case 'cli': return <CliConsole projectRoot={projectRoot} />;
     case 'search': return <SearchPanel projectRoot={projectRoot} onOpenTab={onOpenTab} />;
     case 'questions': return <QuestionList projectRoot={projectRoot} onOpenTab={onOpenTab} />;
+    case 'schedule': return <ScheduleView projectRoot={projectRoot} />;
     default: return <div>Unknown tab type</div>;
   }
 };

@@ -136,7 +136,6 @@ public class ElementParser {
         wp.setOpenQuestions(new ArrayList<>());
 
         String currentSection = "";
-        boolean inTechSpec = false;
         boolean inIssue = false;
         boolean inOpenQuestions = false;
         StringBuilder commentBuilder = new StringBuilder();
@@ -159,7 +158,6 @@ public class ElementParser {
 
             if (trimmed.startsWith("### ")) {
                 currentSection = trimmed;
-                inTechSpec = false;
                 inIssue = false;
                 inOpenQuestions = false;
                 inComment = currentSection.contains("COMMENT");
@@ -228,21 +226,27 @@ public class ElementParser {
                 wp.setTodoSummary(trimmed.substring("- SUMMARY:".length()).trim());
                 continue;
             }
-            if (trimmed.startsWith("- TECH_SPEC:")) {
-                inTechSpec = true;
+            // Skip legacy `- TECH_SPEC:` wrapper line (no longer required)
+            if (trimmed.equals("- TECH_SPEC:")) {
                 continue;
             }
 
-            // TECH_SPEC items
-            if (inTechSpec && (trimmed.startsWith("- [x]") || trimmed.startsWith("- [ ]"))) {
-                WayPointDetailResponse.TechSpecItem item = new WayPointDetailResponse.TechSpecItem();
-                item.setDone(trimmed.startsWith("- [x]"));
-                item.setText(trimmed.substring(5).trim());
-                wp.getTechSpec().add(item);
-                continue;
-            }
-            if (inTechSpec && !trimmed.startsWith("-") && !trimmed.isEmpty()) {
-                inTechSpec = false;
+            // TODO checkbox items: parse [x]/[ ]/(R) under ### TODO regardless of TECH_SPEC wrapper
+            if (currentSection.contains("TODO")) {
+                if (trimmed.startsWith("- [x]") || trimmed.startsWith("- [ ]")) {
+                    WayPointDetailResponse.TechSpecItem item = new WayPointDetailResponse.TechSpecItem();
+                    item.setDone(trimmed.startsWith("- [x]"));
+                    item.setText(trimmed.substring(5).trim());
+                    wp.getTechSpec().add(item);
+                    continue;
+                }
+                if (trimmed.startsWith("- (R)")) {
+                    WayPointDetailResponse.TechSpecItem item = new WayPointDetailResponse.TechSpecItem();
+                    item.setRecurring(true);
+                    item.setText(trimmed.substring(5).trim());
+                    wp.getTechSpec().add(item);
+                    continue;
+                }
             }
 
             // ISSUE section
