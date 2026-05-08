@@ -14,7 +14,7 @@ export default apiClient;
 
 export interface MapViewItem {
   address: string;
-  type: 'MAP' | 'WAYPOINT';
+  type: 'MAP' | 'WAYPOINT' | 'DWP';
   status: string;
   summary: string;
   children: string[];
@@ -50,6 +50,7 @@ export interface WayPointDetail {
   issues: string[];
   openQuestions: { id: string; text: string; resolved: boolean }[];
   comment: string | null;
+  tables: { name: string; items: string[] }[];
 }
 
 // --- File Browser ---
@@ -107,6 +108,20 @@ export async function fetchWayPoint(root: string, address: string): Promise<WayP
 
 export async function updateWayPoint(root: string, data: WayPointDetail, skipHistory = false): Promise<WayPointDetail> {
   const res = await apiClient.put<WayPointDetail>('/elements/waypoint', data, {
+    params: { root, skipHistory },
+  });
+  return res.data;
+}
+
+export async function fetchDwp(root: string, address: string): Promise<WayPointDetail> {
+  const res = await apiClient.get<WayPointDetail>('/elements/dwp', {
+    params: { root, address },
+  });
+  return res.data;
+}
+
+export async function updateDwp(root: string, data: WayPointDetail, skipHistory = false): Promise<WayPointDetail> {
+  const res = await apiClient.put<WayPointDetail>('/elements/dwp', data, {
     params: { root, skipHistory },
   });
   return res.data;
@@ -258,6 +273,13 @@ export async function executeCliCommand(root: string, args: string[]): Promise<C
 
 // --- Dashboard API ---
 
+export interface DwpItem {
+  address: string;
+  summary: string;
+  created: string | null;
+  updated: string | null;
+}
+
 export interface DashboardSummary {
   totalMaps: number;
   totalWaypoints: number;
@@ -265,6 +287,7 @@ export interface DashboardSummary {
   mapGroups: MapGroupSummary[];
   blockedItems: BlockedItem[];
   openQuestionCount: number;
+  dwpItems: DwpItem[];
 }
 
 export interface MapGroupSummary {
@@ -438,7 +461,7 @@ export async function updateDecisionContent(path: string, decision: string, note
 
 export interface SearchResultItem {
   address: string;
-  type: 'MAP' | 'WAYPOINT';
+  type: 'MAP' | 'WAYPOINT' | 'DWP';
   status: string;
   summary: string;
   snippet: string;

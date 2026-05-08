@@ -121,6 +121,103 @@ public class ElementWriter {
         Files.write(file, lines, StandardCharsets.UTF_8);
     }
 
+    public void writeDwp(Path file, WayPointDetailResponse wp) throws IOException {
+        List<String> lines = new ArrayList<>();
+
+        lines.add("<DWP>");
+        lines.add("## [ADDRESS] " + wp.getAddress());
+        lines.add("## [STATUS] " + wp.getStatus());
+        lines.add("");
+
+        // IDENTITY
+        lines.add("### IDENTITY");
+        lines.add("- SUMMARY: " + nvl(wp.getSummary()));
+        StringBuilder meta = new StringBuilder("[");
+        if (wp.getVersion() != null) meta.append("Ver: ").append(wp.getVersion());
+        if (wp.getCreated() != null) {
+            if (meta.length() > 1) meta.append(", ");
+            meta.append("Created: ").append(wp.getCreated());
+        }
+        if (wp.getPriority() != null) {
+            if (meta.length() > 1) meta.append(", ");
+            meta.append("Priority: ").append(wp.getPriority());
+        }
+        meta.append("]");
+        lines.add("- METADATA: " + meta);
+        if (wp.getSyncedAt() != null && !wp.getSyncedAt().isEmpty()) {
+            lines.add("- SYNCED_AT: " + wp.getSyncedAt());
+        }
+        lines.add("");
+
+        // CONNECTIONS (no CHILDREN for DWP)
+        lines.add("### CONNECTIONS");
+        lines.add("- PARENT: " + nvl(wp.getParent()));
+        lines.add("- REFERENCE: " + formatList(wp.getReferences()));
+        lines.add("");
+
+        // TABLES
+        if (wp.getTables() != null && !wp.getTables().isEmpty()) {
+            lines.add("### TABLES");
+            for (WayPointDetailResponse.TableEntry table : wp.getTables()) {
+                lines.add("- " + table.getName() + ":");
+                if (table.getItems() != null) {
+                    for (String item : table.getItems()) {
+                        lines.add("  - " + item);
+                    }
+                }
+            }
+            lines.add("");
+        }
+
+        // CODE_MAP
+        if (wp.getCodeMapScopes() != null && !wp.getCodeMapScopes().isEmpty()) {
+            lines.add("### CODE_MAP");
+            lines.add("- scope:");
+            for (String scope : wp.getCodeMapScopes()) {
+                lines.add("  - " + scope);
+            }
+            lines.add("");
+        }
+
+        // ISSUE
+        lines.add("### ISSUE");
+        boolean hasIssueContent = false;
+        if (wp.getOpenQuestions() != null && !wp.getOpenQuestions().isEmpty()) {
+            lines.add("- OPEN_QUESTIONS:");
+            for (WayPointDetailResponse.OpenQuestion oq : wp.getOpenQuestions()) {
+                String state = oq.getState() != null ? oq.getState()
+                        : (oq.isResolved() ? "RESOLVED" : "OPEN");
+                String tag = oq.getId();
+                switch (state) {
+                    case "DEFERRED" -> tag += " DEFERRED";
+                    case "RESOLVED" -> tag += " RESOLVED" + (oq.getResolvedRef() != null ? " " + oq.getResolvedRef() : "");
+                    case "DONE"     -> tag += " DONE"     + (oq.getResolvedRef() != null ? " " + oq.getResolvedRef() : "");
+                }
+                lines.add("  - [" + tag + "] " + (oq.getText() != null ? oq.getText() : ""));
+            }
+            hasIssueContent = true;
+        }
+        if (wp.getIssues() != null && !wp.getIssues().isEmpty()) {
+            for (String issue : wp.getIssues()) {
+                lines.add("- " + issue);
+            }
+            hasIssueContent = true;
+        }
+        if (!hasIssueContent) lines.add("(없음)");
+        lines.add("");
+
+        // COMMENT
+        lines.add("### COMMENT");
+        if (wp.getComment() != null && !wp.getComment().isEmpty()) {
+            lines.add("- " + wp.getComment());
+        } else {
+            lines.add("(없음)");
+        }
+        lines.add("</DWP>");
+
+        Files.write(file, lines, StandardCharsets.UTF_8);
+    }
+
     private String nvl(String val) {
         return val == null ? "" : val;
     }

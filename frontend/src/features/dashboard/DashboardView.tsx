@@ -1,9 +1,9 @@
 import { useEffect, useState, useRef, useCallback, type CSSProperties, type MouseEvent as RMouseEvent } from 'react';
-import { X as XIcon } from '@phosphor-icons/react';
+import { X as XIcon, Diamond } from '@phosphor-icons/react';
 import {
   fetchDashboardSummary, fetchNotices, createNotice, updateNotice, deleteNotice,
   fetchInitFile, updateInitFile,
-  type DashboardSummary, type NoticeItem, type BlockedItem,
+  type DashboardSummary, type NoticeItem, type BlockedItem, type DwpItem,
 } from '../../api/client';
 import {
   getCategoryLabel, getPriorityLabel, getStatusLabel,
@@ -125,6 +125,10 @@ export default function DashboardView({ projectRoot }: Props) {
   const currentBlocked = activeMapTab === 'all'
     ? summary.blockedItems
     : summary.blockedItems.filter(b => b.address.includes(activeMapTab.replace('M://root/', '')));
+  const currentDwpItems = activeMapTab === 'all'
+    ? (summary.dwpItems ?? [])
+    : (summary.dwpItems ?? []).filter(d =>
+        d.address.startsWith('D://' + activeMapTab.replace('M://', '') + '/'));
   const totalBar = STATUS_KEYS.reduce((sum, k) => sum + (cur.statusCounts[k] || 0), 0);
 
   // 공지 CRUD
@@ -167,6 +171,13 @@ export default function DashboardView({ projectRoot }: Props) {
         <div style={st.statsRow}>
           <div style={st.statChip}><span style={st.statLabel}>Maps</span><span style={st.statValue}>{cur.totalMaps}</span></div>
           <div style={st.statChip}><span style={st.statLabel}>WayPoints</span><span style={st.statValue}>{cur.totalWaypoints}</span></div>
+          {currentDwpItems.length > 0 && (
+            <div style={st.statChip}>
+              <Diamond size={10} weight="fill" color="#3a7ca5" />
+              <span style={st.statLabel}>DWP</span>
+              <span style={{ ...st.statValue, color: '#3a7ca5' }}>{currentDwpItems.length}</span>
+            </div>
+          )}
           {STATUS_KEYS.map(k => (cur.statusCounts[k] || 0) > 0 && (
             <div key={k} style={st.statChip}>
               <span style={{ ...st.legendDot, background: STATUS_COLORS[k] }} />
@@ -227,6 +238,31 @@ export default function DashboardView({ projectRoot }: Props) {
           <pre style={st.initContent}>{initContent || '(내용 없음)'}</pre>
         )}
       </div>
+
+      {/* ② Data WayPoints */}
+      {currentDwpItems.length > 0 && (
+        <div style={st.section}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            <div style={st.sectionTitle}>Data WayPoints</div>
+            <span style={st.dwpCount}>{currentDwpItems.length}</span>
+          </div>
+          <div style={st.dwpGrid}>
+            {currentDwpItems.map((item: DwpItem) => (
+              <div key={item.address} style={st.dwpCard}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                  <Diamond size={12} weight="fill" color="#3a7ca5" />
+                  <span style={st.dwpAddr}>{item.address}</span>
+                </div>
+                {item.summary && <div style={st.dwpSummary}>{item.summary}</div>}
+                <div style={st.dwpMeta}>
+                  {item.created && <span style={st.dwpMetaBadge}>Created {item.created}</span>}
+                  {item.updated && <span style={st.dwpMetaBadge}>Updated {item.updated}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ③ 공지/메모/이슈/결정사항 — 카테고리별 세로 배치 */}
       {CATEGORY_SECTIONS.map(sec => {
@@ -389,5 +425,24 @@ const st: Record<string, CSSProperties> = {
     position: 'absolute', right: 0, bottom: 0, width: 16, height: 16, cursor: 'nwse-resize',
     background: 'linear-gradient(135deg, transparent 50%, var(--border-medium) 50%)',
     borderRadius: '0 0 var(--radius-lg) 0',
+  },
+
+  dwpCount: {
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+    minWidth: 20, height: 20, padding: '0 6px',
+    background: '#3a7ca520', color: '#3a7ca5', borderRadius: 10,
+    fontSize: 'var(--font-xs)', fontWeight: 700,
+  },
+  dwpGrid: { display: 'flex', flexDirection: 'column' as const, gap: 8 },
+  dwpCard: {
+    padding: '10px 14px', borderRadius: 'var(--radius-md)',
+    border: '1.5px dashed #5a8ab060', background: '#f6fafd',
+  },
+  dwpAddr: { fontFamily: 'monospace', fontSize: 'var(--font-xs)', color: '#3a7ca5', fontWeight: 600 },
+  dwpSummary: { fontSize: 'var(--font-xs)', color: 'var(--text-secondary)', marginBottom: 6, lineHeight: 1.5 },
+  dwpMeta: { display: 'flex', gap: 8, flexWrap: 'wrap' as const },
+  dwpMetaBadge: {
+    fontSize: 'var(--font-xs)', padding: '1px 8px', borderRadius: 8,
+    background: 'var(--bg-tertiary)', color: 'var(--text-muted)', fontWeight: 500,
   },
 };

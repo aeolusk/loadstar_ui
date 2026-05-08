@@ -13,6 +13,7 @@ public class DashboardSummary {
     private List<MapGroupSummary> mapGroups;
     private List<BlockedItem> blockedItems;
     private int openQuestionCount;
+    private List<DwpItem> dwpItems;
 
     @Data
     public static class MapGroupSummary {
@@ -26,5 +27,13 @@ public class DashboardSummary {
     public static class BlockedItem {
         private String address;
         private String summary;
+    }
+
+    @Data
+    public static class DwpItem {
+        private String address;
+        private String summary;
+        private String created;
+        private String updated;
     }
 }

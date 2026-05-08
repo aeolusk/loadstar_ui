@@ -38,6 +38,15 @@
 
 ---
 
+## Data WayPoint(dwp) 수정 규칙
+
+dwp 파일(`.loadstar/DATA_WAYPOINT/*.md`)을 수정할 때:
+- `METADATA`의 `Updated` 날짜를 오늘 날짜로 갱신한다.
+- `Created` 날짜는 변경하지 않는다 (최초 작성일 불변).
+- 예: `- METADATA: [Created: 2026-05-01, Updated: 2026-05-08]`
+
+---
+
 ## 주소 체계
 
 ```

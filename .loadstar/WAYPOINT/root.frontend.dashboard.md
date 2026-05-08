@@ -26,6 +26,7 @@
   - [x] 2026-04-10 카테고리 4개 세로 분리 배치 (공지/이슈/리스크/메모)
   - [x] 2026-04-10 LOADSTAR_INIT.md 생성 (프로젝트 상태 요약 + 공지/이슈 섹션)
   - [x] 2026-04-10 CLAUDE.md에 세션 시작 시 loadstar check 규칙 추가
+  - [x] 2026-05-08 대시보드에 DWP 섹션 추가 (DashboardSummary.dwpItems, DashboardService DATA_WAYPOINT 스캔, DashboardView DWP 카드 표시)
 
 ### ISSUE
 (없음)

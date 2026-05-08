@@ -6,6 +6,7 @@ import {
 import DashboardView from '../../features/dashboard/DashboardView';
 import MapView from '../../features/map-view/MapView';
 import WayPointEditor from '../../features/waypoint-editor/WayPointEditor';
+import DataWayPointEditor from '../../features/dwp-editor/DataWayPointEditor';
 import TodoView from '../../features/todo-view/TodoView';
 import GitView from '../../features/git-view/GitView';
 import LogView from '../../features/log-view/LogView';
@@ -29,6 +30,7 @@ const tabTypeIcon = (type: Tab['type']): React.ReactNode => {
   switch (type) {
     case 'map': return <Folder size={TAB_ICON} />;
     case 'waypoint': return <Diamond size={TAB_ICON} />;
+    case 'dwp': return <Diamond size={TAB_ICON} weight="fill" />;
     case 'dashboard': return <SquaresFour size={TAB_ICON} />;
     case 'todo': return <CheckSquare size={TAB_ICON} />;
     case 'history': return <ClockCounterClockwise size={TAB_ICON} />;
@@ -46,6 +48,7 @@ const TabContent = ({ tab, projectRoot, onOpenTab, onStructureChange }: { tab: T
     case 'dashboard': return <DashboardView projectRoot={projectRoot} />;
     case 'map': return <MapView projectRoot={projectRoot} address={tab.address || ''} onOpenTab={onOpenTab} onStructureChange={onStructureChange} />;
     case 'waypoint': return <WayPointEditor projectRoot={projectRoot} address={tab.address || ''} onOpenTab={onOpenTab} />;
+    case 'dwp': return <DataWayPointEditor projectRoot={projectRoot} address={tab.address || ''} onOpenTab={onOpenTab} />;
     case 'todo': return <TodoView projectRoot={projectRoot} />;
     case 'history': return <TodoView projectRoot={projectRoot} />;
     case 'git': return <GitView projectRoot={projectRoot} />;

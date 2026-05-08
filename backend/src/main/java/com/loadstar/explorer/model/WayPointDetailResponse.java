@@ -35,6 +35,15 @@ public class WayPointDetailResponse {
     // COMMENT
     private String comment;
 
+    // TABLES (DWP only)
+    private List<TableEntry> tables;
+
+    @Data
+    public static class TableEntry {
+        private String name;
+        private List<String> items;
+    }
+
     @Data
     public static class TechSpecItem {
         private String text;

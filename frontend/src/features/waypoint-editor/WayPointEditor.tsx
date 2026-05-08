@@ -345,6 +345,7 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
     if (!onOpenTab || !addr) return;
     let type: Tab['type'] = 'waypoint';
     if (addr.startsWith('M://')) type = 'map';
+    else if (addr.startsWith('D://')) type = 'dwp';
     onOpenTab({ id: addr, title: addr.split('/').pop() || addr, type, address: addr });
   };
 

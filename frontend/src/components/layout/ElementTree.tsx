@@ -14,6 +14,7 @@ const typeToTabType = (type: ElementType): Tab['type'] => {
   switch (type) {
     case 'MAP': return 'map';
     case 'WAYPOINT': return 'waypoint';
+    case 'DWP': return 'dwp';
   }
 };
 
@@ -21,6 +22,7 @@ const typeIcon = (type: ElementType): { icon: React.ReactNode; cls: string } => 
   switch (type) {
     case 'MAP': return { icon: <Folder size={13} />, cls: 'map' };
     case 'WAYPOINT': return { icon: <Diamond size={13} />, cls: 'waypoint' };
+    case 'DWP': return { icon: <Diamond size={13} weight="fill" />, cls: 'waypoint' };
   }
 };
 

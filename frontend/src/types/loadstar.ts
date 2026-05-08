@@ -1,6 +1,6 @@
 // LOADSTAR Element Types
 
-export type ElementType = 'MAP' | 'WAYPOINT';
+export type ElementType = 'MAP' | 'WAYPOINT' | 'DWP';
 
 export type StatusCode = 'S_IDL' | 'S_PRG' | 'S_STB' | 'S_ERR' | 'S_REV';
 

@@ -2,6 +2,7 @@ package com.loadstar.explorer.service;
 
 import com.loadstar.explorer.model.DashboardSummary;
 import com.loadstar.explorer.model.DashboardSummary.BlockedItem;
+import com.loadstar.explorer.model.DashboardSummary.DwpItem;
 import com.loadstar.explorer.model.DashboardSummary.MapGroupSummary;
 import com.loadstar.explorer.model.NoticeItem;
 import lombok.RequiredArgsConstructor;
@@ -83,6 +84,7 @@ public class DashboardService {
         summary.setStatusCounts(totalStatus);
         summary.setMapGroups(groups);
         summary.setBlockedItems(parseBlockedItems(projectRoot));
+        summary.setDwpItems(loadDwpItems(projectRoot));
 
         // OPEN + DEFERRED 질문 수
         try {
@@ -136,6 +138,51 @@ public class DashboardService {
             log.warn("Failed to parse blocked items: {}", e.getMessage());
         }
         return items;
+    }
+
+    // ── DWP items ──────────────────────────────────────
+
+    private static final Pattern CREATED_PATTERN = Pattern.compile("Created:\\s*(\\d{4}-\\d{2}-\\d{2})");
+    private static final Pattern UPDATED_PATTERN = Pattern.compile("Updated:\\s*(\\d{4}-\\d{2}-\\d{2})");
+
+    private List<DwpItem> loadDwpItems(String projectRoot) {
+        List<DwpItem> items = new ArrayList<>();
+        Path dwpDir = Paths.get(projectRoot, ".loadstar", "DATA_WAYPOINT");
+        if (!Files.exists(dwpDir)) return items;
+        try (Stream<Path> files = Files.list(dwpDir)) {
+            files.filter(f -> f.toString().endsWith(".md"))
+                 .sorted()
+                 .forEach(f -> {
+                     DwpItem item = parseDwpItem(f);
+                     if (item != null) items.add(item);
+                 });
+        } catch (IOException e) {
+            log.warn("Failed to load DWP items: {}", e.getMessage());
+        }
+        return items;
+    }
+
+    private DwpItem parseDwpItem(Path file) {
+        try {
+            DwpItem item = new DwpItem();
+            for (String line : Files.readAllLines(file)) {
+                String t = line.trim();
+                if (t.startsWith("## [ADDRESS]")) {
+                    item.setAddress(t.substring("## [ADDRESS]".length()).trim());
+                } else if (t.startsWith("- SUMMARY:")) {
+                    item.setSummary(t.substring("- SUMMARY:".length()).trim());
+                } else if (t.startsWith("- METADATA:")) {
+                    Matcher m1 = CREATED_PATTERN.matcher(t);
+                    if (m1.find()) item.setCreated(m1.group(1));
+                    Matcher m2 = UPDATED_PATTERN.matcher(t);
+                    if (m2.find()) item.setUpdated(m2.group(1));
+                }
+            }
+            return item.getAddress() != null ? item : null;
+        } catch (IOException e) {
+            log.warn("Failed to parse DWP file: {}", file, e);
+            return null;
+        }
     }
 
     // ── INIT file ──────────────────────────────────────

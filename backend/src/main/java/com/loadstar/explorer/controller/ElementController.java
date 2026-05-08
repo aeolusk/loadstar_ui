@@ -223,4 +223,25 @@ public class ElementController {
         }
     }
 
+    @GetMapping("/dwp")
+    public ResponseEntity<WayPointDetailResponse> getDwp(@RequestParam String root, @RequestParam String address) {
+        try {
+            return ResponseEntity.ok(elementService.getDwpDetail(root, address));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @PutMapping("/dwp")
+    public ResponseEntity<WayPointDetailResponse> updateDwp(
+            @RequestParam String root,
+            @RequestParam(defaultValue = "false") boolean skipHistory,
+            @RequestBody WayPointDetailResponse data) {
+        try {
+            return ResponseEntity.ok(elementService.updateDwp(root, data, skipHistory));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
 }

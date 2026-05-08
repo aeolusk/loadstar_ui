@@ -56,7 +56,7 @@ public class ElementParser {
 
             if (inWaypoints && trimmed.startsWith("- ")) {
                 String addr = trimmed.substring(2).trim();
-                if (!addr.isEmpty() && (addr.startsWith("M://") || addr.startsWith("W://"))) {
+                if (!addr.isEmpty() && (addr.startsWith("M://") || addr.startsWith("W://") || addr.startsWith("D://"))) {
                     waypoints.add(addr);
                 }
             }
@@ -134,12 +134,14 @@ public class ElementParser {
         wp.setTechSpec(new ArrayList<>());
         wp.setIssues(new ArrayList<>());
         wp.setOpenQuestions(new ArrayList<>());
+        wp.setTables(new ArrayList<>());
 
         String currentSection = "";
         boolean inIssue = false;
         boolean inOpenQuestions = false;
         StringBuilder commentBuilder = new StringBuilder();
         boolean inComment = false;
+        WayPointDetailResponse.TableEntry currentTable = null;
 
         for (String line : lines) {
             String trimmed = line.trim();
@@ -161,6 +163,7 @@ public class ElementParser {
                 inIssue = false;
                 inOpenQuestions = false;
                 inComment = currentSection.contains("COMMENT");
+                currentTable = null;
                 continue;
             }
 
@@ -203,6 +206,23 @@ public class ElementParser {
                 wp.setReferences(parseAddressList(trimmed.substring("- REFERENCE:".length()).trim()));
                 continue;
             }
+            // TABLES section (DWP)
+            if (currentSection.contains("TABLES") && trimmed.startsWith("- ") && !trimmed.equals("(없음)")) {
+                if (!line.startsWith("  ") && !line.startsWith("\t")) {
+                    // Table header: "- 테이블명:"
+                    String tableName = trimmed.substring(2).trim();
+                    if (tableName.endsWith(":")) tableName = tableName.substring(0, tableName.length() - 1).trim();
+                    currentTable = new WayPointDetailResponse.TableEntry();
+                    currentTable.setName(tableName);
+                    currentTable.setItems(new ArrayList<>());
+                    wp.getTables().add(currentTable);
+                } else if (currentTable != null) {
+                    // Table item: "  - 요소" or "  - 요소: 설명"
+                    currentTable.getItems().add(trimmed.substring(2).trim());
+                }
+                continue;
+            }
+
             // CODE_MAP scope
             if (currentSection.contains("CODE_MAP") && trimmed.startsWith("- ") && !trimmed.equals("(없음)")) {
                 String scope = trimmed.substring(2).trim();

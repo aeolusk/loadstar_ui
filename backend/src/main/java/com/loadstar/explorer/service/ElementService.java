@@ -37,6 +37,9 @@ public class ElementService {
         } else if (address.startsWith("W://")) {
             typeDir = "WAYPOINT";
             pathPart = address.substring(4);
+        } else if (address.startsWith("D://")) {
+            typeDir = "DATA_WAYPOINT";
+            pathPart = address.substring(4);
         } else {
             throw new IllegalArgumentException("Unknown address type: " + address);
         }
@@ -88,10 +91,18 @@ public class ElementService {
                         item.setChildren(wp.getChildren());
                         item.setReferences(wp.getReferences());
                     }
+                } else if (childAddr.startsWith("D://")) {
+                    Path dwpFile = addressToPath(projectRoot, childAddr);
+                    if (Files.exists(dwpFile)) {
+                        WayPointDetailResponse dwp = parser.parseWayPointDetail(dwpFile);
+                        item.setType("DWP");
+                        item.setStatus(dwp.getStatus());
+                        item.setSummary(dwp.getSummary());
+                    }
                 }
             } catch (Exception e) {
                 log.warn("Failed to parse child element: {}", childAddr, e);
-                item.setType(childAddr.startsWith("M://") ? "MAP" : "WAYPOINT");
+                item.setType(childAddr.startsWith("M://") ? "MAP" : childAddr.startsWith("D://") ? "DWP" : "WAYPOINT");
                 item.setStatus("S_ERR");
                 item.setSummary("Parse error: " + e.getMessage());
             }
@@ -161,6 +172,26 @@ public class ElementService {
         cli.logModified(projectRoot, address, logMsg);
 
         // Return fresh data
+        return parser.parseWayPointDetail(file);
+    }
+
+    public WayPointDetailResponse getDwpDetail(String projectRoot, String address) throws IOException {
+        Path file = addressToPath(projectRoot, address);
+        if (!Files.exists(file)) throw new IOException("DWP not found: " + file);
+        return parser.parseWayPointDetail(file);
+    }
+
+    public WayPointDetailResponse updateDwp(String projectRoot, WayPointDetailResponse data, boolean skipHistory) throws IOException {
+        Path file = addressToPath(projectRoot, data.getAddress());
+        if (!Files.exists(file)) throw new IOException("DWP not found: " + file);
+
+        WayPointDetailResponse existing = parser.parseWayPointDetail(file);
+        data.setParent(existing.getParent());
+        data.setReferences(existing.getReferences());
+        if (data.getCreated() == null) data.setCreated(existing.getCreated());
+
+        writer.writeDwp(file, data);
+        cli.logModified(projectRoot, data.getAddress(), buildChangeSummary(existing, data));
         return parser.parseWayPointDetail(file);
     }
 
@@ -428,6 +459,12 @@ public class ElementService {
                 }
             }
             node.setChildren(children);
+        } else if (address.startsWith("D://")) {
+            WayPointDetailResponse dwp = parser.parseWayPointDetail(file);
+            node.setType("DWP");
+            node.setStatus(dwp.getStatus());
+            node.setSummary(dwp.getSummary());
+            node.setChildren(List.of());
         }
 
         return node;

@@ -19,6 +19,7 @@ import { Group, Panel, Separator } from 'react-resizable-panels';
 import type { Tab } from '../../App';
 import { fetchMapView, addToMap, addChildToWayPoint, removeFromMap, removeChildFromWayPoint, createSubMap, deleteMap, type MapViewResponse, type MapViewItem } from '../../api/client';
 import WayPointEditor from '../waypoint-editor/WayPointEditor';
+import DataWayPointEditor from '../dwp-editor/DataWayPointEditor';
 
 
 interface MapViewProps {
@@ -29,7 +30,7 @@ interface MapViewProps {
 }
 
 interface DetailPanel {
-  type: 'waypoint';
+  type: 'waypoint' | 'dwp';
   address: string;
 }
 
@@ -42,19 +43,21 @@ function WayPointNode({ data }: { data: {
   selected?: boolean;
   childCount?: number;
   refCount?: number;
+  isDwp?: boolean;
   onNodeSelect: (type: 'waypoint', addr: string) => void;
 } }) {
   const color = getStatusColor(data.status);
   const isSelected = data.selected === true;
   const hasChildren = (data.childCount ?? 0) > 0;
   const hasRefs = (data.refCount ?? 0) > 0;
+  const isDwp = data.isDwp === true;
 
   return (
     <div
       onMouseDownCapture={(e) => { if (e.button !== 0) return; data.onNodeSelect('waypoint', data.address); }}
       style={{
         background: isSelected ? '#eef5fb' : '#ffffff',
-        border: isSelected ? '2px solid #3a7ca5' : `2px solid ${color}`,
+        border: isSelected ? '2px solid #3a7ca5' : isDwp ? '2px dashed #5a8ab0' : `2px solid ${color}`,
         borderRadius: 8,
         padding: '14px 18px', minWidth: 180,
         boxShadow: isSelected ? '0 0 0 3px rgba(58, 124, 165, 0.25), 0 2px 8px rgba(44, 36, 23, 0.08)' : '0 2px 8px rgba(44, 36, 23, 0.08)',
@@ -66,7 +69,7 @@ function WayPointNode({ data }: { data: {
       <Handle type="source" position={Position.Bottom} id="bottom" style={{ background: '#9b8e7e', width: 6, height: 6 }} />
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-        <Diamond size={14} color="#3a7ca5" />
+        <Diamond size={14} weight={isDwp ? 'fill' : 'regular'} color="#3a7ca5" />
         <span style={{ fontSize: 13, fontWeight: 600, color: '#2c2417' }}>{data.label}</span>
       </div>
 
@@ -217,9 +220,11 @@ function buildGraph(
   const X_GAP = 240;
   const Y_MAP_ROW = 20;
   const Y_WP_ROW = 140;
+  const Y_DWP_ROW = 300;
 
   const maps = items.filter(it => it.type === 'MAP');
   const waypoints = items.filter(it => it.type === 'WAYPOINT');
+  const dwps = items.filter(it => it.type === 'DWP');
   const itemMap = new Map(items.map(it => [it.address, it]));
   const addressXMap: Record<string, number> = {};
 
@@ -314,6 +319,27 @@ function buildGraph(
     }
   }
 
+  // Row 3: DWP items
+  dwps.forEach((item, i) => {
+    const id = item.address;
+    addressXMap[id] = i * X_GAP;
+    ns.push({
+      id, type: 'waypoint',
+      position: { x: i * X_GAP, y: Y_DWP_ROW },
+      data: {
+        label: id.split('/').pop() || id,
+        status: item.status,
+        summary: item.summary || '',
+        address: item.address,
+        selected: selectedNode === id,
+        isDwp: true,
+        onNodeSelect,
+      },
+      sourcePosition: Position.Right,
+      targetPosition: Position.Left,
+    });
+  });
+
   return { nodes: ns, edges: es };
 }
 
@@ -395,7 +421,8 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
 
   const handleNodeSelect = useCallback((type: 'waypoint' | 'map', addr: string) => {
     if (type === 'waypoint') {
-      setDetail({ type, address: addr });
+      const detailType: 'waypoint' | 'dwp' = addr.startsWith('D://') ? 'dwp' : 'waypoint';
+      setDetail({ type: detailType, address: addr });
     }
     const isMainItem = mapData?.items.some(it => it.address === addr);
     if (isMainItem) {
@@ -413,6 +440,14 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
       const data = node.data as { address?: string };
       const addr = data.address || node.id;
       onOpenTab({ id: addr, title: addr, type: 'map', address: addr });
+    } else if (node.type === 'waypoint') {
+      const data = node.data as { address?: string };
+      const addr = data.address || node.id;
+      if (addr.startsWith('D://')) {
+        onOpenTab({ id: addr, title: addr.split('/').pop() || addr, type: 'dwp', address: addr });
+      } else {
+        onOpenTab({ id: addr, title: addr.split('/').pop() || addr, type: 'waypoint', address: addr });
+      }
     }
   }, [onOpenTab]);
 
@@ -728,7 +763,7 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
                   background: 'var(--bg-secondary)', flexShrink: 0,
                 }}>
                   <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>
-                    {detail.type === 'waypoint' ? <Diamond size={12} style={{verticalAlign:'middle'}} /> : <Package size={12} style={{verticalAlign:'middle'}} />} {detail.address}
+                    {detail.type === 'dwp' ? <Diamond size={12} weight="fill" style={{verticalAlign:'middle'}} /> : detail.type === 'waypoint' ? <Diamond size={12} style={{verticalAlign:'middle'}} /> : <Package size={12} style={{verticalAlign:'middle'}} />} {detail.address}
                   </span>
                   <button
                     onClick={() => setDetail(null)}
@@ -736,7 +771,10 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
                   ><X size={14} /></button>
                 </div>
                 <div style={{ flex: 1, overflow: 'auto', padding: '12px 16px' }}>
-                  <WayPointEditor projectRoot={projectRoot} address={detail.address} onOpenTab={onOpenTab} />
+                  {detail.type === 'dwp'
+                    ? <DataWayPointEditor projectRoot={projectRoot} address={detail.address} onOpenTab={onOpenTab} />
+                    : <WayPointEditor projectRoot={projectRoot} address={detail.address} onOpenTab={onOpenTab} />
+                  }
                 </div>
               </div>
             ) : (
