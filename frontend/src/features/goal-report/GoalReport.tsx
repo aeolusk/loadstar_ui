@@ -797,16 +797,16 @@ const Node = ({
             );
           })}
 
-          {/* + WP 추가 버튼 (Map nodes in edit mode) */}
+          {/* 편집 모드: root map → Map 추가, 하위 map → WP 추가 */}
           {editMode && isMap && (
             <div style={{ marginLeft: (depth + 1) * 24, display: 'flex', gap: 6 }}>
-              <button style={s.addWpBtn} onClick={() => onAddWp(node.address)}>
-                + WP 추가
-              </button>
-              {/* + Map 추가: root-level map only */}
-              {isRootLevel && (
+              {isRootLevel ? (
                 <button style={s.addWpBtn} onClick={() => onAddMap(node.address)}>
                   + Map 추가
+                </button>
+              ) : (
+                <button style={s.addWpBtn} onClick={() => onAddWp(node.address)}>
+                  + WP 추가
                 </button>
               )}
             </div>
