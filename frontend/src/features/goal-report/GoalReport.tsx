@@ -162,21 +162,6 @@ const s = {
     marginTop: 4,
     display: 'block',
   } as React.CSSProperties,
-  moveBtn: {
-    background: 'none',
-    border: `1px solid ${COLOR_BORDER}`,
-    borderRadius: 3,
-    cursor: 'pointer',
-    fontSize: 11,
-    padding: '1px 5px',
-    lineHeight: 1.2,
-    color: COLOR_MUTED,
-    minWidth: 22,
-  } as React.CSSProperties,
-  moveBtnDisabled: {
-    opacity: 0.3,
-    cursor: 'default',
-  } as React.CSSProperties,
   addWpBtn: {
     background: 'none',
     border: `1px dashed ${COLOR_BORDER}`,
@@ -231,7 +216,6 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
   // Edit mode state
   const [editMode, setEditMode] = useState(false);
   const [editedData, setEditedData] = useState<Map<string, EditedField>>(new Map());
-  const [mapOrders, setMapOrders] = useState<Map<string, string[]>>(new Map());
   const [pendingWps, setPendingWps] = useState<PendingWp[]>([]);
   const [pendingMaps, setPendingMaps] = useState<PendingMap[]>([]);
   const [dirtyAddresses, setDirtyAddresses] = useState<Set<string>>(new Set());
@@ -308,7 +292,6 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
 
   const enterEditMode = () => {
     setEditedData(new Map());
-    setMapOrders(new Map());
     setPendingWps([]);
     setPendingMaps([]);
     setDirtyAddresses(new Set());
@@ -319,7 +302,6 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
   const cancelEdit = () => {
     setEditMode(false);
     setEditedData(new Map());
-    setMapOrders(new Map());
     setPendingWps([]);
     setPendingMaps([]);
     setDirtyAddresses(new Set());
@@ -334,15 +316,6 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
       return next;
     });
     setDirtyAddresses(prev => new Set([...prev, address]));
-  };
-
-  const handleMoveWp = (mapAddr: string, currentOrder: string[], idx: number, dir: -1 | 1) => {
-    const newOrder = [...currentOrder];
-    const swapIdx = idx + dir;
-    if (swapIdx < 0 || swapIdx >= newOrder.length) return;
-    [newOrder[idx], newOrder[swapIdx]] = [newOrder[swapIdx], newOrder[idx]];
-    setMapOrders(prev => new Map([...prev, [mapAddr, newOrder]]));
-    setDirtyAddresses(prev => new Set([...prev, mapAddr]));
   };
 
   const openAddWpModal = (mapAddr: string) => {
@@ -365,24 +338,12 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
       setAddWpError(`이미 존재하는 주소입니다: ${childAddr}`);
       return;
     }
-    const mapNode = nodeMap.get(addWpModal);
-    const currentOrder = mapOrders.get(addWpModal) ?? (mapNode?.children.map(c => c.address) ?? []);
     setPendingWps(prev => [...prev, { mapAddress: addWpModal, id, summary: addWpSummary.trim(), goal: addWpGoal.trim() }]);
-    setMapOrders(prev => new Map([...prev, [addWpModal, [...currentOrder, childAddr]]]));
-    setDirtyAddresses(prev => new Set([...prev, addWpModal]));
     setAddWpModal(null);
   };
 
-  const deletePendingWp = (childAddr: string, parentMapAddr: string) => {
+  const deletePendingWp = (childAddr: string) => {
     setPendingWps(prev => prev.filter(w => `W://${w.mapAddress.substring(4)}/${w.id}` !== childAddr));
-    setMapOrders(prev => {
-      const cur = prev.get(parentMapAddr);
-      if (!cur) return prev;
-      const next = new Map(prev);
-      const filtered = cur.filter(a => a !== childAddr);
-      next.set(parentMapAddr, filtered);
-      return next;
-    });
   };
 
   const openAddMapModal = (parentMapAddr: string) => {
@@ -404,23 +365,12 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
       setAddMapError(`이미 존재하는 주소입니다: ${newAddr}`);
       return;
     }
-    const mapNode = nodeMap.get(addMapModal);
-    const currentOrder = mapOrders.get(addMapModal) ?? (mapNode?.children.map(c => c.address) ?? []);
     setPendingMaps(prev => [...prev, { parentMapAddress: addMapModal, id, summary: addMapSummary.trim() }]);
-    setMapOrders(prev => new Map([...prev, [addMapModal, [...currentOrder, newAddr]]]));
-    setDirtyAddresses(prev => new Set([...prev, addMapModal]));
     setAddMapModal(null);
   };
 
-  const deletePendingMap = (newAddr: string, parentMapAddr: string) => {
+  const deletePendingMap = (newAddr: string) => {
     setPendingMaps(prev => prev.filter(m => `M://${m.parentMapAddress.substring(4)}/${m.id}` !== newAddr));
-    setMapOrders(prev => {
-      const cur = prev.get(parentMapAddr);
-      if (!cur) return prev;
-      const next = new Map(prev);
-      next.set(parentMapAddr, cur.filter(a => a !== newAddr));
-      return next;
-    });
   };
 
   const saveAll = async () => {
@@ -435,18 +385,15 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
         const childAddr = `W://${wp.mapAddress.substring(4)}/${wp.id}`;
         await addToMap(projectRoot, wp.mapAddress, childAddr, undefined, wp.summary || undefined, wp.goal || undefined);
       }
-      // Step 2: patch dirty nodes
+      // Step 2: patch dirty nodes (field edits only)
       for (const addr of dirtyAddresses) {
         const node = nodeMap.get(addr);
-        if (!node) continue;
         const ed = editedData.get(addr);
+        if (!node || !ed) continue;
         if (node.type === 'MAP') {
-          const hasOrder = mapOrders.has(addr);
-          const summary = ed?.summary ?? node.summary;
-          const goal = ed?.goal !== undefined ? (ed.goal || null) : (node.goal ?? null);
-          const waypoints = hasOrder ? mapOrders.get(addr) : undefined;
-          await updateMap(projectRoot, addr, summary, goal, waypoints);
-        } else if (node.type === 'WAYPOINT' && ed) {
+          const goal = ed.goal || null;
+          await updateMap(projectRoot, addr, ed.summary, goal);
+        } else if (node.type === 'WAYPOINT') {
           const detail = await fetchWayPoint(projectRoot, addr);
           detail.summary = ed.summary;
           detail.goal = ed.goal || null;
@@ -458,7 +405,6 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
       setTree(newTree);
       setEditMode(false);
       setEditedData(new Map());
-      setMapOrders(new Map());
       setPendingWps([]);
       setPendingMaps([]);
       setDirtyAddresses(new Set());
@@ -550,13 +496,11 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
             onToggle={toggle}
             editMode={editMode}
             editedData={editedData}
-            mapOrders={mapOrders}
             pendingWps={pendingWps}
             pendingMaps={pendingMaps}
             dirtyAddresses={dirtyAddresses}
             nodeMap={nodeMap}
             onFieldChange={handleFieldChange}
-            onMoveWp={handleMoveWp}
             onAddWp={openAddWpModal}
             onAddMap={openAddMapModal}
             onDeletePendingWp={deletePendingWp}
@@ -653,26 +597,21 @@ interface NodeProps {
   onToggle: (key: string) => void;
   editMode: boolean;
   editedData: Map<string, EditedField>;
-  mapOrders: Map<string, string[]>;
   pendingWps: PendingWp[];
   pendingMaps: PendingMap[];
   dirtyAddresses: Set<string>;
   nodeMap: Map<string, TreeNode>;
   onFieldChange: (address: string, field: 'summary' | 'goal', value: string, node: TreeNode) => void;
-  onMoveWp: (mapAddr: string, currentOrder: string[], idx: number, dir: -1 | 1) => void;
   onAddWp: (mapAddr: string) => void;
   onAddMap: (mapAddr: string) => void;
-  onDeletePendingWp: (childAddr: string, parentMapAddr: string) => void;
-  onDeletePendingMap: (newAddr: string, parentMapAddr: string) => void;
-  // When this node is a direct Map child being reordered
-  reorderCtx?: { idx: number; total: number; currentOrder: string[]; parentMapAddr: string };
+  onDeletePendingWp: (childAddr: string) => void;
+  onDeletePendingMap: (newAddr: string) => void;
 }
 
 const Node = ({
   node, depth, openTodos, onToggle,
-  editMode, editedData, mapOrders, pendingWps, pendingMaps, dirtyAddresses, nodeMap,
-  onFieldChange, onMoveWp, onAddWp, onAddMap, onDeletePendingWp, onDeletePendingMap,
-  reorderCtx,
+  editMode, editedData, pendingWps, pendingMaps, dirtyAddresses, nodeMap,
+  onFieldChange, onAddWp, onAddMap, onDeletePendingWp, onDeletePendingMap,
 }: NodeProps) => {
   const indent = depth * 24;
   const isDirty = dirtyAddresses.has(node.address);
@@ -680,7 +619,6 @@ const Node = ({
   const displaySummary = ed?.summary ?? node.summary ?? '';
   const displayGoal = ed?.goal ?? node.goal ?? '';
 
-  // DWP: always read-only
   if (node.type === 'DWP') {
     return (
       <div style={{ ...s.block, marginLeft: indent }}>
@@ -691,6 +629,7 @@ const Node = ({
   }
 
   const isMap = node.type === 'MAP';
+  const isRootLevel = depth === 0;
   const goal = node.goal?.trim();
   const todos = node.todos ?? [];
   const tasks = todos.filter(t => !t.recurring);
@@ -700,54 +639,35 @@ const Node = ({
   const tasksOpen = openTodos.has(tasksKey);
   const recurringOpen = openTodos.has(recurringKey);
 
-  // Children in edit mode: use mapOrders if available, else original
-  const childAddresses = isMap && editMode
-    ? (mapOrders.get(node.address) ?? node.children.map(c => c.address))
-    : node.children.map(c => c.address);
-
   const childSharedProps = {
-    openTodos, onToggle, editMode, editedData, mapOrders, pendingWps, pendingMaps,
-    dirtyAddresses, nodeMap, onFieldChange, onMoveWp, onAddWp, onAddMap,
+    openTodos, onToggle, editMode, editedData, pendingWps, pendingMaps,
+    dirtyAddresses, nodeMap, onFieldChange, onAddWp, onAddMap,
     onDeletePendingWp, onDeletePendingMap,
   };
+
+  // Pending WPs/Maps for this map node
+  const myPendingWps = pendingWps.filter(w => w.mapAddress === node.address);
+  const myPendingMaps = pendingMaps.filter(m => m.parentMapAddress === node.address);
 
   return (
     <div style={{ ...s.block, marginLeft: indent }}>
       {/* Address row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-        {editMode && reorderCtx && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 1, marginRight: 4 }}>
-            <button
-              style={{ ...s.moveBtn, ...(reorderCtx.idx === 0 ? s.moveBtnDisabled : {}) }}
-              disabled={reorderCtx.idx === 0}
-              onClick={() => onMoveWp(reorderCtx.parentMapAddr, reorderCtx.currentOrder, reorderCtx.idx, -1)}
-            >↑</button>
-            <button
-              style={{ ...s.moveBtn, ...(reorderCtx.idx === reorderCtx.total - 1 ? s.moveBtnDisabled : {}) }}
-              disabled={reorderCtx.idx === reorderCtx.total - 1}
-              onClick={() => onMoveWp(reorderCtx.parentMapAddr, reorderCtx.currentOrder, reorderCtx.idx, 1)}
-            >↓</button>
-          </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+        {editMode && isDirty && <span style={{ color: COLOR_DIRTY, fontSize: 10, marginRight: 4 }}>●</span>}
+        <span style={s.addr}>{isMap ? '📁 ' : '◆ '}{node.address}</span>
+        {editMode && (
+          <span style={{
+            background: STATUS_COLORS[node.status] ?? '#8c959f',
+            color: 'white',
+            padding: '1px 5px',
+            borderRadius: 3,
+            fontSize: 10,
+            marginLeft: 6,
+            fontWeight: 500,
+          }}>
+            {node.status}
+          </span>
         )}
-        <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-            {editMode && isDirty && <span style={{ color: COLOR_DIRTY, fontSize: 10, marginRight: 4 }}>●</span>}
-            <span style={s.addr}>{isMap ? '📁 ' : '◆ '}{node.address}</span>
-            {editMode && (
-              <span style={{
-                background: STATUS_COLORS[node.status] ?? '#8c959f',
-                color: 'white',
-                padding: '1px 5px',
-                borderRadius: 3,
-                fontSize: 10,
-                marginLeft: 6,
-                fontWeight: 500,
-              }}>
-                {node.status}
-              </span>
-            )}
-          </div>
-        </div>
       </div>
 
       {/* SUMMARY */}
@@ -810,79 +730,75 @@ const Node = ({
         </div>
       )}
 
-      {/* Children */}
-      {(childAddresses.length > 0 || (editMode && isMap)) && (
+      {/* Children + pending items */}
+      {(node.children.length > 0 || myPendingWps.length > 0 || myPendingMaps.length > 0 || (editMode && isMap)) && (
         <div style={{ marginTop: 10 }}>
-          {childAddresses.map((childAddr, idx) => {
-            const childNode = nodeMap.get(childAddr);
-            const pendingWp = pendingWps.find(
-              w => `W://${w.mapAddress.substring(4)}/${w.id}` === childAddr
-            );
+          {/* Existing children */}
+          {node.children.map(childNode => (
+            <Node
+              key={childNode.address}
+              node={childNode}
+              depth={depth + 1}
+              {...childSharedProps}
+            />
+          ))}
 
-            const pendingMap = pendingMaps.find(
-              m => `M://${m.parentMapAddress.substring(4)}/${m.id}` === childAddr
-            );
-
-            if (!childNode && (pendingWp || pendingMap)) {
-              const isPendingMap = !!pendingMap;
-              const label = isPendingMap ? `📁 ${childAddr}` : `◆ ${childAddr}`;
-              const displaySummary = isPendingMap
-                ? (pendingMap!.summary || '(내용 미입력)')
-                : (pendingWp!.summary || '(내용 미입력)');
-              return (
-                <div key={childAddr} style={{ marginLeft: 0, marginBottom: 12 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 1, marginRight: 4 }}>
-                      <button style={{ ...s.moveBtn, ...s.moveBtnDisabled }} disabled>↑</button>
-                      <button style={{ ...s.moveBtn, ...s.moveBtnDisabled }} disabled>↓</button>
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <span style={{ color: COLOR_DIRTY, fontSize: 10 }}>●</span>
-                        <span style={{ ...s.addr, color: COLOR_DWP }}>{label}</span>
-                        <span style={{ background: '#6f42c1', color: 'white', padding: '1px 5px', borderRadius: 3, fontSize: 10 }}>NEW</span>
-                        <button
-                          onClick={() => isPendingMap
-                            ? onDeletePendingMap(childAddr, node.address)
-                            : onDeletePendingWp(childAddr, node.address)}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#cf222e', fontSize: 13, lineHeight: 1, padding: '0 2px', marginLeft: 'auto' }}
-                          title="삭제"
-                        >×</button>
-                      </div>
-                      <div style={{ ...s.summary, color: COLOR_DWP }}>{displaySummary}</div>
-                    </div>
-                  </div>
-                </div>
-              );
-            }
-
-            if (!childNode) return null;
-
+          {/* Pending new WPs */}
+          {myPendingWps.map(wp => {
+            const addr = `W://${wp.mapAddress.substring(4)}/${wp.id}`;
             return (
-              <Node
-                key={childAddr}
-                node={childNode}
-                depth={depth + 1}
-                {...childSharedProps}
-                reorderCtx={editMode && isMap ? {
-                  idx,
-                  total: childAddresses.length,
-                  currentOrder: childAddresses,
-                  parentMapAddr: node.address,
-                } : undefined}
-              />
+              <div key={addr} style={{ marginLeft: (depth + 1) * 24, marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ color: COLOR_DIRTY, fontSize: 10 }}>●</span>
+                  <span style={{ ...s.addr, color: COLOR_DWP }}>◆ {addr}</span>
+                  <span style={{ background: '#6f42c1', color: 'white', padding: '1px 5px', borderRadius: 3, fontSize: 10 }}>NEW</span>
+                  <button
+                    onClick={() => onDeletePendingWp(addr)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#cf222e', fontSize: 14, lineHeight: 1, padding: '0 4px', marginLeft: 4 }}
+                    title="삭제"
+                  >×</button>
+                </div>
+                <div style={{ marginLeft: (depth + 2) * 24 - indent, ...s.summary, color: COLOR_DWP }}>
+                  {wp.summary || '(내용 미입력)'}
+                </div>
+              </div>
             );
           })}
 
-          {/* + WP / Map 추가 버튼 (Map nodes in edit mode) */}
+          {/* Pending new Maps */}
+          {myPendingMaps.map(m => {
+            const addr = `M://${m.parentMapAddress.substring(4)}/${m.id}`;
+            return (
+              <div key={addr} style={{ marginLeft: (depth + 1) * 24, marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ color: COLOR_DIRTY, fontSize: 10 }}>●</span>
+                  <span style={{ ...s.addr, color: COLOR_DWP }}>📁 {addr}</span>
+                  <span style={{ background: '#6f42c1', color: 'white', padding: '1px 5px', borderRadius: 3, fontSize: 10 }}>NEW</span>
+                  <button
+                    onClick={() => onDeletePendingMap(addr)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#cf222e', fontSize: 14, lineHeight: 1, padding: '0 4px', marginLeft: 4 }}
+                    title="삭제"
+                  >×</button>
+                </div>
+                <div style={{ marginLeft: (depth + 2) * 24 - indent, ...s.summary, color: COLOR_DWP }}>
+                  {m.summary || '(내용 미입력)'}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* + WP 추가 버튼 (Map nodes in edit mode) */}
           {editMode && isMap && (
             <div style={{ marginLeft: (depth + 1) * 24, display: 'flex', gap: 6 }}>
               <button style={s.addWpBtn} onClick={() => onAddWp(node.address)}>
                 + WP 추가
               </button>
-              <button style={s.addWpBtn} onClick={() => onAddMap(node.address)}>
-                + Map 추가
-              </button>
+              {/* + Map 추가: root-level map only */}
+              {isRootLevel && (
+                <button style={s.addWpBtn} onClick={() => onAddMap(node.address)}>
+                  + Map 추가
+                </button>
+              )}
             </div>
           )}
         </div>

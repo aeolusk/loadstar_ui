@@ -3,7 +3,6 @@
 
 ### IDENTITY
 - SUMMARY: Spring Boot 백엔드 — .loadstar 파일 시스템 및 CLI 브릿지
-- SYNCED_AT: 2026-04-06
 
 ### WAYPOINTS
 - W://root/backend/project_config
