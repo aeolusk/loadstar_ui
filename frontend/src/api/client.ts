@@ -140,12 +140,19 @@ export async function updateDwp(root: string, data: WayPointDetail, skipHistory 
 
 // --- Map Structure API ---
 
-export async function addToMap(root: string, mapAddress: string, childAddress: string, position?: string, summary?: string): Promise<MapViewResponse> {
+export async function addToMap(root: string, mapAddress: string, childAddress: string, position?: string, summary?: string, goal?: string): Promise<MapViewResponse> {
   const params: Record<string, string> = { root, mapAddress, childAddress };
   if (position) params.position = position;
   if (summary) params.summary = summary;
+  if (goal) params.goal = goal;
   const res = await apiClient.post<MapViewResponse>('/elements/map/add', null, { params });
   return res.data;
+}
+
+export async function createSubMap(root: string, parentMapAddress: string, id: string, summary?: string): Promise<void> {
+  const params: Record<string, string> = { root, parentMapAddress, id };
+  if (summary) params.summary = summary;
+  await apiClient.post('/elements/map/create-child', null, { params });
 }
 
 export async function addChildToWayPoint(root: string, parentWpAddress: string, childId: string, mapAddress: string, summary?: string): Promise<MapViewResponse> {
@@ -176,12 +183,6 @@ export async function deleteMap(root: string, mapAddress: string): Promise<{ suc
   return res.data;
 }
 
-export async function createSubMap(root: string, parentMapAddress: string, id: string, summary?: string): Promise<MapViewResponse> {
-  const res = await apiClient.post<MapViewResponse>('/elements/map/create-child', null, {
-    params: { root, parentMapAddress, id, summary: summary || '' },
-  });
-  return res.data;
-}
 
 // --- TODO API ---
 

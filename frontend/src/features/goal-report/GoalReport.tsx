@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { fetchTree, updateMap, updateWayPoint, fetchWayPoint, addToMap } from '../../api/client';
+import { fetchTree, updateMap, updateWayPoint, fetchWayPoint, addToMap, createSubMap } from '../../api/client';
 import type { TreeNode } from '../../types/loadstar';
 
 interface GoalReportProps {
@@ -7,7 +7,8 @@ interface GoalReportProps {
 }
 
 type EditedField = { summary: string; goal: string };
-type PendingWp = { mapAddress: string; id: string; summary: string };
+type PendingWp = { mapAddress: string; id: string; summary: string; goal: string };
+type PendingMap = { parentMapAddress: string; id: string; summary: string };
 
 const COLOR_TEXT = '#1f2328';
 const COLOR_MUTED = '#8c959f';
@@ -232,6 +233,7 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
   const [editedData, setEditedData] = useState<Map<string, EditedField>>(new Map());
   const [mapOrders, setMapOrders] = useState<Map<string, string[]>>(new Map());
   const [pendingWps, setPendingWps] = useState<PendingWp[]>([]);
+  const [pendingMaps, setPendingMaps] = useState<PendingMap[]>([]);
   const [dirtyAddresses, setDirtyAddresses] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -240,7 +242,14 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
   const [addWpModal, setAddWpModal] = useState<string | null>(null);
   const [addWpId, setAddWpId] = useState('');
   const [addWpSummary, setAddWpSummary] = useState('');
+  const [addWpGoal, setAddWpGoal] = useState('');
   const [addWpError, setAddWpError] = useState('');
+
+  // Add Map modal state
+  const [addMapModal, setAddMapModal] = useState<string | null>(null);
+  const [addMapId, setAddMapId] = useState('');
+  const [addMapSummary, setAddMapSummary] = useState('');
+  const [addMapError, setAddMapError] = useState('');
 
   // Inject print CSS
   useEffect(() => {
@@ -266,8 +275,9 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
   const allKnownAddresses = useMemo(() => {
     const addrs = new Set(nodeMap.keys());
     pendingWps.forEach(w => addrs.add(`W://${w.mapAddress.substring(4)}/${w.id}`));
+    pendingMaps.forEach(m => addrs.add(`M://${m.parentMapAddress.substring(4)}/${m.id}`));
     return addrs;
-  }, [nodeMap, pendingWps]);
+  }, [nodeMap, pendingWps, pendingMaps]);
 
   const loadTree = useCallback(async () => {
     if (!projectRoot) { setTree([]); return; }
@@ -300,6 +310,7 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
     setEditedData(new Map());
     setMapOrders(new Map());
     setPendingWps([]);
+    setPendingMaps([]);
     setDirtyAddresses(new Set());
     setSaveError(null);
     setEditMode(true);
@@ -310,6 +321,7 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
     setEditedData(new Map());
     setMapOrders(new Map());
     setPendingWps([]);
+    setPendingMaps([]);
     setDirtyAddresses(new Set());
     setSaveError(null);
   };
@@ -337,6 +349,7 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
     setAddWpModal(mapAddr);
     setAddWpId('');
     setAddWpSummary('');
+    setAddWpGoal('');
     setAddWpError('');
   };
 
@@ -354,20 +367,73 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
     }
     const mapNode = nodeMap.get(addWpModal);
     const currentOrder = mapOrders.get(addWpModal) ?? (mapNode?.children.map(c => c.address) ?? []);
-    setPendingWps(prev => [...prev, { mapAddress: addWpModal, id, summary: addWpSummary.trim() }]);
+    setPendingWps(prev => [...prev, { mapAddress: addWpModal, id, summary: addWpSummary.trim(), goal: addWpGoal.trim() }]);
     setMapOrders(prev => new Map([...prev, [addWpModal, [...currentOrder, childAddr]]]));
     setDirtyAddresses(prev => new Set([...prev, addWpModal]));
     setAddWpModal(null);
+  };
+
+  const deletePendingWp = (childAddr: string, parentMapAddr: string) => {
+    setPendingWps(prev => prev.filter(w => `W://${w.mapAddress.substring(4)}/${w.id}` !== childAddr));
+    setMapOrders(prev => {
+      const cur = prev.get(parentMapAddr);
+      if (!cur) return prev;
+      const next = new Map(prev);
+      const filtered = cur.filter(a => a !== childAddr);
+      next.set(parentMapAddr, filtered);
+      return next;
+    });
+  };
+
+  const openAddMapModal = (parentMapAddr: string) => {
+    setAddMapModal(parentMapAddr);
+    setAddMapId('');
+    setAddMapSummary('');
+    setAddMapError('');
+  };
+
+  const confirmAddMap = () => {
+    if (!addMapModal) return;
+    const id = addMapId.trim();
+    if (!/^[a-z][a-z0-9_]*$/.test(id)) {
+      setAddMapError('소문자로 시작, 소문자·숫자·언더스코어만 허용됩니다.');
+      return;
+    }
+    const newAddr = `M://${addMapModal.substring(4)}/${id}`;
+    if (allKnownAddresses.has(newAddr)) {
+      setAddMapError(`이미 존재하는 주소입니다: ${newAddr}`);
+      return;
+    }
+    const mapNode = nodeMap.get(addMapModal);
+    const currentOrder = mapOrders.get(addMapModal) ?? (mapNode?.children.map(c => c.address) ?? []);
+    setPendingMaps(prev => [...prev, { parentMapAddress: addMapModal, id, summary: addMapSummary.trim() }]);
+    setMapOrders(prev => new Map([...prev, [addMapModal, [...currentOrder, newAddr]]]));
+    setDirtyAddresses(prev => new Set([...prev, addMapModal]));
+    setAddMapModal(null);
+  };
+
+  const deletePendingMap = (newAddr: string, parentMapAddr: string) => {
+    setPendingMaps(prev => prev.filter(m => `M://${m.parentMapAddress.substring(4)}/${m.id}` !== newAddr));
+    setMapOrders(prev => {
+      const cur = prev.get(parentMapAddr);
+      if (!cur) return prev;
+      const next = new Map(prev);
+      next.set(parentMapAddr, cur.filter(a => a !== newAddr));
+      return next;
+    });
   };
 
   const saveAll = async () => {
     setSaving(true);
     setSaveError(null);
     try {
-      // Step 1: create skeleton WP files
+      // Step 1: create new Maps and skeleton WP files
+      for (const m of pendingMaps) {
+        await createSubMap(projectRoot, m.parentMapAddress, m.id, m.summary || undefined);
+      }
       for (const wp of pendingWps) {
         const childAddr = `W://${wp.mapAddress.substring(4)}/${wp.id}`;
-        await addToMap(projectRoot, wp.mapAddress, childAddr, undefined, wp.summary || undefined);
+        await addToMap(projectRoot, wp.mapAddress, childAddr, undefined, wp.summary || undefined, wp.goal || undefined);
       }
       // Step 2: patch dirty nodes
       for (const addr of dirtyAddresses) {
@@ -394,6 +460,7 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
       setEditedData(new Map());
       setMapOrders(new Map());
       setPendingWps([]);
+      setPendingMaps([]);
       setDirtyAddresses(new Set());
     } catch (err) {
       console.error('Save failed:', err);
@@ -485,44 +552,90 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
             editedData={editedData}
             mapOrders={mapOrders}
             pendingWps={pendingWps}
+            pendingMaps={pendingMaps}
             dirtyAddresses={dirtyAddresses}
             nodeMap={nodeMap}
             onFieldChange={handleFieldChange}
             onMoveWp={handleMoveWp}
             onAddWp={openAddWpModal}
+            onAddMap={openAddMapModal}
+            onDeletePendingWp={deletePendingWp}
+            onDeletePendingMap={deletePendingMap}
           />
         ))
       )}
 
       {/* Add WP Modal */}
       {addWpModal && (
-        <div style={s.modalOverlay} onClick={() => setAddWpModal(null)}>
-          <div style={s.modalBox} onClick={e => e.stopPropagation()}>
+        <div style={s.modalOverlay}>
+          <div style={s.modalBox}>
             <p style={s.modalTitle}>새 WayPoint 추가</p>
             <span style={{ fontSize: 11, color: COLOR_MUTED, display: 'block', marginBottom: 12 }}>
               부모: <code>{addWpModal}</code>
             </span>
-            <label style={s.modalLabel}>ID (영문 소문자·숫자·언더스코어)</label>
+            <label style={s.modalLabel}>ID (영문 소문자·숫자·언더스코어) *</label>
             <input
               style={s.modalInput}
               value={addWpId}
               onChange={e => { setAddWpId(e.target.value); setAddWpError(''); }}
               placeholder="예: new_feature"
               autoFocus
-              onKeyDown={e => { if (e.key === 'Enter') confirmAddWp(); if (e.key === 'Escape') setAddWpModal(null); }}
+              onKeyDown={e => { if (e.key === 'Escape') setAddWpModal(null); }}
             />
-            <label style={s.modalLabel}>SUMMARY (선택)</label>
+            <label style={s.modalLabel}>SUMMARY</label>
             <input
               style={s.modalInput}
               value={addWpSummary}
               onChange={e => setAddWpSummary(e.target.value)}
               placeholder="간략한 설명"
-              onKeyDown={e => { if (e.key === 'Enter') confirmAddWp(); if (e.key === 'Escape') setAddWpModal(null); }}
+              onKeyDown={e => { if (e.key === 'Escape') setAddWpModal(null); }}
+            />
+            <label style={s.modalLabel}>GOAL</label>
+            <textarea
+              style={{ ...s.modalInput, minHeight: 56, resize: 'vertical', color: COLOR_GOAL }}
+              value={addWpGoal}
+              onChange={e => setAddWpGoal(e.target.value)}
+              placeholder="이 WayPoint가 달성하고자 하는 목표"
+              onKeyDown={e => { if (e.key === 'Escape') setAddWpModal(null); }}
             />
             {addWpError && <div style={s.modalError}>{addWpError}</div>}
             <div style={s.modalBtnRow}>
               <button style={s.btn} onClick={() => setAddWpModal(null)}>취소</button>
               <button style={s.btnPrimary} onClick={confirmAddWp}>추가</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Map Modal */}
+      {addMapModal && (
+        <div style={s.modalOverlay}>
+          <div style={s.modalBox}>
+            <p style={s.modalTitle}>새 Map 추가</p>
+            <span style={{ fontSize: 11, color: COLOR_MUTED, display: 'block', marginBottom: 12 }}>
+              부모: <code>{addMapModal}</code>
+            </span>
+            <label style={s.modalLabel}>ID (영문 소문자·숫자·언더스코어) *</label>
+            <input
+              style={s.modalInput}
+              value={addMapId}
+              onChange={e => { setAddMapId(e.target.value); setAddMapError(''); }}
+              placeholder="예: new_module"
+              autoFocus
+              onKeyDown={e => { if (e.key === 'Escape') setAddMapModal(null); }}
+            />
+            <label style={s.modalLabel}>SUMMARY</label>
+            <input
+              style={s.modalInput}
+              value={addMapSummary}
+              onChange={e => setAddMapSummary(e.target.value)}
+              placeholder="간략한 설명"
+              onKeyDown={e => { if (e.key === 'Escape') setAddMapModal(null); }}
+            />
+            {addMapError && <div style={s.modalError}>{addMapError}</div>}
+            <div style={s.modalBtnRow}>
+              <button style={s.btn} onClick={() => setAddMapModal(null)}>취소</button>
+              <button style={s.btnPrimary} onClick={confirmAddMap}>추가</button>
             </div>
           </div>
         </div>
@@ -542,19 +655,23 @@ interface NodeProps {
   editedData: Map<string, EditedField>;
   mapOrders: Map<string, string[]>;
   pendingWps: PendingWp[];
+  pendingMaps: PendingMap[];
   dirtyAddresses: Set<string>;
   nodeMap: Map<string, TreeNode>;
   onFieldChange: (address: string, field: 'summary' | 'goal', value: string, node: TreeNode) => void;
   onMoveWp: (mapAddr: string, currentOrder: string[], idx: number, dir: -1 | 1) => void;
   onAddWp: (mapAddr: string) => void;
+  onAddMap: (mapAddr: string) => void;
+  onDeletePendingWp: (childAddr: string, parentMapAddr: string) => void;
+  onDeletePendingMap: (newAddr: string, parentMapAddr: string) => void;
   // When this node is a direct Map child being reordered
   reorderCtx?: { idx: number; total: number; currentOrder: string[]; parentMapAddr: string };
 }
 
 const Node = ({
   node, depth, openTodos, onToggle,
-  editMode, editedData, mapOrders, pendingWps, dirtyAddresses, nodeMap,
-  onFieldChange, onMoveWp, onAddWp,
+  editMode, editedData, mapOrders, pendingWps, pendingMaps, dirtyAddresses, nodeMap,
+  onFieldChange, onMoveWp, onAddWp, onAddMap, onDeletePendingWp, onDeletePendingMap,
   reorderCtx,
 }: NodeProps) => {
   const indent = depth * 24;
@@ -589,8 +706,9 @@ const Node = ({
     : node.children.map(c => c.address);
 
   const childSharedProps = {
-    openTodos, onToggle, editMode, editedData, mapOrders, pendingWps,
-    dirtyAddresses, nodeMap, onFieldChange, onMoveWp, onAddWp,
+    openTodos, onToggle, editMode, editedData, mapOrders, pendingWps, pendingMaps,
+    dirtyAddresses, nodeMap, onFieldChange, onMoveWp, onAddWp, onAddMap,
+    onDeletePendingWp, onDeletePendingMap,
   };
 
   return (
@@ -701,8 +819,16 @@ const Node = ({
               w => `W://${w.mapAddress.substring(4)}/${w.id}` === childAddr
             );
 
-            if (!childNode && pendingWp) {
-              // Render pending (not-yet-saved) WP card
+            const pendingMap = pendingMaps.find(
+              m => `M://${m.parentMapAddress.substring(4)}/${m.id}` === childAddr
+            );
+
+            if (!childNode && (pendingWp || pendingMap)) {
+              const isPendingMap = !!pendingMap;
+              const label = isPendingMap ? `📁 ${childAddr}` : `◆ ${childAddr}`;
+              const displaySummary = isPendingMap
+                ? (pendingMap!.summary || '(내용 미입력)')
+                : (pendingWp!.summary || '(내용 미입력)');
               return (
                 <div key={childAddr} style={{ marginLeft: 0, marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -710,13 +836,20 @@ const Node = ({
                       <button style={{ ...s.moveBtn, ...s.moveBtnDisabled }} disabled>↑</button>
                       <button style={{ ...s.moveBtn, ...s.moveBtnDisabled }} disabled>↓</button>
                     </div>
-                    <div>
+                    <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                         <span style={{ color: COLOR_DIRTY, fontSize: 10 }}>●</span>
-                        <span style={{ ...s.addr, color: COLOR_DWP }}>◆ {childAddr}</span>
+                        <span style={{ ...s.addr, color: COLOR_DWP }}>{label}</span>
                         <span style={{ background: '#6f42c1', color: 'white', padding: '1px 5px', borderRadius: 3, fontSize: 10 }}>NEW</span>
+                        <button
+                          onClick={() => isPendingMap
+                            ? onDeletePendingMap(childAddr, node.address)
+                            : onDeletePendingWp(childAddr, node.address)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#cf222e', fontSize: 13, lineHeight: 1, padding: '0 2px', marginLeft: 'auto' }}
+                          title="삭제"
+                        >×</button>
                       </div>
-                      <div style={{ ...s.summary, color: COLOR_DWP }}>{pendingWp.summary || '(내용 미입력)'}</div>
+                      <div style={{ ...s.summary, color: COLOR_DWP }}>{displaySummary}</div>
                     </div>
                   </div>
                 </div>
@@ -741,11 +874,14 @@ const Node = ({
             );
           })}
 
-          {/* + WP 추가 button (Map nodes in edit mode) */}
+          {/* + WP / Map 추가 버튼 (Map nodes in edit mode) */}
           {editMode && isMap && (
-            <div style={{ marginLeft: (depth + 1) * 24 }}>
+            <div style={{ marginLeft: (depth + 1) * 24, display: 'flex', gap: 6 }}>
               <button style={s.addWpBtn} onClick={() => onAddWp(node.address)}>
                 + WP 추가
+              </button>
+              <button style={s.addWpBtn} onClick={() => onAddMap(node.address)}>
+                + Map 추가
               </button>
             </div>
           )}

@@ -37,7 +37,8 @@ public class ElementParser {
 
             Matcher statusMatch = STATUS_PATTERN.matcher(trimmed);
             if (statusMatch.matches()) {
-                map.setStatus(statusMatch.group(1).trim());
+                String sv = statusMatch.group(1).trim();
+                if (!sv.isEmpty() && !"null".equals(sv)) map.setStatus(sv);
                 continue;
             }
 

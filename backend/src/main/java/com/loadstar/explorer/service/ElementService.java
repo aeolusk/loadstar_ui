@@ -264,14 +264,14 @@ public class ElementService {
      * Add a child to a Map's WAYPOINTS list.
      * @param position null=append, "before:ADDR"=insert before, "after:ADDR"=insert after
      */
-    public MapViewResponse addToMap(String projectRoot, String mapAddress, String childAddress, String position, String summary) throws IOException {
+    public MapViewResponse addToMap(String projectRoot, String mapAddress, String childAddress, String position, String summary, String goal) throws IOException {
         Path mapFile = addressToPath(projectRoot, mapAddress);
         if (!Files.exists(mapFile)) throw new IOException("Map not found: " + mapAddress);
 
         // If the child is a new WayPoint that doesn't exist, create skeleton
         Path childFile = addressToPath(projectRoot, childAddress);
         if (!Files.exists(childFile) && childAddress.startsWith("W://")) {
-            writer.writeWayPointSkeleton(childFile, childAddress, mapAddress, summary);
+            writer.writeWayPointSkeleton(childFile, childAddress, mapAddress, summary, goal);
         }
 
         MapData map = parser.parseMap(mapFile);
@@ -310,7 +310,7 @@ public class ElementService {
         // Create child WP skeleton with parent = parentWpAddress
         Path childFile = addressToPath(projectRoot, childAddress);
         if (!Files.exists(childFile)) {
-            writer.writeWayPointSkeleton(childFile, childAddress, parentWpAddress, summary);
+            writer.writeWayPointSkeleton(childFile, childAddress, parentWpAddress, summary, null);
         }
 
         // Update parent's CHILDREN list

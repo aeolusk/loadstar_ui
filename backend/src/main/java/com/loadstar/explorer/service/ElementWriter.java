@@ -234,7 +234,7 @@ public class ElementWriter {
 
         lines.add("<MAP>");
         lines.add("## [ADDRESS] " + map.getAddress());
-        if (map.getStatus() != null && !map.getStatus().isEmpty()) {
+        if (map.getStatus() != null && !map.getStatus().isEmpty() && !"null".equals(map.getStatus())) {
             lines.add("## [STATUS] " + map.getStatus());
         }
         lines.add("");
@@ -266,7 +266,7 @@ public class ElementWriter {
         Files.write(file, lines, StandardCharsets.UTF_8);
     }
 
-    public void writeWayPointSkeleton(Path file, String address, String parentAddress, String summary) throws IOException {
+    public void writeWayPointSkeleton(Path file, String address, String parentAddress, String summary, String goal) throws IOException {
         List<String> lines = new ArrayList<>();
 
         lines.add("<WAYPOINT>");
@@ -277,6 +277,11 @@ public class ElementWriter {
         lines.add("- SUMMARY: " + (summary != null ? summary : ""));
         lines.add("- METADATA: [Created: " + java.time.LocalDate.now() + "]");
         lines.add("");
+        if (goal != null && !goal.isBlank()) {
+            lines.add("### GOAL");
+            lines.add(goal.strip());
+            lines.add("");
+        }
         lines.add("### CONNECTIONS");
         lines.add("- PARENT: " + parentAddress);
         lines.add("- CHILDREN: []");

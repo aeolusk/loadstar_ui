@@ -55,9 +55,10 @@ public class ElementController {
             @RequestParam String mapAddress,
             @RequestParam String childAddress,
             @RequestParam(required = false) String position,
-            @RequestParam(required = false) String summary) {
+            @RequestParam(required = false) String summary,
+            @RequestParam(required = false) String goal) {
         try {
-            return ResponseEntity.ok(elementService.addToMap(root, mapAddress, childAddress, position, summary));
+            return ResponseEntity.ok(elementService.addToMap(root, mapAddress, childAddress, position, summary, goal));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
