@@ -82,6 +82,12 @@ CLI만으로도 모든 기능을 쓸 수 있지만, **WayPoint가 다수**(20개
 - loadstar CLI 명령을 웹에서 직접 실행
 - 명령 이력 탐색, 색상 구분 출력
 
+### 🎯 Goals Report
+
+- Map → WayPoint 계층을 한 화면에서 SUMMARY / GOAL / TODO 보고서 형식으로 조망
+- TODO / RECURRING 섹션을 +/- 토글로 펼침/닫힘 (기본 닫힘), 진척률 표시
+- 인쇄/PDF (새 창 열기 — 앱 셸 제외, Goals 보고서만 출력) 및 Markdown 다운로드
+
 ### 🔍 Search
 
 - Command Palette (`Ctrl+K`) 기반 통합 검색
@@ -126,12 +132,13 @@ loadstar_ui/
 │       └── service/        비즈니스 로직 (Element·Todo·Git·Log·CLI)
 ├── frontend/               React SPA (Vite)
 │   └── src/
-│       ├── features/       기능별 컴포넌트 (map-view, waypoint-editor, ...)
+│       ├── features/       기능별 컴포넌트 (map-view, waypoint-editor, goal-report, ...)
 │       ├── components/     공통 컴포넌트 (AppShell, ElementTree, ...)
 │       └── api/            API 클라이언트
 ├── .loadstar/              LOADSTAR 메타데이터
 │   ├── MAP/                Map 요소
 │   ├── WAYPOINT/           WayPoint 요소
+│   ├── DATA_WAYPOINT/      D:// Data WayPoint 요소
 │   └── .clionly/           ⚠️ CLI 전용 (직접 편집 금지)
 └── docs/                   문서·스크린샷
 ```

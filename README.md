@@ -82,6 +82,12 @@ The CLI alone covers every feature, but for projects with **more than ~20 WayPoi
 - Run loadstar CLI commands directly from the browser
 - Command history navigation, color-coded output
 
+### 🎯 Goals Report
+
+- Tree view of Map → WayPoint hierarchy with SUMMARY / GOAL / TODO on one screen
+- TODO / RECURRING sections toggle open/closed (default closed), showing completion ratio
+- Print to PDF (new window — outputs only the Goals report, no app shell) and Markdown download
+
 ### 🔍 Search
 
 - Unified search via Command Palette (`Ctrl+K`)
@@ -126,12 +132,13 @@ loadstar_ui/
 │       └── service/        Business logic (Element · Todo · Git · Log · CLI)
 ├── frontend/               React SPA (Vite)
 │   └── src/
-│       ├── features/       Feature components (map-view, waypoint-editor, ...)
+│       ├── features/       Feature components (map-view, waypoint-editor, goal-report, ...)
 │       ├── components/     Shared components (AppShell, ElementTree, ...)
 │       └── api/            API client
 ├── .loadstar/              LOADSTAR metadata
 │   ├── MAP/                Map elements
 │   ├── WAYPOINT/           WayPoint elements
+│   ├── DATA_WAYPOINT/      D:// Data WayPoint elements
 │   └── .clionly/           ⚠️ CLI-only (do not edit directly)
 └── docs/                   Documentation & screenshots
 ```
