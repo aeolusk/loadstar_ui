@@ -234,12 +234,20 @@ public class ElementWriter {
 
         lines.add("<MAP>");
         lines.add("## [ADDRESS] " + map.getAddress());
-        lines.add("## [STATUS] " + map.getStatus());
+        if (map.getStatus() != null && !map.getStatus().isEmpty()) {
+            lines.add("## [STATUS] " + map.getStatus());
+        }
         lines.add("");
 
         lines.add("### IDENTITY");
         lines.add("- SUMMARY: " + nvl(map.getSummary()));
         lines.add("");
+
+        if (map.getGoal() != null && !map.getGoal().isEmpty()) {
+            lines.add("### GOAL");
+            lines.add(map.getGoal());
+            lines.add("");
+        }
 
         lines.add("### WAYPOINTS");
         if (map.getWaypoints() != null && !map.getWaypoints().isEmpty()) {

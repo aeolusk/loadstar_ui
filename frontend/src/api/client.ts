@@ -27,6 +27,7 @@ export interface MapViewResponse {
     address: string;
     status: string;
     summary: string;
+    goal?: string | null;
     waypoints: string[];
   };
   items: MapViewItem[];
@@ -99,6 +100,14 @@ export async function fetchMapView(root: string, address: string): Promise<MapVi
     params: { root, address },
   });
   return res.data;
+}
+
+export async function updateMap(root: string, address: string, summary?: string, goal?: string | null): Promise<void> {
+  const params: Record<string, string> = { root, address };
+  if (summary !== undefined) params.summary = summary;
+  if (goal !== undefined && goal !== null) params.goal = goal;
+  else if (goal === null || goal === '') params.goal = '';
+  await apiClient.patch('/elements/map', null, { params });
 }
 
 export async function fetchWayPoint(root: string, address: string): Promise<WayPointDetail> {

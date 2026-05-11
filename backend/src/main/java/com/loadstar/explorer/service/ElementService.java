@@ -341,6 +341,18 @@ public class ElementService {
         return getMapView(projectRoot, mapAddress);
     }
 
+    public MapData updateMap(String projectRoot, String mapAddress, String summary, String goal) throws IOException {
+        Path mapFile = addressToPath(projectRoot, mapAddress);
+        if (!Files.exists(mapFile)) throw new IOException("Map not found: " + mapAddress);
+
+        MapData map = parser.parseMap(mapFile);
+        if (summary != null) map.setSummary(summary);
+        map.setGoal((goal == null || goal.isBlank()) ? null : goal.strip());
+        writer.writeMap(mapFile, map);
+        cli.logModified(projectRoot, mapAddress, "GOAL 수정");
+        return map;
+    }
+
     public MapViewResponse removeFromMap(String projectRoot, String mapAddress, String childAddress) throws IOException {
         Path mapFile = addressToPath(projectRoot, mapAddress);
         if (!Files.exists(mapFile)) throw new IOException("Map not found: " + mapAddress);

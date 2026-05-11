@@ -17,7 +17,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import type { Tab } from '../../App';
-import { fetchMapView, addToMap, addChildToWayPoint, removeFromMap, removeChildFromWayPoint, createSubMap, deleteMap, type MapViewResponse, type MapViewItem } from '../../api/client';
+import { fetchMapView, updateMap, addToMap, addChildToWayPoint, removeFromMap, removeChildFromWayPoint, createSubMap, deleteMap, type MapViewResponse, type MapViewItem } from '../../api/client';
 import WayPointEditor from '../waypoint-editor/WayPointEditor';
 import DataWayPointEditor from '../dwp-editor/DataWayPointEditor';
 
@@ -30,7 +30,7 @@ interface MapViewProps {
 }
 
 interface DetailPanel {
-  type: 'waypoint' | 'dwp';
+  type: 'waypoint' | 'dwp' | 'map';
   address: string;
 }
 
@@ -211,6 +211,93 @@ function GroupBoxNode({ data }: { data: {
 }
 
 const nodeTypes = { waypoint: WayPointNode, mapNode: MapNode, groupBox: GroupBoxNode };
+
+// ===== Map GOAL panel (shown in bottom panel when a sub-map node is selected) =====
+function MapGoalPanel({ projectRoot, address, onSaved, showToast }: {
+  projectRoot: string; address: string;
+  onSaved: () => void; showToast: (msg: string) => void;
+}) {
+  const [mapInfo, setMapInfo] = useState<{ summary: string; goal: string | null } | null>(null);
+  const [editGoal, setEditGoal] = useState('');
+  const [editSummary, setEditSummary] = useState('');
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchMapView(projectRoot, address)
+      .then(res => {
+        setMapInfo({ summary: res.map.summary, goal: res.map.goal ?? null });
+        setEditGoal(res.map.goal ?? '');
+        setEditSummary(res.map.summary ?? '');
+      })
+      .catch(() => setMapInfo(null));
+  }, [projectRoot, address]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await updateMap(projectRoot, address, editSummary, editGoal || null);
+      setMapInfo({ summary: editSummary, goal: editGoal || null });
+      setEditing(false);
+      onSaved();
+      showToast('Map 정보 저장 완료');
+    } catch (e) {
+      showToast('저장 실패: ' + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const s2 = {
+    label: { fontSize: 11, color: 'var(--text-muted)', marginBottom: 2 } as React.CSSProperties,
+    value: { fontSize: 13, color: 'var(--text-primary)', marginBottom: 8 } as React.CSSProperties,
+    input: { width: '100%', padding: '4px 8px', border: '1px solid var(--border-medium)', borderRadius: 4, fontSize: 13, fontFamily: 'inherit', background: 'var(--bg-surface)', color: 'var(--text-primary)', outline: 'none' } as React.CSSProperties,
+    textarea: { width: '100%', padding: '6px 8px', border: '1px solid var(--border-medium)', borderRadius: 4, fontSize: 13, fontFamily: 'inherit', background: 'var(--bg-surface)', color: 'var(--text-primary)', outline: 'none', resize: 'vertical' as const, minHeight: 60 } as React.CSSProperties,
+    btn: { padding: '2px 8px', border: '1px solid var(--border-medium)', borderRadius: 3, background: 'var(--bg-surface)', fontSize: 11, cursor: 'pointer', color: 'var(--text-secondary)' } as React.CSSProperties,
+    btnPrimary: { padding: '2px 8px', border: '1px solid var(--accent-primary)', borderRadius: 3, background: 'var(--accent-bg)', fontSize: 11, cursor: 'pointer', color: 'var(--accent-primary)', fontWeight: 600 } as React.CSSProperties,
+  };
+
+  if (!mapInfo) return <div style={{ color: 'var(--text-muted)', fontSize: 12 }}>Loading...</div>;
+
+  return (
+    <div style={{ fontSize: 13 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, borderBottom: '1px solid var(--border-light)', paddingBottom: 4 }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>MAP IDENTITY</span>
+        <div style={{ display: 'flex', gap: 4 }}>
+          {editing ? (
+            <>
+              <button style={s2.btnPrimary} onClick={handleSave} disabled={saving}>Save</button>
+              <button style={s2.btn} onClick={() => { setEditing(false); setEditGoal(mapInfo.goal ?? ''); setEditSummary(mapInfo.summary ?? ''); }}>Cancel</button>
+            </>
+          ) : (
+            <button style={s2.btn} onClick={() => setEditing(true)}>Edit</button>
+          )}
+        </div>
+      </div>
+      {editing ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div>
+            <div style={s2.label}>Summary</div>
+            <input style={s2.input} value={editSummary} onChange={e => setEditSummary(e.target.value)} />
+          </div>
+          <div>
+            <div style={s2.label}>Goal</div>
+            <textarea style={s2.textarea} value={editGoal} onChange={e => setEditGoal(e.target.value)} placeholder="이 Map이 달성해야 할 의도 (선택)" />
+          </div>
+        </div>
+      ) : (
+        <>
+          <div style={s2.label}>Summary</div>
+          <div style={s2.value}>{mapInfo.summary || '-'}</div>
+          <div style={s2.label}>Goal</div>
+          <div style={{ fontSize: 13, color: mapInfo.goal ? '#0550ae' : 'var(--text-muted)', fontStyle: 'italic' }}>
+            {mapInfo.goal || '(미지정)'}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 function buildGraph(
   items: MapViewItem[],
@@ -405,6 +492,10 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
   const [toast, setToast] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // GOAL inline edit for current map
+  const [editingGoal, setEditingGoal] = useState<string | null>(null); // null = not editing, string = editing
+  const [goalSaving, setGoalSaving] = useState(false);
+
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 5000);
@@ -429,6 +520,8 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
     if (type === 'waypoint') {
       const detailType: 'waypoint' | 'dwp' = addr.startsWith('D://') ? 'dwp' : 'waypoint';
       setDetail({ type: detailType, address: addr });
+    } else if (type === 'map') {
+      setDetail({ type: 'map', address: addr });
     }
     const isMainItem = mapData?.items.some(it => it.address === addr);
     if (isMainItem) {
@@ -527,6 +620,22 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
       showToast('제거 실패: ' + (e instanceof Error ? e.message : 'Unknown error'));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const saveGoal = async (addr: string, newGoal: string) => {
+    setGoalSaving(true);
+    try {
+      await updateMap(projectRoot, addr, undefined, newGoal || null);
+      // Refresh map data so GOAL is reflected
+      const updated = await fetchMapView(projectRoot, address);
+      setMapData(updated);
+      showToast('GOAL 저장 완료');
+    } catch (e) {
+      showToast('GOAL 저장 실패: ' + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setGoalSaving(false);
+      setEditingGoal(null);
     }
   };
 
@@ -630,12 +739,13 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
       {/* Header */}
       <div style={{
         padding: '8px 16px', borderBottom: '1px solid #e5ddd0', background: '#faf8f5',
-        display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0,
+        flexShrink: 0,
       }}>
-        <Folder size={15} />
-        <span style={{ fontSize: 14, fontWeight: 600, color: '#2c2417' }}>{mapLabel}</span>
-        <span style={{ fontSize: 12, color: '#9b8e7e' }}>{address}</span>
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Folder size={15} />
+          <span style={{ fontSize: 14, fontWeight: 600, color: '#2c2417' }}>{mapLabel}</span>
+          <span style={{ fontSize: 12, color: '#9b8e7e' }}>{address}</span>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, alignItems: 'center' }}>
           <div style={{ position: 'relative' }}>
             <button style={{...btnStyle, opacity: isChildSelected ? 0.4 : 1 }} onClick={() => {
               if (isChildSelected) return;
@@ -688,6 +798,38 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
           <span style={{ fontSize: 11, color: '#6b5d4d', marginLeft: 8 }}>
             {wpCount} WP, {mapCount} Maps
           </span>
+        </div>
+        </div>
+
+        {/* GOAL row for current map */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, marginTop: 5 }}>
+          <span style={{ fontSize: 10, color: '#9b8e7e', whiteSpace: 'nowrap', paddingTop: 2 }}>🎯 GOAL</span>
+          {editingGoal !== null ? (
+            <>
+              <input
+                autoFocus
+                value={editingGoal}
+                onChange={e => setEditingGoal(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') saveGoal(address, editingGoal);
+                  if (e.key === 'Escape') setEditingGoal(null);
+                }}
+                style={{ flex: 1, fontSize: 12, padding: '1px 6px', border: '1px solid #d5cdc0', borderRadius: 4, fontFamily: 'inherit' }}
+              />
+              <button onClick={() => saveGoal(address, editingGoal)} disabled={goalSaving}
+                style={{ ...btnStyle, fontSize: 10, padding: '1px 8px' }}>저장</button>
+              <button onClick={() => setEditingGoal(null)}
+                style={{ ...btnStyle, fontSize: 10, padding: '1px 8px' }}>취소</button>
+            </>
+          ) : (
+            <span
+              onClick={() => setEditingGoal(mapData?.map.goal ?? '')}
+              style={{ fontSize: 12, color: mapData?.map.goal ? '#0550ae' : '#c0b8b0', fontStyle: 'italic', cursor: 'pointer', flex: 1 }}
+              title="클릭하여 편집"
+            >
+              {mapData?.map.goal || '(미지정) — 클릭하여 입력'}
+            </span>
+          )}
         </div>
       </div>
 
@@ -779,6 +921,8 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
                 <div style={{ flex: 1, overflow: 'auto', padding: '12px 16px' }}>
                   {detail.type === 'dwp'
                     ? <DataWayPointEditor projectRoot={projectRoot} address={detail.address} onOpenTab={onOpenTab} />
+                    : detail.type === 'map'
+                    ? <MapGoalPanel projectRoot={projectRoot} address={detail.address} onSaved={reloadMap} showToast={showToast} />
                     : <WayPointEditor projectRoot={projectRoot} address={detail.address} onOpenTab={onOpenTab} />
                   }
                 </div>
@@ -788,7 +932,7 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
                 height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: 'var(--text-muted)', fontSize: 13, background: 'var(--bg-surface)',
               }}>
-                WayPoint를 클릭하면 상세 정보가 표시됩니다.
+                WayPoint 또는 Map을 클릭하면 상세 정보가 표시됩니다.
               </div>
             )}
           </Panel>

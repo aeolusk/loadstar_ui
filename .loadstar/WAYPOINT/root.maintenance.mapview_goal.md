@@ -23,6 +23,9 @@
 - [x] 2026-05-11 ElementService.getMapView()에서 WayPoint goal 설정 (backend)
 - [x] 2026-05-11 MapViewItem 프론트엔드 인터페이스에 goal 추가 (client.ts)
 - [x] 2026-05-11 WayPointNode에 goal prop 전달 및 렌더링 (MapView.tsx)
+- [x] 2026-05-11 현재 Map의 GOAL 헤더 표시/인라인 편집 (MapView.tsx)
+- [x] 2026-05-11 서브맵 선택 시 하단 패널 MapGoalPanel 표시/편집 (MapView.tsx)
+- [x] 2026-05-11 PATCH /api/elements/map 엔드포인트 + ElementWriter.writeMap() GOAL 지원
 
 ### ISSUE
 (없음)

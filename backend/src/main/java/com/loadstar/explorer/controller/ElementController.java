@@ -127,6 +127,19 @@ public class ElementController {
         }
     }
 
+    @PatchMapping("/map")
+    public ResponseEntity<MapData> updateMap(
+            @RequestParam String root,
+            @RequestParam String address,
+            @RequestParam(required = false) String summary,
+            @RequestParam(required = false) String goal) {
+        try {
+            return ResponseEntity.ok(elementService.updateMap(root, address, summary, goal));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     @GetMapping("/references")
     public ResponseEntity<List<ElementService.ReferenceInfo>> getReferences(
             @RequestParam String root,
