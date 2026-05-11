@@ -373,6 +373,15 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
 
   const deletePendingMap = (newAddr: string) => {
     setPendingMaps(prev => prev.filter(m => `M://${m.parentMapAddress.substring(4)}/${m.id}` !== newAddr));
+    // Also remove any pending WPs that belong to this pending map
+    setPendingWps(prev => prev.filter(w => w.mapAddress !== newAddr));
+  };
+
+  const updatePendingMap = (addr: string, field: 'summary' | 'goal', value: string) => {
+    setPendingMaps(prev => prev.map(m => {
+      const mAddr = `M://${m.parentMapAddress.substring(4)}/${m.id}`;
+      return mAddr === addr ? { ...m, [field]: value } : m;
+    }));
   };
 
   const saveAll = async () => {
@@ -507,6 +516,7 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
             onAddMap={openAddMapModal}
             onDeletePendingWp={deletePendingWp}
             onDeletePendingMap={deletePendingMap}
+            onUpdatePendingMap={updatePendingMap}
           />
         ))
       )}
@@ -616,12 +626,13 @@ interface NodeProps {
   onAddMap: (mapAddr: string) => void;
   onDeletePendingWp: (childAddr: string) => void;
   onDeletePendingMap: (newAddr: string) => void;
+  onUpdatePendingMap: (addr: string, field: 'summary' | 'goal', value: string) => void;
 }
 
 const Node = ({
   node, depth, openTodos, onToggle,
   editMode, editedData, pendingWps, pendingMaps, dirtyAddresses, nodeMap,
-  onFieldChange, onAddWp, onAddMap, onDeletePendingWp, onDeletePendingMap,
+  onFieldChange, onAddWp, onAddMap, onDeletePendingWp, onDeletePendingMap, onUpdatePendingMap,
 }: NodeProps) => {
   const indent = depth * 24;
   const isDirty = dirtyAddresses.has(node.address);
@@ -652,7 +663,7 @@ const Node = ({
   const childSharedProps = {
     openTodos, onToggle, editMode, editedData, pendingWps, pendingMaps,
     dirtyAddresses, nodeMap, onFieldChange, onAddWp, onAddMap,
-    onDeletePendingWp, onDeletePendingMap,
+    onDeletePendingWp, onDeletePendingMap, onUpdatePendingMap,
   };
 
   // Pending WPs/Maps for this map node
@@ -775,11 +786,12 @@ const Node = ({
             );
           })}
 
-          {/* Pending new Maps */}
+          {/* Pending new Maps — editable with WP children */}
           {myPendingMaps.map(m => {
             const addr = `M://${m.parentMapAddress.substring(4)}/${m.id}`;
+            const wpsForMap = pendingWps.filter(w => w.mapAddress === addr);
             return (
-              <div key={addr} style={{ marginLeft: (depth + 1) * 24, marginBottom: 12 }}>
+              <div key={addr} style={{ ...s.block, marginLeft: (depth + 1) * 24 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <span style={{ color: COLOR_DIRTY, fontSize: 10 }}>●</span>
                   <span style={{ ...s.addr, color: COLOR_DWP }}>📁 {addr}</span>
@@ -790,8 +802,46 @@ const Node = ({
                     title="삭제"
                   >×</button>
                 </div>
-                <div style={{ marginLeft: (depth + 2) * 24 - indent, ...s.summary, color: COLOR_DWP }}>
-                  {m.summary || '(내용 미입력)'}
+                <input
+                  style={s.editInput}
+                  value={m.summary}
+                  onChange={e => onUpdatePendingMap(addr, 'summary', e.target.value)}
+                  placeholder="SUMMARY"
+                />
+                <span style={s.editGoalLabel}>🎯 GOAL</span>
+                <textarea
+                  style={s.editGoal}
+                  value={m.goal}
+                  onChange={e => onUpdatePendingMap(addr, 'goal', e.target.value)}
+                  placeholder="GOAL 입력..."
+                  rows={2}
+                />
+                {/* Pending WPs for this pending map */}
+                {wpsForMap.map(wp => {
+                  const wpAddr = `W://${addr.substring(4)}/${wp.id}`;
+                  return (
+                    <div key={wpAddr} style={{ marginLeft: 24, marginBottom: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ color: COLOR_DIRTY, fontSize: 10 }}>●</span>
+                        <span style={{ ...s.addr, color: COLOR_DWP }}>◆ {wpAddr}</span>
+                        <span style={{ background: '#6f42c1', color: 'white', padding: '1px 5px', borderRadius: 3, fontSize: 10 }}>NEW</span>
+                        <button
+                          onClick={() => onDeletePendingWp(wpAddr)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#cf222e', fontSize: 14, lineHeight: 1, padding: '0 4px', marginLeft: 4 }}
+                          title="삭제"
+                        >×</button>
+                      </div>
+                      <div style={{ marginLeft: 24, ...s.summary, color: COLOR_DWP }}>
+                        {wp.summary || '(내용 미입력)'}
+                      </div>
+                    </div>
+                  );
+                })}
+                {/* + WP 추가 */}
+                <div style={{ marginLeft: 24, display: 'flex', gap: 6 }}>
+                  <button style={s.addWpBtn} onClick={() => onAddWp(addr)}>
+                    + WP 추가
+                  </button>
                 </div>
               </div>
             );
