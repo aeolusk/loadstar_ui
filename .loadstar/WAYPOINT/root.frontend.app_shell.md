@@ -13,16 +13,15 @@
 - REFERENCE: [W://root/test/test_app_shell]
 
 ### TODO
-- TECH_SPEC:
-  - [x] 2026-04-06 Menu Bar, Toolbar, ElementTree, EditorTabs, StatusBar 레이아웃
-  - [x] 2026-04-08 ElementTree: Map 추가(+ 버튼) / 삭제(− 버튼, confirm, 하위 항목 시 경고)
-  - [x] 2026-04-08 ElementTree: 노드 선택 하이라이트 (파란 좌측 보더)
-  - [x] 2026-04-08 Toolbar: 모니터링 버튼 제거
-  - [x] 2026-04-08 EditorTabs: BlackBox editor 제거
-  - [x] 2026-04-08 구조 변경 시 트리 자동 갱신 (treeVersion)
-  - [x] 2026-04-10 프로젝트 선택 시 대시보드 탭 자동 오픈
-  - [x] 2026-04-14 MenuBar 컴포넌트 제거, About 팝업 추가 (toolbar 우측 ⓘ 버튼)
-  - [x] 2026-04-14 전체 유니코드/이모지 아이콘을 Phosphor Icons로 교체 (11개 파일, 44+ 아이콘)
+- [x] 2026-04-06 Menu Bar, Toolbar, ElementTree, EditorTabs, StatusBar 레이아웃
+- [x] 2026-04-08 ElementTree: Map 추가(+ 버튼) / 삭제(− 버튼, confirm, 하위 항목 시 경고)
+- [x] 2026-04-08 ElementTree: 노드 선택 하이라이트 (파란 좌측 보더)
+- [x] 2026-04-08 Toolbar: 모니터링 버튼 제거
+- [x] 2026-04-08 EditorTabs: BlackBox editor 제거
+- [x] 2026-04-08 구조 변경 시 트리 자동 갱신 (treeVersion)
+- [x] 2026-04-10 프로젝트 선택 시 대시보드 탭 자동 오픈
+- [x] 2026-04-14 MenuBar 컴포넌트 제거, About 팝업 추가 (toolbar 우측 ⓘ 버튼)
+- [x] 2026-04-14 전체 유니코드/이모지 아이콘을 Phosphor Icons로 교체 (11개 파일, 44+ 아이콘)
 
 ### ISSUE
 (없음)

@@ -23,12 +23,12 @@
 
 ### 작업 전
 1. 대상 WayPoint를 확인한다 (`.loadstar/WAYPOINT/` 하위)
-2. TECH_SPEC에 작업 항목이 없으면 `- [ ] 작업 내용`을 추가한다
+2. TODO에 작업 항목이 없으면 `- [ ] 작업 내용`을 추가한다
 3. STATUS가 `S_IDL`이면 `S_PRG`로 변경한다
 
 ### 작업 후
-1. 완료된 TECH_SPEC 항목을 `- [x] YYYY-MM-DD 작업 내용`으로 체크한다
-2. WP의 모든 TECH_SPEC이 완료되면 STATUS를 `S_STB`로 변경한다
+1. 완료된 TODO 항목을 `- [x] YYYY-MM-DD 작업 내용`으로 체크한다
+2. WP의 모든 TODO TASK 항목이 완료되면 STATUS를 `S_STB`로 변경한다
 3. SUMMARY가 현재 기능과 다르면 갱신한다
 
 ### 원칙

@@ -17,16 +17,14 @@
   - frontend/src/
 
 ### TODO
-- SUMMARY: DWP 에디터 프론트엔드 구현
-- TECH_SPEC:
-  # TASK
-  - [x] 2026-05-08 types/loadstar.ts — ElementType에 'DWP' 추가
-  - [x] 2026-05-08 client.ts — WayPointDetail에 tables 필드 추가, fetchDwp/updateDwp 함수 추가
-  - [x] 2026-05-08 ElementTree.tsx — DWP 타입 → 'dwp' 탭타입, 아이콘 처리
-  - [x] 2026-05-08 App.tsx — Tab type union에 'dwp' 추가
-  - [x] 2026-05-08 EditorTabs.tsx — 'dwp' 케이스 추가, DataWayPointEditor 연결, 탭 아이콘
-  - [x] 2026-05-08 DataWayPointEditor.tsx — 신규 컴포넌트. WayPointEditor에서 TODO 제거, CHILDREN 제거, TABLES 섹션 추가
-  - [x] 2026-05-08 WayPointEditor.tsx — navigateTo에 D:// → dwp 케이스 추가
+# TASK
+- [x] 2026-05-08 types/loadstar.ts — ElementType에 'DWP' 추가
+- [x] 2026-05-08 client.ts — WayPointDetail에 tables 필드 추가, fetchDwp/updateDwp 함수 추가
+- [x] 2026-05-08 ElementTree.tsx — DWP 타입 → 'dwp' 탭타입, 아이콘 처리
+- [x] 2026-05-08 App.tsx — Tab type union에 'dwp' 추가
+- [x] 2026-05-08 EditorTabs.tsx — 'dwp' 케이스 추가, DataWayPointEditor 연결, 탭 아이콘
+- [x] 2026-05-08 DataWayPointEditor.tsx — 신규 컴포넌트. WayPointEditor에서 TODO 제거, CHILDREN 제거, TABLES 섹션 추가
+- [x] 2026-05-08 WayPointEditor.tsx — navigateTo에 D:// → dwp 케이스 추가
 
 ### ISSUE
 (없음)

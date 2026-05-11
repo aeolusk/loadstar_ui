@@ -18,20 +18,17 @@
   - backend/src/main/java/com/loadstar/explorer/controller/
 
 ### TODO
-- ADDRESS: W://root/backend/schedule_service
-- SUMMARY: 스케쥴 보조 툴용 schedule.json 관리 REST API
-- TECH_SPEC:
-  - [x] 2026-05-07 schedule.json 파일 위치 정의 (`.loadstar/SCHEDULE/schedule.json`)
-  - [x] 2026-05-07 파일 부재 시 첫 GET 진입에서 자동 생성 (빈 view + 빈 items)
-  - [x] 2026-05-07 GET /api/schedule — view(start_date, duration_days) + items(주소→{start,end}) + 각 항목에 exists / completed / recurring_only 플래그를 함께 반환
-  - [x] 2026-05-07 PUT /api/schedule — 요청 본문(view + 화면에 보이는 모든 items)을 그대로 schedule.json으로 덮어쓰기
-  - [x] 2026-05-07 WP 존재 여부 — ElementParser를 통한 WP 파일 존재 여부 확인
-  - [x] 2026-05-07 WP 완료 판정 — TECH_SPEC의 비반복 체크박스 항목(`[ ]`/`[x]`)이 모두 `[x]`이면 completed=true. 반복 전용(모두 `(R)` 또는 비반복 0건)이면 recurring_only=true로 별도 표시
-  - [x] 2026-05-07 WP 정렬 키 산출 — `M://root` 부터 DFS 순회한 등장 순서를 인덱스로 부여. 고아 WP는 맨 뒤로 모음
-  - [x] 2026-05-07 log_service 호출 0건 — 로그 미기록 원칙 준수
-  - [x] 2026-05-07 schedule.json read/write 외에는 다른 파일에 쓰지 않음 (단방향 read만 허용)
-  - (R) 변경 후 mvn test 실행
-  - (R) 변경 후 mvn spring-boot:build로 컴파일 검증
+- [x] 2026-05-07 schedule.json 파일 위치 정의 (`.loadstar/SCHEDULE/schedule.json`)
+- [x] 2026-05-07 파일 부재 시 첫 GET 진입에서 자동 생성 (빈 view + 빈 items)
+- [x] 2026-05-07 GET /api/schedule — view(start_date, duration_days) + items(주소→{start,end}) + 각 항목에 exists / completed / recurring_only 플래그를 함께 반환
+- [x] 2026-05-07 PUT /api/schedule — 요청 본문(view + 화면에 보이는 모든 items)을 그대로 schedule.json으로 덮어쓰기
+- [x] 2026-05-07 WP 존재 여부 — ElementParser를 통한 WP 파일 존재 여부 확인
+- [x] 2026-05-07 WP 완료 판정 — TECH_SPEC의 비반복 체크박스 항목(`[ ]`/`[x]`)이 모두 `[x]`이면 completed=true. 반복 전용(모두 `(R)` 또는 비반복 0건)이면 recurring_only=true로 별도 표시
+- [x] 2026-05-07 WP 정렬 키 산출 — `M://root` 부터 DFS 순회한 등장 순서를 인덱스로 부여. 고아 WP는 맨 뒤로 모음
+- [x] 2026-05-07 log_service 호출 0건 — 로그 미기록 원칙 준수
+- [x] 2026-05-07 schedule.json read/write 외에는 다른 파일에 쓰지 않음 (단방향 read만 허용)
+- (R) 변경 후 mvn test 실행
+- (R) 변경 후 mvn spring-boot:build로 컴파일 검증
 
 ### ISSUE
 (없음)

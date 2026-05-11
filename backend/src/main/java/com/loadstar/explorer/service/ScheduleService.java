@@ -103,7 +103,7 @@ public class ScheduleService {
             }
 
             boolean recurringOnly = !hasTask && hasRecurring;
-            // 작업 항목이 없고 반복 항목도 없으면 완료로 처리 (TECH_SPEC 없는 WP 포함)
+            // 작업 항목이 없고 반복 항목도 없으면 완료로 처리 (TODO 없는 WP 포함)
             boolean completed = !recurringOnly && (!hasTask || allDone);
             return new WpMeta(true, summary, completed, recurringOnly);
         } catch (Exception e) {

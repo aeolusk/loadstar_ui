@@ -12,10 +12,8 @@
 - REFERENCE: []
 
 ### TODO
-- ADDRESS: W://root/frontend/dashboard/waypoint 상황 표시
-- TECH_SPEC:
-  - [x] 2026-04-10 백엔드 API — WP STATUS 집계 (Map별 그룹, 상태별 카운트, BLOCKED 목록)
-  - [x] 2026-04-10 프론트엔드 — Map별 탭 + 상태 분포 바 + BLOCKED 경고
+- [x] 2026-04-10 백엔드 API — WP STATUS 집계 (Map별 그룹, 상태별 카운트, BLOCKED 목록)
+- [x] 2026-04-10 프론트엔드 — Map별 탭 + 상태 분포 바 + BLOCKED 경고
 
 ### ISSUE
 (없음)

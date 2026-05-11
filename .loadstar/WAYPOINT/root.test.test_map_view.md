@@ -18,8 +18,7 @@
 - [x] 2026-04-28 WP 삭제 confirm 대화상자 테스트 — functional test로 대체
 - [x] 2026-04-28 child/ref 배지 펼침 테스트 — functional test로 대체
 
-- TECH_SPEC:
-  - (R) 이 기능에 대한 functional test를 진행한다
+- (R) 이 기능에 대한 functional test를 진행한다
 
 ### ISSUE
 (없음)

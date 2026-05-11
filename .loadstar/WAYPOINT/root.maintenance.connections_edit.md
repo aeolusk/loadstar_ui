@@ -20,28 +20,25 @@
   - frontend/src/api/
 
 ### TODO
-- ADDRESS: W://root/maintenance/connections_edit
-- SUMMARY: WP의 PARENT 변경 및 CHILDREN 추가/삭제 UI + 백엔드 API
-- TECH_SPEC:
-  # TASK — Backend
-  - [x] 2026-04-28 GET /api/elements/addresses — 전체 WP+MAP 주소 목록 (콤보박스 소스)
-  - [x] 2026-04-28 PATCH /api/elements/waypoint/parent?root=&address=&newParent= — PARENT 필드 변경
+# TASK — Backend
+- [x] 2026-04-28 GET /api/elements/addresses — 전체 WP+MAP 주소 목록 (콤보박스 소스)
+- [x] 2026-04-28 PATCH /api/elements/waypoint/parent?root=&address=&newParent= — PARENT 필드 변경
     - 기존 부모 MAP/WP의 CHILDREN에서 제거, 새 부모의 CHILDREN에 추가
     - 주소(파일명)는 변경 없음
-  - [x] 2026-04-28 POST /api/elements/waypoint/children?root=&parentAddr=&childAddr= — CHILDREN 추가
-  - [x] 2026-04-28 DELETE /api/elements/waypoint/children?root=&parentAddr=&childAddr= — CHILDREN 제거
-  - [x] 2026-04-28 변경 시 loadstar log add MODIFIED 자동 기록
+- [x] 2026-04-28 POST /api/elements/waypoint/children?root=&parentAddr=&childAddr= — CHILDREN 추가
+- [x] 2026-04-28 DELETE /api/elements/waypoint/children?root=&parentAddr=&childAddr= — CHILDREN 제거
+- [x] 2026-04-28 변경 시 loadstar log add MODIFIED 자동 기록
 
-  # TASK — Frontend
-  - [x] 2026-04-28 client.ts — fetchAddresses, patchParent, addChild, removeChild API 함수 추가
-  - [x] 2026-04-28 WayPointEditor에 CONNECTIONS 편집 섹션 추가 (edit 모드 토글)
-  - [x] 2026-04-28 PARENT: 콤보박스(전체 주소 목록) + "없음" 클리어 옵션
-  - [x] 2026-04-28 CHILDREN: 리스트 + × 삭제 버튼 + 콤보박스로 추가
-  - [x] 2026-04-28 변경 성공 후 WP 데이터 재로드
+# TASK — Frontend
+- [x] 2026-04-28 client.ts — fetchAddresses, patchParent, addChild, removeChild API 함수 추가
+- [x] 2026-04-28 WayPointEditor에 CONNECTIONS 편집 섹션 추가 (edit 모드 토글)
+- [x] 2026-04-28 PARENT: 콤보박스(전체 주소 목록) + "없음" 클리어 옵션
+- [x] 2026-04-28 CHILDREN: 리스트 + × 삭제 버튼 + 콤보박스로 추가
+- [x] 2026-04-28 변경 성공 후 WP 데이터 재로드
 
-  # RECURRING
-  - (R) 변경 후 `cd backend && mvn compile` 실행
-  - (R) 변경 후 `cd frontend && npx vite build` 실행
+# RECURRING
+- (R) 변경 후 `cd backend && mvn compile` 실행
+- (R) 변경 후 `cd frontend && npx vite build` 실행
 
 ### ISSUE
 - OPEN_QUESTIONS:

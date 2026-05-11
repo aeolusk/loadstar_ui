@@ -82,7 +82,7 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
   const [editCommentText, setEditCommentText] = useState('');
   const [editTodoSummaryText, setEditTodoSummaryText] = useState('');
 
-  // TECH_SPEC editing
+  // TODO editing (변수명은 후속 리네임 WP에서 정리)
   const [techSpecItems, setTechSpecItems] = useState<{ text: string; done: boolean; recurring?: boolean }[]>([]);
   const [selectedTechSpec, setSelectedTechSpec] = useState<Set<number>>(new Set());
   const [editingTechSpec, setEditingTechSpec] = useState<number | null>(null);
@@ -395,7 +395,7 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
     setEditTodoSummary(false);
   };
 
-  // --- TECH_SPEC handlers ---
+  // --- TODO handlers ---
   const toggleTechSpec = (idx: number) => {
     const updated = techSpecItems.map((item, i) => i === idx ? { ...item, done: !item.done } : item);
     setTechSpecItems(updated);
@@ -926,7 +926,7 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
         )}
       </div>
 
-      {/* ===== TODO / TECH_SPEC ===== */}
+      {/* ===== TODO ===== */}
       <div style={s.section}>
         <div style={s.sectionHeader}>
           <span style={s.sectionTitle}>TODO {total > 0 && `(${done}/${total})`}</span>

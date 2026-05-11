@@ -17,19 +17,16 @@
   - frontend/src/features/map-view/
 
 ### TODO
-- ADDRESS: W://root/maintenance/selection_mousedown
-- SUMMARY: MapView 노드 4종 선택 핸들러를 onMouseDown(좌클릭 가드) 으로 전환
-- TECH_SPEC:
-  # TASK
-  - [x] 2026-05-01 MapView WayPointNode: onClick → onMouseDownCapture + 좌클릭 가드
-  - [x] 2026-05-01 MapView MapNode: 동일
-  - [x] 2026-05-01 MapView RefWayPointNode: 동일
-  - [x] 2026-05-01 MapView ChildWayPointNode: 동일
-  - [x] 2026-05-01 FlowChart ReactFlow에 nodeDragThreshold=5 유지 (drag UX 보조)
-  - [x] 2026-05-01 vite build 통과
+# TASK
+- [x] 2026-05-01 MapView WayPointNode: onClick → onMouseDownCapture + 좌클릭 가드
+- [x] 2026-05-01 MapView MapNode: 동일
+- [x] 2026-05-01 MapView RefWayPointNode: 동일
+- [x] 2026-05-01 MapView ChildWayPointNode: 동일
+- [x] 2026-05-01 FlowChart ReactFlow에 nodeDragThreshold=5 유지 (drag UX 보조)
+- [x] 2026-05-01 vite build 통과
 
-  # RECURRING
-  - (R) 변경 후 `cd frontend && npx vite build` 실행
+# RECURRING
+- (R) 변경 후 `cd frontend && npx vite build` 실행
 
 ### ISSUE
 - OPEN_QUESTIONS:

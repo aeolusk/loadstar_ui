@@ -13,12 +13,9 @@
 - REFERENCE: [W://root/test/test_search]
 
 ### TODO
-- ADDRESS: W://root/frontend/search
-- SUMMARY: Command Palette 검색 구현
-- TECH_SPEC:
-  - [x] 샘플 데이터 기반 검색 화면 구현
-  - [x] 2026-04-14 실제 API 연동 (요소 검색)
-  - [x] 2026-04-14 Ctrl+K 단축키 연동
+- [x] 샘플 데이터 기반 검색 화면 구현
+- [x] 2026-04-14 실제 API 연동 (요소 검색)
+- [x] 2026-04-14 Ctrl+K 단축키 연동
 
 ### ISSUE
 (없음)

@@ -203,7 +203,7 @@ export default function TodoView({ projectRoot }: TodoViewProps) {
           </div>
 
           {histResult === null ? (
-            <div style={s.empty}>[조회] 버튼을 클릭하면 WayPoint TECH_SPEC의 완료 항목을 수집합니다.</div>
+            <div style={s.empty}>[조회] 버튼을 클릭하면 WayPoint TODO의 완료 항목을 수집합니다.</div>
           ) : histResult.length === 0 ? (
             <div style={s.empty}>완료된 항목이 없습니다.</div>
           ) : (

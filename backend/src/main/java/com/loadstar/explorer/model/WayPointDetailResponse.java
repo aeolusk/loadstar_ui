@@ -23,7 +23,7 @@ public class WayPointDetailResponse {
     // CODE_MAP
     private List<String> codeMapScopes;
 
-    // TODO / TECH_SPEC
+    // TODO
     private String todoAddress;
     private String todoSummary;
     private List<TechSpecItem> techSpec;
