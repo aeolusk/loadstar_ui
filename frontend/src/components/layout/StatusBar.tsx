@@ -11,7 +11,7 @@ const StatusBar = ({ projectRoot }: StatusBarProps) => {
       <div className="status-bar-separator" />
       <div className="status-bar-item">drift: 0</div>
       <div className="status-bar-spacer" />
-      <div className="status-bar-item">v0.1.0</div>
+      <div className="status-bar-item">v0.2.0</div>
     </div>
   );
 };
