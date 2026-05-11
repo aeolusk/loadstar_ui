@@ -17,7 +17,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import type { Tab } from '../../App';
-import { fetchMapView, updateMap, addToMap, addChildToWayPoint, removeFromMap, removeChildFromWayPoint, createSubMap, deleteMap, type MapViewResponse, type MapViewItem } from '../../api/client';
+import { fetchMapView, updateMap, addToMap, addChildToWayPoint, removeFromMap, removeChildFromWayPoint, createSubMap, deleteMap, deleteWayPoint, type MapViewResponse, type MapViewItem } from '../../api/client';
 import WayPointEditor from '../waypoint-editor/WayPointEditor';
 import DataWayPointEditor from '../dwp-editor/DataWayPointEditor';
 
@@ -607,17 +607,25 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
 
   const handleRemoveSelected = async () => {
     if (!selectedNode) return;
-    if (!confirm(`"${selectedNode}"를 이 Map에서 제거하시겠습니까?`)) return;
+    const nodeType = mapData?.items.find(it => it.address === selectedNode)?.type;
+    const isWp = nodeType === 'WAYPOINT';
+    if (!confirm(`"${selectedNode}"를 ${isWp ? '삭제' : '이 Map에서 제거'}하시겠습니까?`)) return;
     setSaving(true);
     try {
-      const updated = await removeFromMap(projectRoot, address, selectedNode);
-      setMapData(updated);
+      if (isWp) {
+        const result = await deleteWayPoint(projectRoot, selectedNode);
+        if (!result.success) throw new Error(result.error || '삭제 실패');
+        reloadMap();
+      } else {
+        const updated = await removeFromMap(projectRoot, address, selectedNode);
+        setMapData(updated);
+      }
       setSelectedNode(null);
       setDetail(null);
-      showToast(`"${selectedNode}" 제거 완료.`);
+      showToast(`"${selectedNode}" ${isWp ? '삭제' : '제거'} 완료.`);
       onStructureChange?.();
     } catch (e) {
-      showToast('제거 실패: ' + (e instanceof Error ? e.message : 'Unknown error'));
+      showToast('실패: ' + (e instanceof Error ? e.message : 'Unknown error'));
     } finally {
       setSaving(false);
     }
