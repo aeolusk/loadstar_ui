@@ -149,9 +149,10 @@ export async function addToMap(root: string, mapAddress: string, childAddress: s
   return res.data;
 }
 
-export async function createSubMap(root: string, parentMapAddress: string, id: string, summary?: string): Promise<void> {
+export async function createSubMap(root: string, parentMapAddress: string, id: string, summary?: string, goal?: string): Promise<void> {
   const params: Record<string, string> = { root, parentMapAddress, id };
   if (summary) params.summary = summary;
+  if (goal) params.goal = goal;
   await apiClient.post('/elements/map/create-child', null, { params });
 }
 

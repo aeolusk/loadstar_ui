@@ -367,7 +367,7 @@ public class ElementService {
         return getMapView(projectRoot, mapAddress);
     }
 
-    public MapViewResponse createSubMap(String projectRoot, String parentMapAddress, String newId, String summary) throws IOException {
+    public MapViewResponse createSubMap(String projectRoot, String parentMapAddress, String newId, String summary, String goal) throws IOException {
         Path parentFile = addressToPath(projectRoot, parentMapAddress);
         if (!Files.exists(parentFile)) throw new IOException("Parent map not found: " + parentMapAddress);
 
@@ -383,6 +383,7 @@ public class ElementService {
         newMap.setAddress(newAddress);
         newMap.setStatus("S_IDL");
         newMap.setSummary(summary != null ? summary : "");
+        newMap.setGoal((goal == null || goal.isBlank()) ? null : goal.strip());
         newMap.setWaypoints(new ArrayList<>());
         writer.writeMap(newFile, newMap);
 

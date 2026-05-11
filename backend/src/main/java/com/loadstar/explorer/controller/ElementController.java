@@ -120,9 +120,10 @@ public class ElementController {
             @RequestParam String root,
             @RequestParam String parentMapAddress,
             @RequestParam String id,
-            @RequestParam(required = false) String summary) {
+            @RequestParam(required = false) String summary,
+            @RequestParam(required = false) String goal) {
         try {
-            return ResponseEntity.ok(elementService.createSubMap(root, parentMapAddress, id, summary));
+            return ResponseEntity.ok(elementService.createSubMap(root, parentMapAddress, id, summary, goal));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }

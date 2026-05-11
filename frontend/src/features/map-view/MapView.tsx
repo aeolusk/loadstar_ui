@@ -648,8 +648,8 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
   };
 
   const handleDeleteMap = async () => {
-    const targetMap = selectedNode && mapData?.items.find(it => it.address === selectedNode && it.type === 'MAP');
-    const targetAddr = targetMap ? selectedNode! : address;
+    if (!selectedNode) return;
+    const targetAddr = selectedNode;
 
     // WP 존재 여부 먼저 확인
     let wpCount: number;

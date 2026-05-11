@@ -8,7 +8,7 @@ interface GoalReportProps {
 
 type EditedField = { summary: string; goal: string };
 type PendingWp = { mapAddress: string; id: string; summary: string; goal: string };
-type PendingMap = { parentMapAddress: string; id: string; summary: string };
+type PendingMap = { parentMapAddress: string; id: string; summary: string; goal: string };
 
 const COLOR_TEXT = '#1f2328';
 const COLOR_MUTED = '#8c959f';
@@ -233,6 +233,7 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
   const [addMapModal, setAddMapModal] = useState<string | null>(null);
   const [addMapId, setAddMapId] = useState('');
   const [addMapSummary, setAddMapSummary] = useState('');
+  const [addMapGoal, setAddMapGoal] = useState('');
   const [addMapError, setAddMapError] = useState('');
 
   // Inject print CSS
@@ -350,6 +351,7 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
     setAddMapModal(parentMapAddr);
     setAddMapId('');
     setAddMapSummary('');
+    setAddMapGoal('');
     setAddMapError('');
   };
 
@@ -365,7 +367,7 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
       setAddMapError(`이미 존재하는 주소입니다: ${newAddr}`);
       return;
     }
-    setPendingMaps(prev => [...prev, { parentMapAddress: addMapModal, id, summary: addMapSummary.trim() }]);
+    setPendingMaps(prev => [...prev, { parentMapAddress: addMapModal, id, summary: addMapSummary.trim(), goal: addMapGoal.trim() }]);
     setAddMapModal(null);
   };
 
@@ -379,7 +381,7 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
     try {
       // Step 1: create new Maps and skeleton WP files
       for (const m of pendingMaps) {
-        await createSubMap(projectRoot, m.parentMapAddress, m.id, m.summary || undefined);
+        await createSubMap(projectRoot, m.parentMapAddress, m.id, m.summary || undefined, m.goal || undefined);
       }
       for (const wp of pendingWps) {
         const childAddr = `W://${wp.mapAddress.substring(4)}/${wp.id}`;
@@ -574,6 +576,14 @@ const GoalReport = ({ projectRoot }: GoalReportProps) => {
               value={addMapSummary}
               onChange={e => setAddMapSummary(e.target.value)}
               placeholder="간략한 설명"
+              onKeyDown={e => { if (e.key === 'Escape') setAddMapModal(null); }}
+            />
+            <label style={s.modalLabel}>GOAL</label>
+            <textarea
+              style={{ ...s.modalInput, minHeight: 56, resize: 'vertical', color: COLOR_GOAL }}
+              value={addMapGoal}
+              onChange={e => setAddMapGoal(e.target.value)}
+              placeholder="이 Map이 달성하고자 하는 목표"
               onKeyDown={e => { if (e.key === 'Escape') setAddMapModal(null); }}
             />
             {addMapError && <div style={s.modalError}>{addMapError}</div>}
