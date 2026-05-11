@@ -11,6 +11,7 @@
 - W://root/maintenance/connections_edit
 - W://root/maintenance/selection_mousedown
 - W://root/maintenance/mapview_goal
+- W://root/maintenance/goals_editor
 
 ### COMMENT
 (없음)

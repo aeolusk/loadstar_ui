@@ -132,9 +132,10 @@ public class ElementController {
             @RequestParam String root,
             @RequestParam String address,
             @RequestParam(required = false) String summary,
-            @RequestParam(required = false) String goal) {
+            @RequestParam(required = false) String goal,
+            @RequestParam(required = false) List<String> waypoints) {
         try {
-            return ResponseEntity.ok(elementService.updateMap(root, address, summary, goal));
+            return ResponseEntity.ok(elementService.updateMap(root, address, summary, goal, waypoints));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
