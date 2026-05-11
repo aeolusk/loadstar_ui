@@ -7,6 +7,9 @@
 - METADATA: [Ver: 2.1, Created: 2026-04-06]
 - SYNCED_AT: 2026-05-01
 
+### GOAL
+Map 산하 요소들의 계층과 참조 관계를 다이어그램 한 장으로 조망할 수 있게 한다. 텍스트로만 표현된 트리에서는 보이지 않는 다대다 참조와 흐름을 시각적으로 드러낸다.
+
 ### CONNECTIONS
 - PARENT: M://root/frontend
 - CHILDREN: []

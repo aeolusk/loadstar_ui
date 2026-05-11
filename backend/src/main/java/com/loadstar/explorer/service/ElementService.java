@@ -439,6 +439,7 @@ public class ElementService {
             node.setType("MAP");
             node.setStatus(map.getStatus());
             node.setSummary(map.getSummary());
+            node.setGoal(map.getGoal());
 
             List<TreeNodeDto> children = new ArrayList<>();
             for (String childAddr : map.getWaypoints()) {
@@ -450,7 +451,9 @@ public class ElementService {
             node.setType("WAYPOINT");
             node.setStatus(wp.getStatus());
             node.setSummary(wp.getSummary());
+            node.setGoal(wp.getGoal());
             node.setReferences(wp.getReferences());
+            node.setTodos(wp.getTodos());
 
             List<TreeNodeDto> children = new ArrayList<>();
             if (wp.getChildren() != null) {
@@ -580,8 +583,10 @@ public class ElementService {
         private String type;
         private String status;
         private String summary;
+        private String goal;
         private List<String> references;
         private List<TreeNodeDto> children;
+        private List<com.loadstar.explorer.model.TodoItem> todos;
     }
 
     // ===== Connections editing =====

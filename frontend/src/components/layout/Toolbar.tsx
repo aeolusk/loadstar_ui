@@ -1,5 +1,5 @@
 import type { Tab } from '../../App';
-import { SquaresFour, CheckSquare, GitBranch, Scroll, Terminal, Info, Question, CalendarBlank } from '@phosphor-icons/react';
+import { SquaresFour, CheckSquare, GitBranch, Scroll, Terminal, Info, Question, CalendarBlank, Target } from '@phosphor-icons/react';
 
 interface ToolbarProps {
   onOpenTab: (tab: Tab) => void;
@@ -16,6 +16,7 @@ const toolbarItems: { label: string; type: Tab['type']; icon: React.ReactNode }[
   { label: '로그', type: 'log', icon: <Scroll size={ICON_SIZE} /> },
   { label: 'CLI', type: 'cli', icon: <Terminal size={ICON_SIZE} /> },
   { label: 'Schedule', type: 'schedule', icon: <CalendarBlank size={ICON_SIZE} /> },
+  { label: 'Goals', type: 'goals', icon: <Target size={ICON_SIZE} /> },
 ];
 
 const Toolbar = ({ onOpenTab, onAbout }: ToolbarProps) => {

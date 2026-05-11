@@ -7,6 +7,9 @@
 - METADATA: [Ver: 1.0, Created: 2026-04-06]
 - SYNCED_AT: 2026-04-10
 
+### GOAL
+프로젝트 진입 시 가장 먼저 보이는 화면. 진행 중인 WP, 미해결 이슈, 최근 알림을 한눈에 보여주어 작업 컨텍스트를 빠르게 회복시킨다.
+
 ### CONNECTIONS
 - PARENT: M://root/frontend
 - CHILDREN: [W://root/frontend/dashboard/주요 알림 표시, W://root/frontend/dashboard/주요 이슈 표시, W://root/frontend/dashboard/waypoint 상황 표시]

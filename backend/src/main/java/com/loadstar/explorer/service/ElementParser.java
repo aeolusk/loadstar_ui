@@ -23,6 +23,8 @@ public class ElementParser {
         MapData map = new MapData();
         List<String> waypoints = new ArrayList<>();
         boolean inWaypoints = false;
+        boolean inGoal = false;
+        StringBuilder goalBuilder = new StringBuilder();
 
         for (String line : lines) {
             String trimmed = line.trim();
@@ -39,18 +41,28 @@ public class ElementParser {
                 continue;
             }
 
+            if (trimmed.startsWith("### ")) {
+                if (trimmed.equals("### WAYPOINTS")) {
+                    inWaypoints = true;
+                    inGoal = false;
+                } else if (trimmed.startsWith("### GOAL")) {
+                    inGoal = true;
+                    inWaypoints = false;
+                } else {
+                    inWaypoints = false;
+                    inGoal = false;
+                }
+                continue;
+            }
+
             if (trimmed.startsWith("- SUMMARY:")) {
                 map.setSummary(trimmed.substring("- SUMMARY:".length()).trim());
                 continue;
             }
 
-            if (trimmed.equals("### WAYPOINTS")) {
-                inWaypoints = true;
-                continue;
-            }
-
-            if (trimmed.startsWith("### ") && !trimmed.equals("### WAYPOINTS")) {
-                inWaypoints = false;
+            if (inGoal && !trimmed.isEmpty() && !trimmed.startsWith("</")) {
+                if (goalBuilder.length() > 0) goalBuilder.append(" ");
+                goalBuilder.append(trimmed);
                 continue;
             }
 
@@ -62,6 +74,8 @@ public class ElementParser {
             }
         }
 
+        String goal = goalBuilder.toString().trim();
+        if (!goal.isEmpty()) map.setGoal(goal);
         map.setWaypoints(waypoints);
         return map;
     }
@@ -71,8 +85,10 @@ public class ElementParser {
         WayPointData wp = new WayPointData();
         wp.setChildren(new ArrayList<>());
         wp.setReferences(new ArrayList<>());
+        wp.setTodos(new ArrayList<>());
 
         String currentSection = "";
+        StringBuilder goalBuilder = new StringBuilder();
 
         for (String line : lines) {
             String trimmed = line.trim();
@@ -120,8 +136,36 @@ public class ElementParser {
                 wp.setReferences(parseAddressList(val));
                 continue;
             }
+
+            // GOAL section — free text (single or multi-line)
+            if (currentSection.startsWith("### GOAL") && !trimmed.isEmpty() && !trimmed.startsWith("</")) {
+                if (goalBuilder.length() > 0) goalBuilder.append(" ");
+                goalBuilder.append(trimmed);
+                continue;
+            }
+
+            // TODO section — TASK ([x]/[ ]) and RECURRING ((R)) items
+            if (currentSection.contains("TODO")) {
+                if (trimmed.equals("- TECH_SPEC:")) continue; // legacy wrapper
+                if (trimmed.startsWith("- [x]") || trimmed.startsWith("- [ ]")) {
+                    TodoItem item = new TodoItem();
+                    item.setDone(trimmed.startsWith("- [x]"));
+                    item.setText(trimmed.substring(5).trim());
+                    wp.getTodos().add(item);
+                    continue;
+                }
+                if (trimmed.startsWith("- (R)")) {
+                    TodoItem item = new TodoItem();
+                    item.setRecurring(true);
+                    item.setText(trimmed.substring(5).trim());
+                    wp.getTodos().add(item);
+                    continue;
+                }
+            }
         }
 
+        String goal = goalBuilder.toString().trim();
+        if (!goal.isEmpty()) wp.setGoal(goal);
         return wp;
     }
 

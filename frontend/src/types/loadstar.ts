@@ -18,6 +18,8 @@ export interface TreeNode {
   type: ElementType;
   status: StatusCode;
   summary: string;
+  goal?: string;  // v1.6.0 GOAL slot (선택 항목)
+  todos?: { done: boolean; recurring: boolean; text: string }[];  // WP의 TODO 항목들
   children: TreeNode[];
   references?: string[];  // CONNECTIONS.REFERENCE 주소 목록
 }

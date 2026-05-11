@@ -7,6 +7,9 @@
 - METADATA: [Ver: 2.0, Created: 2026-04-06]
 - SYNCED_AT: 2026-04-14 15:00
 
+### GOAL
+모든 화면이 공통으로 의존하는 IDE-style 셸을 제공한다. 사용자가 LOADSTAR 요소들 사이를 빠르게 이동하고, 여러 항목을 동시에 펼쳐서 비교/편집할 수 있도록 한다.
+
 ### CONNECTIONS
 - PARENT: M://root/frontend
 - CHILDREN: []
