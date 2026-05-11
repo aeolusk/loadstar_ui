@@ -723,6 +723,7 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
   const isMainItem = detailAddr ? mapData.items.some(it => it.address === detailAddr) : false;
   const isChildSelected = detailAddr != null && !isMainItem;
   const childParentWp = isChildSelected && selectedNode ? selectedNode : null;
+  const selectedNodeType = selectedNode ? mapData.items.find(it => it.address === selectedNode)?.type : undefined;
 
   const btnStyle: React.CSSProperties = {
     fontSize: 11, padding: '3px 10px', border: '1px solid #d5cdc0', borderRadius: 4,
@@ -795,13 +796,14 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
               <Minus size={11} style={{verticalAlign:'middle'}} /> child 제거
             </button>
           ) : (
-            <button style={btnDangerStyle} onClick={handleRemoveSelected} disabled={!selectedNode || saving}>
-              <Minus size={11} style={{verticalAlign:'middle'}} /> 제거
+            <button
+              style={{ ...btnDangerStyle, opacity: selectedNode ? 0.85 : 0.4 }}
+              onClick={selectedNodeType === 'MAP' ? handleDeleteMap : handleRemoveSelected}
+              disabled={!selectedNode || saving}
+            >
+              {selectedNodeType === 'MAP' ? 'MAP 삭제' : selectedNodeType === 'WAYPOINT' ? 'WP 삭제' : '삭제'}
             </button>
           )}
-          <button style={{ ...btnDangerStyle, opacity: 0.85 }} onClick={handleDeleteMap} disabled={saving} title="MAP 물리 삭제">
-            MAP 삭제
-          </button>
           <span style={{ fontSize: 11, color: '#6b5d4d', marginLeft: 8 }}>
             {wpCount} WP, {mapCount} Maps
           </span>
