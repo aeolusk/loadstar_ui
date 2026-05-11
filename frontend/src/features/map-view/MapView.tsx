@@ -17,7 +17,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import type { Tab } from '../../App';
-import { fetchMapView, updateMap, addToMap, addChildToWayPoint, removeFromMap, removeChildFromWayPoint, createSubMap, deleteMap, type MapViewResponse, type MapViewItem } from '../../api/client';
+import { fetchMapView, updateMap, addToMap, addChildToWayPoint, removeFromMap, removeChildFromWayPoint, createSubMap, deleteMap, deleteWayPoint, type MapViewResponse, type MapViewItem } from '../../api/client';
 import WayPointEditor from '../waypoint-editor/WayPointEditor';
 import DataWayPointEditor from '../dwp-editor/DataWayPointEditor';
 
@@ -682,6 +682,28 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
     }
   };
 
+  const handleDeleteWayPoint = async () => {
+    if (!selectedNode) return;
+    if (!confirm(`"${selectedNode}" WayPoint 파일을 물리 삭제하시겠습니까?\n(Map WAYPOINTS 목록에서도 제거됩니다)`)) return;
+    setSaving(true);
+    try {
+      const result = await deleteWayPoint(projectRoot, selectedNode);
+      if (result.success) {
+        reloadMap();
+        setSelectedNode(null);
+        setDetail(null);
+        showToast(`"${selectedNode}" 삭제 완료.`);
+        onStructureChange?.();
+      } else {
+        showToast('삭제 실패: ' + (result.error || '알 수 없는 오류'));
+      }
+    } catch (e) {
+      showToast('삭제 실패: ' + (e instanceof Error ? e.message : 'Unknown error'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleRemoveChild = async () => {
     if (!detailAddr || !childParentWp) return;
     if (!confirm(`"${detailAddr}"를 "${childParentWp}"의 하위에서 제거하시겠습니까?`)) return;
@@ -714,8 +736,9 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
   const detailAddr = detail?.address ?? null;
   const isMainItem = detailAddr ? mapData.items.some(it => it.address === detailAddr) : false;
   const isChildSelected = detailAddr != null && !isMainItem;
-  // Find parent WP of the selected child
   const childParentWp = isChildSelected && selectedNode ? selectedNode : null;
+  const selectedNodeType = selectedNode ? mapData.items.find(it => it.address === selectedNode)?.type : undefined;
+  const isWpSelected = selectedNodeType === 'WAYPOINT' && !isChildSelected;
 
   const btnStyle: React.CSSProperties = {
     fontSize: 11, padding: '3px 10px', border: '1px solid #d5cdc0', borderRadius: 4,
@@ -790,6 +813,11 @@ export default function MapView({ projectRoot, address, onOpenTab, onStructureCh
           ) : (
             <button style={btnDangerStyle} onClick={handleRemoveSelected} disabled={!selectedNode || saving}>
               <Minus size={11} style={{verticalAlign:'middle'}} /> 제거
+            </button>
+          )}
+          {isWpSelected && (
+            <button style={{ ...btnDangerStyle, opacity: 0.85 }} onClick={handleDeleteWayPoint} disabled={saving} title="WP 파일 물리 삭제">
+              WP 삭제
             </button>
           )}
           <button style={{ ...btnDangerStyle, opacity: 0.85 }} onClick={handleDeleteMap} disabled={saving} title="MAP 물리 삭제">
