@@ -32,6 +32,8 @@
 - [x] 2026-05-11 Map 신규 생성 UI — root-level map 하단 "+ Map 추가" 버튼, createSubMap API 연동
 - [x] 2026-05-11 WP/Map 순서 변경 기능 전체 제거 (리스크 과다)
 - [x] 2026-05-11 ElementParser.parseMap / ElementWriter.writeMap — "null" 문자열 STATUS 방어 코드 추가
+- [x] 2026-05-11 Map 신규 생성 모달에 GOAL 텍스트에리어 추가 (createSubMap goal 파라미터 연동)
+- [x] 2026-05-11 WP 추가 버튼 위치 조정 — root map은 Map 추가만, 하위 map은 WP 추가만 표시
 
 ### ISSUE
 (없음)
