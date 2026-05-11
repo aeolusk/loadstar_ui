@@ -44,6 +44,13 @@ public class ElementWriter {
         }
         lines.add("");
 
+        // GOAL
+        if (wp.getGoal() != null && !wp.getGoal().isEmpty()) {
+            lines.add("### GOAL");
+            lines.add(wp.getGoal());
+            lines.add("");
+        }
+
         // CONNECTIONS
         lines.add("### CONNECTIONS");
         lines.add("- PARENT: " + nvl(wp.getParent()));

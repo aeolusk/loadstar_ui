@@ -10,6 +10,7 @@ public class WayPointDetailResponse {
 
     // IDENTITY
     private String summary;
+    private String goal;
     private String syncedAt;
     private String version;
     private String created;

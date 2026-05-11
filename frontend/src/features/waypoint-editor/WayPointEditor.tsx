@@ -76,6 +76,7 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
   // Edit buffers
   const [editStatus, setEditStatus] = useState('');
   const [editSummary, setEditSummary] = useState('');
+  const [editGoal, setEditGoal] = useState('');
   const [editVersion, setEditVersion] = useState('');
   const [editPriority, setEditPriority] = useState('');
   const [editSyncedAt, setEditSyncedAt] = useState('');
@@ -362,6 +363,7 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
   const startEditIdentity = () => {
     setEditStatus(data.status);
     setEditSummary(data.summary || '');
+    setEditGoal(data.goal || '');
     setEditVersion(data.version || '');
     setEditPriority(data.priority || '');
     setEditSyncedAt(data.syncedAt || '');
@@ -369,7 +371,7 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
   };
   const cancelEditIdentity = () => setEditIdentity(false);
   const saveIdentity = () => {
-    saveToServer({ status: editStatus, summary: editSummary, version: editVersion, priority: editPriority, syncedAt: editSyncedAt });
+    saveToServer({ status: editStatus, summary: editSummary, goal: editGoal || null, version: editVersion, priority: editPriority, syncedAt: editSyncedAt });
     setEditIdentity(false);
   };
 
@@ -663,6 +665,10 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
               <div style={s.label}>Summary</div>
               <input style={s.input} value={editSummary} onChange={e => setEditSummary(e.target.value)} />
             </div>
+            <div>
+              <div style={s.label}>Goal</div>
+              <textarea style={{ ...s.textarea, minHeight: 48 }} value={editGoal} onChange={e => setEditGoal(e.target.value)} placeholder="이 WayPoint가 달성해야 할 의도 (선택)" />
+            </div>
             <div style={{ display: 'flex', gap: 12 }}>
               <div style={{ flex: 1 }}><div style={s.label}>Version</div><input style={s.inputSm} value={editVersion} onChange={e => setEditVersion(e.target.value)} /></div>
               <div style={{ flex: 1 }}><div style={s.label}>Priority</div><input style={s.inputSm} value={editPriority} onChange={e => setEditPriority(e.target.value)} /></div>
@@ -673,6 +679,12 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
           <>
             <div style={s.label}>Summary</div>
             <div style={s.value}>{data.summary || '-'}</div>
+            {data.goal && (
+              <div style={{ marginBottom: 8 }}>
+                <div style={s.label}>Goal</div>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)', fontStyle: 'italic' }}>{data.goal}</div>
+              </div>
+            )}
             <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
               {data.version && <div><span style={s.label}>Version: </span><span style={{ fontSize: 12 }}>{data.version}</span></div>}
               {data.created && <div><span style={s.label}>Created: </span><span style={{ fontSize: 12 }}>{data.created}</span></div>}

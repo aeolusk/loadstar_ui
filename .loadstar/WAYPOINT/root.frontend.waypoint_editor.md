@@ -3,9 +3,9 @@
 ## [STATUS] S_STB
 
 ### IDENTITY
-- SUMMARY: WayPoint 편집 기능 구현 (선택 툴바 + Done/Delete 분리 + Git History + TECH_SPEC 추가/삭제 로그)
-- METADATA: [Ver: 3.1, Created: 2026-04-06]
-- SYNCED_AT: 2026-04-08
+- SUMMARY: WayPoint 편집 기능 구현 (선택 툴바 + Done/Delete 분리 + Git History + GOAL 편집)
+- METADATA: [Ver: 3.2, Created: 2026-04-06]
+- SYNCED_AT: 2026-05-11
 
 ### CONNECTIONS
 - PARENT: M://root/frontend
@@ -21,6 +21,7 @@
 - [x] 2026-04-08 TECH_SPEC 추가 시 log add 기록 ("추가:항목내용")
 - [x] 2026-04-08 TECH_SPEC 삭제 시 log add 기록 ("삭제:항목내용 (완료/미완료)")
 - [x] 2026-04-08 BlackBox 관련 참조 제거
+- [x] 2026-05-11 IDENTITY 편집 화면에 GOAL 필드 추가/수정/삭제 지원
 
 ### ISSUE
 (없음)

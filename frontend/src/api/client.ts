@@ -36,6 +36,7 @@ export interface WayPointDetail {
   address: string;
   status: string;
   summary: string;
+  goal?: string | null;
   syncedAt: string | null;
   version: string | null;
   created: string | null;

@@ -184,6 +184,7 @@ public class ElementParser {
         boolean inIssue = false;
         boolean inOpenQuestions = false;
         StringBuilder commentBuilder = new StringBuilder();
+        StringBuilder goalBuilder = new StringBuilder();
         boolean inComment = false;
         WayPointDetailResponse.TableEntry currentTable = null;
 
@@ -208,6 +209,13 @@ public class ElementParser {
                 inOpenQuestions = false;
                 inComment = currentSection.contains("COMMENT");
                 currentTable = null;
+                continue;
+            }
+
+            // GOAL section — free text
+            if (currentSection.startsWith("### GOAL") && !trimmed.isEmpty() && !trimmed.startsWith("</")) {
+                if (goalBuilder.length() > 0) goalBuilder.append(" ");
+                goalBuilder.append(trimmed);
                 continue;
             }
 
@@ -363,6 +371,8 @@ public class ElementParser {
 
         String comment = commentBuilder.toString().trim();
         wp.setComment(comment.isEmpty() ? null : comment);
+        String goal = goalBuilder.toString().trim();
+        if (!goal.isEmpty()) wp.setGoal(goal);
         return wp;
     }
 
