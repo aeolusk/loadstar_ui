@@ -22,6 +22,7 @@ public class MapViewResponse {
         private String type;       // MAP, WAYPOINT
         private String status;
         private String summary;
+        private String goal;
         // WayPoint specific
         private List<String> children;
         private List<String> references;

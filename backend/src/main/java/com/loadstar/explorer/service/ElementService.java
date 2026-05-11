@@ -88,6 +88,7 @@ public class ElementService {
                         item.setType("WAYPOINT");
                         item.setStatus(wp.getStatus());
                         item.setSummary(wp.getSummary());
+                        item.setGoal(wp.getGoal());
                         item.setChildren(wp.getChildren());
                         item.setReferences(wp.getReferences());
                     }

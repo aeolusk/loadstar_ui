@@ -10,6 +10,7 @@
 - W://root/maintenance/decisions_ui
 - W://root/maintenance/connections_edit
 - W://root/maintenance/selection_mousedown
+- W://root/maintenance/mapview_goal
 
 ### COMMENT
 (없음)

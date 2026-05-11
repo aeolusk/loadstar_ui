@@ -17,6 +17,7 @@ export interface MapViewItem {
   type: 'MAP' | 'WAYPOINT' | 'DWP';
   status: string;
   summary: string;
+  goal?: string | null;
   children: string[];
   references: string[];
 }

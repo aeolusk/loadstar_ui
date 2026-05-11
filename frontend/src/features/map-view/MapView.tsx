@@ -39,7 +39,7 @@ import { getStatusLabel, getStatusColor } from '../../data/status-labels';
 // ===== Custom Nodes =====
 
 function WayPointNode({ data }: { data: {
-  label: string; status: string; summary: string; address: string;
+  label: string; status: string; summary: string; goal?: string | null; address: string;
   selected?: boolean;
   childCount?: number;
   refCount?: number;
@@ -85,6 +85,11 @@ function WayPointNode({ data }: { data: {
       {data.summary && (
         <div style={{ fontSize: 10, color: '#6b5d4d', marginTop: 4, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {data.summary}
+        </div>
+      )}
+      {data.goal && (
+        <div style={{ fontSize: 9, color: '#0550ae', marginTop: 3, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontStyle: 'italic' }}>
+          🎯 {data.goal}
         </div>
       )}
 
@@ -260,6 +265,7 @@ function buildGraph(
         label: id.split('/').pop() || id,
         status: item.status,
         summary: item.summary || '',
+        goal: item.goal,
         address: item.address,
         selected: selectedNode === item.address,
         childCount: item.children?.length ?? 0,
