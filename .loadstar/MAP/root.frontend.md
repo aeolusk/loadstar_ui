@@ -19,6 +19,7 @@
 - W://root/frontend/search
 - W://root/frontend/schedule_view
 - W://root/frontend/goal_report
+- W://root/frontend/attachments_panel
 
 ### COMMENT
 (없음)

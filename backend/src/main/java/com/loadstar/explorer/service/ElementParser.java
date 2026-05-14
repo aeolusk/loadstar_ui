@@ -180,6 +180,7 @@ public class ElementParser {
         wp.setIssues(new ArrayList<>());
         wp.setOpenQuestions(new ArrayList<>());
         wp.setTables(new ArrayList<>());
+        wp.setAttachments(new ArrayList<>());
 
         String currentSection = "";
         boolean inIssue = false;
@@ -273,6 +274,13 @@ public class ElementParser {
                     // Table item: "  - 요소" or "  - 요소: 설명"
                     currentTable.getItems().add(trimmed.substring(2).trim());
                 }
+                continue;
+            }
+
+            // ATTACHMENTS section
+            if (currentSection.contains("ATTACHMENTS") && trimmed.startsWith("- ") && !trimmed.equals("(없음)")) {
+                String item = trimmed.substring(2).trim();
+                if (!item.isEmpty()) wp.getAttachments().add(item);
                 continue;
             }
 

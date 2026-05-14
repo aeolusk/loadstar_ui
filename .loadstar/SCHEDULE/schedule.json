@@ -70,8 +70,8 @@
       "status" : "DONE"
     },
     "W://root/frontend/log_view" : {
-      "start" : "2026-05-08",
-      "end" : "2026-05-15",
+      "start" : "2026-05-14",
+      "end" : "2026-05-23",
       "status" : "DONE"
     },
     "W://root/frontend/cli_console" : {
@@ -87,6 +87,11 @@
     "W://root/frontend/schedule_view" : {
       "start" : "2026-05-08",
       "end" : "2026-05-15",
+      "status" : "DONE"
+    },
+    "W://root/frontend/goal_report" : {
+      "start" : "2026-05-11",
+      "end" : "2026-05-18",
       "status" : "DONE"
     },
     "W://root/test/test_app_shell" : {
@@ -131,7 +136,7 @@
     },
     "W://root/test/test_search" : {
       "start" : "2026-05-08",
-      "end" : "2026-05-15",
+      "end" : "2026-06-06",
       "status" : "RECURRING"
     },
     "W://root/maintenance/orphan_delete" : {
@@ -152,6 +157,16 @@
     "W://root/maintenance/selection_mousedown" : {
       "start" : "2026-05-08",
       "end" : "2026-05-15",
+      "status" : "DONE"
+    },
+    "W://root/maintenance/mapview_goal" : {
+      "start" : "2026-05-11",
+      "end" : "2026-05-18",
+      "status" : "DONE"
+    },
+    "W://root/maintenance/goals_editor" : {
+      "start" : "2026-05-11",
+      "end" : "2026-05-18",
       "status" : "DONE"
     }
   }

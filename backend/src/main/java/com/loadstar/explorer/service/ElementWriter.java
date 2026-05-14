@@ -68,6 +68,15 @@ public class ElementWriter {
             lines.add("");
         }
 
+        // ATTACHMENTS
+        if (wp.getAttachments() != null && !wp.getAttachments().isEmpty()) {
+            lines.add("### ATTACHMENTS");
+            for (String attachment : wp.getAttachments()) {
+                lines.add("- " + attachment);
+            }
+            lines.add("");
+        }
+
         // TODO
         lines.add("### TODO");
         if (wp.getTechSpec() != null && !wp.getTechSpec().isEmpty()) {
@@ -182,6 +191,15 @@ public class ElementWriter {
             lines.add("- scope:");
             for (String scope : wp.getCodeMapScopes()) {
                 lines.add("  - " + scope);
+            }
+            lines.add("");
+        }
+
+        // ATTACHMENTS
+        if (wp.getAttachments() != null && !wp.getAttachments().isEmpty()) {
+            lines.add("### ATTACHMENTS");
+            for (String attachment : wp.getAttachments()) {
+                lines.add("- " + attachment);
             }
             lines.add("");
         }

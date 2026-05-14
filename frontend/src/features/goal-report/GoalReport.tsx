@@ -129,7 +129,7 @@ const s = {
     color: COLOR_MUTED,
   } as React.CSSProperties,
   todoItem: { fontSize: 12, margin: '1px 0' } as React.CSSProperties,
-  todoDone: { color: COLOR_MUTED, textDecoration: 'line-through' } as React.CSSProperties,
+  todoDone: { color: COLOR_MUTED } as React.CSSProperties,
   todoRecurring: { color: '#8250df' } as React.CSSProperties,
   // Edit mode styles
   editInput: {

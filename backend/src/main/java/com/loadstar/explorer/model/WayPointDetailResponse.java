@@ -24,6 +24,9 @@ public class WayPointDetailResponse {
     // CODE_MAP
     private List<String> codeMapScopes;
 
+    // ATTACHMENTS
+    private List<String> attachments;
+
     // TODO
     private String todoAddress;
     private String todoSummary;

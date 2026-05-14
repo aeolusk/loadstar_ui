@@ -54,6 +54,7 @@ export interface WayPointDetail {
   openQuestions: { id: string; text: string; resolved: boolean }[];
   comment: string | null;
   tables: { name: string; items: string[] }[];
+  attachments: string[];
 }
 
 // --- File Browser ---

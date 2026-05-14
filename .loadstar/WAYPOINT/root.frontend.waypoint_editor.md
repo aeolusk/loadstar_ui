@@ -22,6 +22,7 @@
 - [x] 2026-04-08 TECH_SPEC 삭제 시 log add 기록 ("삭제:항목내용 (완료/미완료)")
 - [x] 2026-04-08 BlackBox 관련 참조 제거
 - [x] 2026-05-11 IDENTITY 편집 화면에 GOAL 필드 추가/수정/삭제 지원
+- [x] 2026-05-12 TODO 완료 항목 line-through 제거 — 아이콘(✓)으로만 완료 표시 (WayPointEditor.tsx, GoalReport.tsx)
 
 ### ISSUE
 (없음)
