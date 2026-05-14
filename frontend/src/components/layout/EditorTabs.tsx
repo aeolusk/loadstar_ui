@@ -1,7 +1,9 @@
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Tab } from '../../App';
 import {
   Folder, Diamond, SquaresFour, CheckSquare, ClockCounterClockwise,
   GitBranch, Scroll, Terminal, MagnifyingGlass, X, Star, Question, CalendarBlank, Target,
+  CaretDoubleRight,
 } from '@phosphor-icons/react';
 import DashboardView from '../../features/dashboard/DashboardView';
 import MapView from '../../features/map-view/MapView';
@@ -22,6 +24,7 @@ interface EditorTabsProps {
   activeTabId: string | null;
   onSelectTab: (tabId: string) => void;
   onCloseTab: (tabId: string) => void;
+  onMoveTabToEnd: (tabId: string) => void;
   onOpenTab: (tab: Tab) => void;
   onStructureChange?: () => void;
 }
@@ -64,28 +67,122 @@ const TabContent = ({ tab, projectRoot, onOpenTab, onStructureChange }: { tab: T
   }
 };
 
-const EditorTabs = ({ projectRoot, tabs, activeTabId, onSelectTab, onCloseTab, onOpenTab, onStructureChange }: EditorTabsProps) => {
+const EditorTabs = ({ projectRoot, tabs, activeTabId, onSelectTab, onCloseTab, onMoveTabToEnd, onOpenTab, onStructureChange }: EditorTabsProps) => {
+  const tabsBarRef = useRef<HTMLDivElement>(null);
+  const activeTabRef = useRef<HTMLDivElement | null>(null);
+  const overflowRef = useRef<HTMLDivElement>(null);
+  const tabRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  useLayoutEffect(() => {
+    const bar = tabsBarRef.current;
+    const tab = activeTabRef.current;
+    if (!bar || !tab) return;
+    const barRect = bar.getBoundingClientRect();
+    const tabRect = tab.getBoundingClientRect();
+    if (tabRect.left < barRect.left) {
+      bar.scrollLeft += Math.floor(tabRect.left - barRect.left);
+    } else if (tabRect.right > barRect.right) {
+      bar.scrollLeft += Math.ceil(tabRect.right - barRect.right);
+    }
+  }, [activeTabId, tabs]);
+
+  useLayoutEffect(() => {
+    const el = tabsBarRef.current;
+    if (el) setIsOverflowing(el.scrollWidth > el.clientWidth + 1);
+  });
+
+  useEffect(() => {
+    const el = tabsBarRef.current;
+    if (!el) return;
+    const update = () => setIsOverflowing(el.scrollWidth > el.clientWidth + 1);
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    window.addEventListener('resize', update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', update);
+    };
+  }, [tabs.length > 0]);
+
+  useEffect(() => {
+    if (!showDropdown) return;
+    const close = (e: MouseEvent) => {
+      if (overflowRef.current && !overflowRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [showDropdown]);
 
   return (
     <div className="editor-area">
       {tabs.length > 0 && (
-        <div className="editor-tabs-bar">
-          {tabs.map(tab => (
-            <div
-              key={tab.id}
-              className={`editor-tab ${tab.id === activeTabId ? 'active' : ''}`}
-              onClick={() => onSelectTab(tab.id)}
-            >
-              <span className="editor-tab-icon">{tabTypeIcon(tab.type)}</span>
-              <span>{tab.title}</span>
-              <span
-                className="editor-tab-close"
-                onClick={(e) => { e.stopPropagation(); onCloseTab(tab.id); }}
+        <div className="editor-tabs-bar-wrapper">
+          <div className="editor-tabs-bar" ref={tabsBarRef}>
+            {tabs.map(tab => (
+              <div
+                key={tab.id}
+                ref={el => {
+                  if (el) tabRefs.current.set(tab.id, el);
+                  else tabRefs.current.delete(tab.id);
+                  if (tab.id === activeTabId) (activeTabRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+                }}
+                className={`editor-tab ${tab.id === activeTabId ? 'active' : ''}`}
+                onClick={() => onSelectTab(tab.id)}
               >
-                <X size={12} />
-              </span>
-            </div>
-          ))}
+                <span className="editor-tab-icon">{tabTypeIcon(tab.type)}</span>
+                <span>{tab.title}</span>
+                <span
+                  className="editor-tab-close"
+                  onClick={(e) => { e.stopPropagation(); onCloseTab(tab.id); }}
+                >
+                  <X size={12} />
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="editor-tabs-overflow" ref={overflowRef}>
+              <button
+                className="editor-tabs-overflow-btn"
+                onClick={() => setShowDropdown(!showDropdown)}
+                title={`전체 탭 ${tabs.length}개`}
+              >
+                <CaretDoubleRight size={14} />
+              </button>
+              {showDropdown && (
+                <div className="editor-tabs-dropdown">
+                  {tabs.map(tab => (
+                    <div
+                      key={tab.id}
+                      className={`editor-tabs-dropdown-item ${tab.id === activeTabId ? 'active' : ''}`}
+                      onClick={() => {
+                        const bar = tabsBarRef.current;
+                        const tabEl = tabRefs.current.get(tab.id);
+                        if (bar && tabEl && tabEl.offsetLeft + tabEl.offsetWidth > bar.scrollLeft + bar.clientWidth) {
+                          onMoveTabToEnd(tab.id);
+                        } else {
+                          onSelectTab(tab.id);
+                        }
+                        setShowDropdown(false);
+                      }}
+                    >
+                      <span className="editor-tab-icon">{tabTypeIcon(tab.type)}</span>
+                      <span className="editor-tabs-dropdown-title">{tab.title}</span>
+                      {tab.address && <span className="editor-tabs-dropdown-address">{tab.address}</span>}
+                      <span
+                        className="editor-tab-close"
+                        onClick={(e) => { e.stopPropagation(); onCloseTab(tab.id); }}
+                      >
+                        <X size={12} />
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+          </div>
         </div>
       )}
       <div className="editor-content">

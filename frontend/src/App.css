@@ -367,17 +367,117 @@
   background: var(--bg-surface);
 }
 
-.editor-tabs-bar {
+.editor-tabs-bar-wrapper {
   display: flex;
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-light);
+  position: relative;
+}
+
+.editor-tabs-bar {
+  display: flex;
   overflow-x: auto;
   min-height: 34px;
   align-items: flex-end;
+  flex: 1;
+  min-width: 0;
 }
 
 .editor-tabs-bar::-webkit-scrollbar {
   height: 0;
+}
+
+.editor-tabs-overflow {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  border-left: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+
+.editor-tabs-overflow-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0 10px;
+  font-size: var(--font-xs);
+  transition: all 0.15s;
+}
+
+.editor-tabs-overflow-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.editor-tabs-overflow-count {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.editor-tabs-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 100;
+  min-width: 280px;
+  max-width: 480px;
+  max-height: 400px;
+  overflow-y: auto;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 4px 0;
+}
+
+.editor-tabs-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+}
+
+.editor-tabs-dropdown-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.editor-tabs-dropdown-item.active {
+  background: var(--bg-active);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.editor-tabs-dropdown-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editor-tabs-dropdown-address {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+}
+
+.editor-tabs-dropdown-item .editor-tab-close {
+  opacity: 0.5;
+}
+
+.editor-tabs-dropdown-item:hover .editor-tab-close {
+  opacity: 1;
 }
 
 .editor-tab {

@@ -88,6 +88,7 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
   const [selectedTechSpec, setSelectedTechSpec] = useState<Set<number>>(new Set());
   const [editingTechSpec, setEditingTechSpec] = useState<number | null>(null);
   const [editTechSpecText, setEditTechSpecText] = useState('');
+  const [focusedTechSpec, setFocusedTechSpec] = useState<number | null>(null);
   const [newTechSpec, setNewTechSpec] = useState('');
   const [techSpecFilter, setTechSpecFilter] = useState('');
 
@@ -100,6 +101,13 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
   const [dirBrowserParent, setDirBrowserParent] = useState<string | null>(null);
   const [dirBrowserEntries, setDirBrowserEntries] = useState<DirEntry[]>([]);
   const [dirBrowserLoading, setDirBrowserLoading] = useState(false);
+
+  // ATTACHMENTS editing
+  const [attachments, setAttachments] = useState<string[]>([]);
+  const [editAttachments, setEditAttachments] = useState(false);
+  const [newAttachment, setNewAttachment] = useState('');
+  const [editingAttachmentIdx, setEditingAttachmentIdx] = useState<number | null>(null);
+  const [editAttachmentText, setEditAttachmentText] = useState('');
 
   // ISSUE editing
   const [issues, setIssues] = useState<string[]>([]);
@@ -143,6 +151,7 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
         setIssues([...d.issues]);
         setOpenQuestions(d.openQuestions.map(q => ({ ...q })));
         setCodeMapScopes([...(d.codeMapScopes || [])]);
+        setAttachments([...(d.attachments || [])]);
       })
       .catch(e => setError(e.message || 'Failed to load'))
       .finally(() => setLoading(false));
@@ -165,6 +174,7 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
       setIssues([...updated.issues]);
       setOpenQuestions(updated.openQuestions.map(q => ({ ...q })));
       setCodeMapScopes([...(updated.codeMapScopes || [])]);
+      setAttachments([...(updated.attachments || [])]);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Save failed');
     } finally {
@@ -180,6 +190,7 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
       setTechSpecItems(d.techSpec.map(t => ({ ...t })));
       setIssues([...d.issues]);
       setOpenQuestions(d.openQuestions.map(q => ({ ...q })));
+      setAttachments([...(d.attachments || [])]);
       setViewingCommit(commit);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load version');
@@ -198,6 +209,7 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
       setTechSpecItems(d.techSpec.map(t => ({ ...t })));
       setIssues([...d.issues]);
       setOpenQuestions(d.openQuestions.map(q => ({ ...q })));
+      setAttachments([...(d.attachments || [])]);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load');
     } finally {
@@ -427,6 +439,7 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
   const startEditTechSpecItem = (idx: number) => {
     setEditingTechSpec(idx);
     setEditTechSpecText(techSpecItems[idx].text);
+    setFocusedTechSpec(null);
   };
   const saveEditTechSpecItem = () => {
     if (editingTechSpec !== null) {
@@ -938,16 +951,125 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
         )}
       </div>
 
+      {/* ===== ATTACHMENTS ===== */}
+      <div style={s.section}>
+        <div style={s.sectionHeader}>
+          <span style={s.sectionTitle}>ATTACHMENTS</span>
+          <div style={s.headerBtns}>
+            {!isReadOnly && (editAttachments ? (
+              <>
+                <button style={s.btnPrimary} onClick={() => {
+                  const finalList = editingAttachmentIdx !== null
+                    ? attachments.map((a, i) => i === editingAttachmentIdx ? editAttachmentText.trim() : a).filter(a => a)
+                    : attachments;
+                  setAttachments(finalList);
+                  setEditingAttachmentIdx(null);
+                  saveToServer({ attachments: finalList });
+                  setEditAttachments(false);
+                }}>Save</button>
+                <button style={s.btn} onClick={() => {
+                  setAttachments([...(data.attachments || [])]);
+                  setEditingAttachmentIdx(null);
+                  setNewAttachment('');
+                  setEditAttachments(false);
+                }}>Cancel</button>
+              </>
+            ) : (
+              <button style={s.btn} onClick={() => setEditAttachments(true)}>Edit</button>
+            ))}
+          </div>
+        </div>
+        {editAttachments ? (
+          <div>
+            {attachments.map((item, i) => (
+              <div key={i} style={{ display: 'flex', gap: 4, marginBottom: 4, alignItems: 'center' }}>
+                {editingAttachmentIdx === i ? (
+                  <input
+                    style={{ ...s.inputSm, flex: 1, fontFamily: 'monospace' }}
+                    value={editAttachmentText}
+                    autoFocus
+                    onChange={e => setEditAttachmentText(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        setAttachments(attachments.map((a, j) => j === i ? editAttachmentText.trim() : a).filter(a => a));
+                        setEditingAttachmentIdx(null);
+                      } else if (e.key === 'Escape') {
+                        setEditingAttachmentIdx(null);
+                      }
+                    }}
+                  />
+                ) : (
+                  <span
+                    style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--text-primary)', flex: 1, cursor: 'pointer' }}
+                    onClick={() => { setEditingAttachmentIdx(i); setEditAttachmentText(item); }}
+                  >{item}</span>
+                )}
+                <button style={s.btnDanger} onClick={() => {
+                  setAttachments(attachments.filter((_, j) => j !== i));
+                  if (editingAttachmentIdx === i) setEditingAttachmentIdx(null);
+                }}>x</button>
+              </div>
+            ))}
+            <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+              <input
+                style={{ ...s.inputSm, flex: 1, fontFamily: 'monospace' }}
+                placeholder="URL 추가... (예: https://... 또는 file:///path/to/file.sql)"
+                value={newAttachment}
+                onChange={e => setNewAttachment(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && newAttachment.trim()) {
+                    setAttachments([...attachments, newAttachment.trim()]);
+                    setNewAttachment('');
+                  }
+                }}
+              />
+              <button style={s.btnPrimary} onClick={() => {
+                if (newAttachment.trim()) { setAttachments([...attachments, newAttachment.trim()]); setNewAttachment(''); }
+              }} disabled={!newAttachment.trim()}>+ Add</button>
+            </div>
+          </div>
+        ) : (
+          attachments.length > 0 ? (
+            <div>
+              {attachments.map((item, i) => {
+                const dashIdx = item.indexOf(' — ');
+                const url = dashIdx >= 0 ? item.substring(0, dashIdx) : item;
+                const desc = dashIdx >= 0 ? item.substring(dashIdx + 3) : null;
+                const isHttp = url.startsWith('http://') || url.startsWith('https://');
+                return (
+                  <div key={i} style={{ display: 'flex', alignItems: 'baseline', gap: 6, padding: '2px 0 2px 4px' }}>
+                    {isHttp ? (
+                      <a href={url} target="_blank" rel="noreferrer" style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--accent-blue)', wordBreak: 'break-all' }}>{url}</a>
+                    ) : (
+                      <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--text-primary)', wordBreak: 'break-all' }}>{url}</span>
+                    )}
+                    {desc && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>— {desc}</span>}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div style={s.empty}>ATTACHMENTS 없음</div>
+          )
+        )}
+      </div>
+
       {/* ===== TODO ===== */}
       <div style={s.section}>
         <div style={s.sectionHeader}>
           <span style={s.sectionTitle}>TODO {total > 0 && `(${done}/${total})`}</span>
           <div style={s.headerBtns}>
-            {!isReadOnly && selectedTechSpec.size > 0 && (
+            {!isReadOnly && (
               <>
-                <button style={s.btn} onClick={() => { const idx = [...selectedTechSpec][0]; startEditTechSpecItem(idx); }}>Edit</button>
-                <button style={s.btnPrimary} onClick={doneSelectedTechSpec}>Done ({selectedTechSpec.size})</button>
-                <button style={s.btnDanger} onClick={deleteSelectedTechSpec}>Delete ({selectedTechSpec.size})</button>
+                {focusedTechSpec !== null && editingTechSpec === null && (
+                  <button style={s.btn} onClick={() => startEditTechSpecItem(focusedTechSpec)}>Edit</button>
+                )}
+                {selectedTechSpec.size > 0 && (
+                  <>
+                    <button style={s.btnPrimary} onClick={doneSelectedTechSpec}>Done ({selectedTechSpec.size})</button>
+                    <button style={s.btnDanger} onClick={deleteSelectedTechSpec}>Delete ({selectedTechSpec.size})</button>
+                  </>
+                )}
               </>
             )}
           </div>
@@ -1041,7 +1163,20 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
 
         {/* TODO items */}
         {techSpecItems.map((item, i) => (
-          <div key={i} style={s.checkRow}>
+          <div
+            key={i}
+            style={{
+              ...s.checkRow,
+              background: focusedTechSpec === i && editingTechSpec !== i ? 'var(--accent-bg)' : 'transparent',
+              borderRadius: 3,
+              cursor: editingTechSpec === i ? 'default' : 'pointer',
+            }}
+            onClick={(e) => {
+              if (editingTechSpec !== null) return;
+              if ((e.target as HTMLElement).tagName === 'INPUT') return;
+              setFocusedTechSpec(focusedTechSpec === i ? null : i);
+            }}
+          >
             <input
               type="checkbox"
               checked={selectedTechSpec.has(i)}
@@ -1072,10 +1207,7 @@ export default function WayPointEditor({ projectRoot, address, onOpenTab }: WayP
                 <button style={s.btnPrimary} onClick={saveEditTechSpecItem}>OK</button>
               </div>
             ) : (
-              <span
-                style={{ color: item.done ? 'var(--text-muted)' : 'var(--text-primary)', textDecoration: item.done ? 'line-through' : 'none', cursor: 'pointer' }}
-                onDoubleClick={() => startEditTechSpecItem(i)}
-              >
+              <span style={{ color: item.done ? 'var(--text-muted)' : 'var(--text-primary)' }}>
                 {item.text}
               </span>
             )}

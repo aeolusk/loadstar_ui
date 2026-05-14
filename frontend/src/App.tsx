@@ -51,6 +51,16 @@ function App() {
     }
   };
 
+  const moveTabToEnd = (tabId: string) => {
+    setTabs(prev => {
+      if (prev.length === 0 || prev[prev.length - 1].id === tabId) return prev;
+      const tab = prev.find(t => t.id === tabId);
+      if (!tab) return prev;
+      return [...prev.filter(t => t.id !== tabId), tab];
+    });
+    setActiveTabId(tabId);
+  };
+
   const closeTab = (tabId: string) => {
     const idx = tabs.findIndex(t => t.id === tabId);
     const newTabs = tabs.filter(t => t.id !== tabId);
@@ -99,6 +109,7 @@ function App() {
               activeTabId={activeTabId}
               onSelectTab={setActiveTabId}
               onCloseTab={closeTab}
+              onMoveTabToEnd={moveTabToEnd}
               onOpenTab={openTab}
               onStructureChange={handleStructureChange}
             />
